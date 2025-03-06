@@ -33,6 +33,7 @@ from django.shortcuts import redirect
 from Ferry_plot.models import Metadata, Measurements, Parameters
 from django.db.models import Q, Count
 
+import threading
 
 #don't you lose the reference app pages...
 
@@ -50,7 +51,7 @@ from django.contrib.auth.models import Group
 
 from django.views.generic import ListView, CreateView, UpdateView
 from django.urls import reverse_lazy
-
+import importlib.util
 
 
 

@@ -20,6 +20,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.
 # Application definition
 
 INSTALLED_APPS = [
+    'Ferry_app.apps.FerryAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -77,7 +78,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ferry',
         'USER': 'postgres',
-        'PASSWORD': 'azizbm2003',
+        'PASSWORD': 'dhouha',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
@@ -166,6 +167,6 @@ DEFAULT_FROM_EMAIL='tun.ferrybox@gmail.com'
 EMAIL_USE_TLS = True
 # EMAIL_USE_TLS = False
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'tun.ferrybox@gmail.com'
-EMAIL_HOST_PASSWORD = 'sbth rmtl frmb rvdq'
+EMAIL_HOST_USER = 'dhouhabelakhel2001@gmail.com'
+EMAIL_HOST_PASSWORD = 'pmtd xqqz rqbj xcdv'
 EMAIL_PORT = 587
