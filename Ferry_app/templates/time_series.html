@@ -1,0 +1,502 @@
+
+{% extends "layouts/base.html" %}
+{% load leaflet_tags %}
+
+{% leaflet_js %}
+{% leaflet_css %}
+{% load static %}
+ 
+
+
+
+{% block title %} Page Blank {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}                                <!-- Choose the type of graph -->
+<style>
+
+ 
+/*.leaflet-container { height: 100%; }*/
+
+.leaflet-container {  /* all maps */
+    height: 300px;
+
+}
+
+  #cm-popup{
+    display:relative;
+   /*box-shadow: 0 0 10px #888888;*/
+   /*position:relative;*/
+   /*left:50%;*/
+   transform:translateX();
+         /*width:50%;
+   /*height:200px;*/
+   }
+
+</style>
+
+<!-- This is the new navbar ( pretty one) , it's calling other sections using the href items, save the names and try this new architechture.. -->
+    <div class="row">
+      <div class="col-lg-12 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-tabs card-header-primary">
+            <div class="nav-tabs-navigation">
+              <div class="nav-tabs-wrapper">
+                <span class="nav-tabs-title">Graphs:</span>
+                <ul class="nav nav-tabs" data-tabs="tabs">
+                  <li class="nav-item">
+                    <a class="nav-link" href="transect_plotting">
+                      <i class="material-icons"></i> Transect
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="map">
+                      <i class="material-icons"></i> Map
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#times" data-toggle="tab">
+                      <i class="material-icons"></i> Time series
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="scatter">
+                      <i class="material-icons"></i> Scatter
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+<!--                   <li class="nav-item">
+                    <a class="nav-link" href="heat.html">
+                      <i class="material-icons"></i> Heat -->
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+<!-- These are the navbars called items ( the different graphs forms ) -->
+
+          <div class="card-body">
+            <div class="tab-content">
+              <!-- this div is just replacing the tab pane part -->
+              <div class="tab-pane active" id="transect">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+            <form method="GET" action=".">
+              {% csrf_token %}
+
+                <div class="row">
+
+                      <div style="width: 170px; ">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Transect</label>
+                          <select class="custom-select" name="transect_select_times">  
+                            {% if  answered  %}
+                            <option>{{ save_transect }}</option>
+                            {% endif %}  
+                            <option>Tunis - Marseille</option>
+                            <option>Tunis - Genova</option>         
+                          </select>
+                        </div>
+                      
+
+
+                      <div class="col-md-2">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Parameter</label>
+                          <select type="text"  class="custom-select" name="parameter_selection_times">
+
+                            {% if  answered  %}
+                            <option>{{ save_parameter }}</option>
+                            {% endif %} 
+                            <option>Salinity_SBE45</option>
+                            <option>Temp_in_SBE38</option>
+                            <option>Oxygen</option>
+                            <option>Turbidity</option>  
+                            <option>Chl_a</option>
+                              </select>
+                        </div>
+                   
+
+
+                  <!-- <div class="form-group "> -->
+                    <div class="col-md-3">
+                    <label for="publishDateMin">Start date</label>
+                    <input type="date" class="custom-select" name="date_min" value="{{ save_date1 }}">
+                  </div>
+              <!-- </div> -->
+                
+    
+
+                         <!-- <div class="form-group"> -->
+                  <div class="col-md-3">
+                    <label for="publishDateMin">End date</label>
+                    <input type="date" class="custom-select" name="date_max" value="{{ save_date2 }}">
+                  </div>
+              <!-- </div>      -->
+
+
+                    <div class="col-md-2">
+                      <!-- <div class="form-group"> -->
+                        <!-- <label class="bmd-label-floating">Position</label> -->
+                        <label class="bmd-label-floating" for="latInput">Latitude</label>
+                          {% if  answered  %}
+                          <input class="form-control" id="latInput" name="position_times_lat" value="{{ save_position_lat }}"/>
+                          {% else %} 
+                        <input class="form-control" id="latInput" name="position_times_lat" value="Pick on Map below"/>
+                          {% endif %} 
+
+                        </div>
+
+
+                </div>
+            </div>  
+
+
+
+           <!-- <div class="container">  -->
+            <div class="row">
+                                   <div class="col-md-2">
+                        <label class="bmd-label-floating" for="lngInput">Longitude</label>
+                          {% if  answered  %}
+                          <input class="form-control" id="lngInput" name="position_times_lon" value="{{ save_position_lon }}"/>
+                          {% else %} 
+                        <input class="form-control" id="lngInput" name="position_times_lon" value="Pick on Map below"/>
+                          {% endif %} 
+
+
+                      </div>
+
+                    <div class="col-md-2">
+                      <!-- <div class="form-group"> -->
+                        <label class="bmd-label-floating">Size</label>
+                        <select type="text"  class="custom-select" name="size_times">
+
+                          {% if  answered  %}
+                          <option>{{ save_size }}</option>
+                          {% endif %} 
+                          <option>2</option>
+                          <option>5</option>
+                          <option>10</option>
+                          <option>15</option>  
+                          <option>20</option>
+                            </select>
+                      </div>
+
+            <div class="col-md-2">
+             <label for="metadata">Quality Control</label>
+              <select class="custom-select" name="qc_times">
+              {% if  answered  %}
+              <option>{{ save_qc }}</option>
+              {% endif %}
+                <option>0 - None</option>
+                <option>1 - Good</option>
+                <option>2 - Probably good</option>  
+                <option>3 - Probably bad</option> 
+                <option>4 - Bad</option> 
+            </select>
+          </div> 
+        </div>
+                         <!-- <a href="map.html" target="_app">Open page in new window</a>. -->
+<!--                          <a href="#" onClick="MyWindow=window.open('http://41.229.139.78:8000/popup_map.html','MyWindow','width=600,height=300'); return false;">Click Here</a> -->
+
+
+
+  
+           <hr> 
+           <div class="container"> 
+              <div class="col-md-48">
+                  <button type="submit" class="btn btn-primary float-right" style="width: 150px">Plot</button>
+              </div>
+          </div>
+
+          </div>
+        </div>
+            </form>
+                  </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+</div>
+         
+   
+<!-- map picker -->
+            <!-- <div class="row"> -->
+              <div class="col-md-48">
+<!--                 <button  class="btn btn-primary" onclick="document.getElementById('cm-popup').style.display='block'">Position picker</button> -->
+
+                <!-- this is the good part -->
+
+
+                 <!-- <div id="map" style="height : 200px"></div> -->
+
+
+<div id="map"></div>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script>
+      function addMapPicker() {
+        var mapCenter = [36,10];
+    var map = L.map('map', {center : mapCenter, zoom : 4});
+
+
+    // L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+    //     maxZoom: 18,
+    //     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+    //     '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+    //     'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    //     id: 'examples.map-i875mjb7',
+    //     noWrap : true
+    // }).addTo(map);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        }).addTo(map);
+
+          var Goulette_Genova = [
+
+          {% for q in qs_genova %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Chl_a":{{ q.Chl_a }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+    ]; 
+
+    L.geoJson(Goulette_Genova, {
+        style: function (feature) {
+            return {
+             "opacity": 1,
+            }}
+    }).addTo(map);
+
+
+
+
+
+         var Goulette_Marseille = [
+
+          {% for q in qs_marseille %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Chl_a":{{ q.Chl_a }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+    ]; 
+
+    L.geoJson(Goulette_Marseille, {
+        style: function (feature) {
+            return {
+             "opacity": 1,
+            }}
+    }).addTo(map);
+
+
+
+    
+    var marker = L.marker(mapCenter).addTo(map);
+    var updateMarker = function(lat, lng) {
+        marker
+            .setLatLng([lat, lng])
+            .bindPopup( marker.getLatLng().toString())
+            .openPopup();
+        return false;
+    };
+    map.on('click', function(e) {
+        $('#latInput').val(e.latlng.lat);
+        $('#lngInput').val(e.latlng.lng);
+        updateMarker(e.latlng.lat, e.latlng.lng);
+        });
+        
+        var updateMarkerByInputs = function() {
+      return updateMarker( $('#latInput').val() , $('#lngInput').val());
+    }
+    $('#latInput').on('input', updateMarkerByInputs);
+    $('#lngInput').on('input', updateMarkerByInputs);
+      }
+      
+  $(document).ready(function() {
+      addMapPicker();
+  });
+    </script>
+
+
+
+
+
+
+
+
+    <style>
+    input {
+        margin-bottom : 2px;
+    }
+    #map {
+        /*width : 600px;*/
+        height : 300px;
+    }
+    </style>
+
+ <!-- end of the good part -->
+               <!-- Pop up window -->
+
+                     <!-- Hide button -->
+<!--                       <button type="submit" class="btn btn-primary" onclick="document.getElementById('cm-popup').style.display='none'">Apply</button>
+ -->
+                </div>
+              </div>
+            </div>
+<!-- end of map picker -->
+
+
+<!-- add a row -->
+
+<div class="row">
+  <hr>
+  </div>
+
+<div class="border" id="container8" style="height:500px;" >
+  <div class="col-md-48">
+   <!-- Chartjs libraries -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    
+    <script>
+      _categories = {{categories|safe}};
+      _values = {{values|safe}}; 
+      _min_values={{min_graph|safe}};
+      _max_values={{max_graph|safe}}; 
+      
+      
+      Highcharts.chart('container8', {
+    chart: {
+              type: 'line'
+    },
+     exporting: {
+    enabled: {{ down }} 
+  },
+    title: {
+              text: ' '
+    },
+    subtitle: {
+              text:'{{ title_graph }}'
+    },
+    xAxis: {
+              categories:_categories,
+              crosshair: true,
+    },
+    yAxis: {
+              
+              title: {
+      text: '{{ param_name }}'
+              }
+    },
+    tooltip: {
+              headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+              pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+      '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
+              footerFormat: '</table>',
+              shared: true,
+              useHTML: true
+    },
+    plotOptions: {
+              column: {
+      pointPadding: 0.2,
+      borderWidth: 0
+        }
+    },
+          area: {
+          fillColor: {
+            linearGradient: {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 1
+            },
+              marker: {
+          radius: 2
+            },
+     },
+     },
+    series: [{
+              name: 'Average ',
+              data: _values
+        
+    },{
+              name: 'Maximum',
+              data: _max_values
+        
+    },{
+              name: 'Minimum',
+              data: _min_values
+        
+    },]
+      });
+      </script>
+
+<br>
+</div>
+
+<!-- main content -->
+
+ 
+
+   <!-- end of page content section -->
+    <script src='/static/assets/js/script.js'></script>                
+
+    
+{% endblock content %}
+
+  {% include 'includes/scripts.html' %}
+
+  {% include 'includes/scripts-sidebar.html' %}
+  
+  <!-- Specific Page JS goes HERE  -->
+  {% block javascripts %}{% endblock javascripts %}
+
+

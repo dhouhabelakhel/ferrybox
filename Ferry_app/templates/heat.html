@@ -1,0 +1,152 @@
+
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Page Blank {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}                                <!-- Choose the type of graph -->
+
+
+<!-- This is the new navbar ( pretty one) , it's calling other sections using the href items, save the names and try this new architechture.. -->
+    <div class="row">
+      <div class="col-lg-12 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-tabs card-header-primary">
+            <div class="nav-tabs-navigation">
+              <div class="nav-tabs-wrapper">
+                <span class="nav-tabs-title">Graphs:</span>
+                <ul class="nav nav-tabs" data-tabs="tabs">
+                  <li class="nav-item">
+                    <a class="nav-link" href="transect_plotting.html">
+                      <i class="material-icons"></i> Transect
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="map.html">
+                      <i class="material-icons"></i> Map
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="time_series.html">
+                      <i class="material-icons"></i> Time series
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="scatter.html">
+                      <i class="material-icons"></i> Scatter
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#heat" data-toggle="tab">
+                      <i class="material-icons"></i> Heat
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+<!-- These are the navbars called items ( the different graphs forms ) -->
+
+          <div class="card-body">
+            <div class="tab-content">
+              <!-- this div is just replacing the tab pane part -->
+              <div class="tab-pane active" id="transect">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+            <form method="GET" action=".">
+              {% csrf_token %}
+
+              <div class="row">
+
+
+                 <div class="col-md-5">
+        <!-- the buttons group starts here-->        
+            <label for="metadata">Transect reference</label>
+            <select id="path_selection"  class="custom-select" name="transect_selection_heat">
+              {% for trans in av_transects %}
+              <option value="{{ trans }}">{{ trans }}</option>
+              {% endfor %}
+            </select>
+                </div>
+
+
+            <div class="col-md-3">
+
+            <label for="parameter">Parameter</label>
+            <select id="path_selection"  class="custom-select" name="parameter_selection_heat">
+                <option>Salinity_SBE45</option>
+                <option>Temp_in_SBE38</option>
+                <option>Oxygen</option>
+                <option>Turbidity</option>  
+                <option>Chl_a</option>
+            </select>
+                </div>
+
+
+                <div class="col-md-2">
+                     <label for="metadata">Quality Control</label>
+                      <select class="custom-select" name="qc_param_heat">
+                        <option>0</option>
+                        <option>1</option>
+                        <option>2</option>  
+                        <option>3</option> 
+                        <option>4</option> 
+                    </select>
+                  </div>
+
+
+
+                </div>
+            </div>   
+           <hr> 
+        <button type="submit" class="btn btn-primary" style="width: 130px;right: -860px; ">Plot</button>
+
+          </div>
+        </div>
+            </form>
+                  </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+</div>
+
+<div class="border" id="container8" style="position:relative; width: 1000px; height:500px;">
+
+
+
+
+
+</div>
+</div></div></div></div>
+
+
+
+<br>
+
+
+
+<!-- main content -->
+
+ 
+
+   <!-- end of page content section -->
+                    
+
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+
+

@@ -1,0 +1,213 @@
+{% load leaflet_tags %}
+{% load static %}
+
+{% leaflet_js %}
+{% leaflet_css %}
+<style type="text/css">
+  .info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+</style>
+
+<script type="text/javascript" id="container8" >
+
+
+      window.addEventListener("map:init", function (event) {
+        var map = event.detail.map;
+        // Download GeoJSON data with Ajax
+
+
+  
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+            maxZoom: 13
+        }).addTo(map);
+
+          var Goulette_Genova = [
+  {% for q in queryset %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Salinity_SBE45":{{ q.Salinity_SBE45 }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+
+    ];
+
+
+     function showData (feature, layer) {
+        layer.bindPopup(
+            '<p><b>Salinity_SBE45 : </b>' +
+             + feature.properties.Salinity_SBE45 + '    PSU' + '</p>' +
+             '<b>LatLng ( </b>' + feature.properties.Latitude + ' ,  ' +feature.properties.Longitude + ')' )
+        ;
+    }
+
+
+
+    L.geoJson(Goulette_Genova, {
+        style: function (feature) {
+            return {
+            "color": getColor_salinity(feature.properties.Salinity_SBE45),
+             "opacity": 1,
+            }},
+        onEachFeature: showData,
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 4,
+                color: "red"
+            })
+        },
+    }).addTo(map);
+
+    function getColor_salinity(x) {
+      return x < 36.7     ?   '#0007A7':
+             x < 36.8     ?   '#0019CA':
+             x < 36.9     ?   '#0035E6':
+             x < 37       ?   '#0058F8':
+             x < 37.1     ?   '#0180FF':
+             x < 37.2     ?   '#07A7F8':
+             x < 37.3     ?   '#19CAE6': 
+             x < 37.4     ?   '#35E6CA':
+             x < 37.5     ?   '#58F8A7':
+             x < 37.6     ?   '#80FF7F':
+             x < 37.7     ?   '#A7F858':
+             x < 37.8     ?   '#CAE635':                                                                
+             x < 37.9     ?   '#F8A707':
+             x < 38       ?   '#E6CA19':
+             x < 38.1     ?   '#F8A707':
+             x < 38.2     ?   '#FF8001':
+             x < 38.3     ?   '#FF4F00':
+                              '#BF0000' ;
+    };
+
+// add the title
+
+
+function highlightFeature(e) {
+    var layer = e.target;
+    info.update(layer.feature.properties);
+}
+
+function resetHighlight(e) {
+    
+    info.update();
+}
+
+var info = L.control();
+
+info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); 
+    this.update();
+    return this._div;
+};
+
+info.update = function (props) {
+    this._div.innerHTML = '<h5>Trip details</h5>' +  
+    (props ? '<b>' + props.Chl_a + '</b>' + props.Longitude + ' people / mi<sup>2</sup>': '<b>Trip ref</b> : {{ trip }}')+
+    '<br><b>Transect</b> : {{ transect }}'+
+    '<br><b>Date</b> : {{ date }}'+
+    '<br><b>Parameter</b> : Salinity_SBE45'+
+    '<br><b>Quality</b> : {{ quality }}';
+};
+
+info.addTo(map);
+
+
+// legend part
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [36.7,36.8,37,37.1,37.2,37.4,37.6,37.9,38,38.1,38.3],
+        labels = [];
+
+        div.innerHTML +='<h5>Legend (PSU)</h5>';
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor_salinity(grades[i] + 0.1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+
+
+
+    //other options to controle the map
+
+    // info.update = function (props) {
+    // this._div.innerHTML = '<img src="http://www.dailyfocus.net/wp-content/uploads/2014/05/Logo-Terna.jpg" alt="Smiley face" height="58" width="120">';
+    // };
+
+    var punti = L.geoJson(nidi_pt, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+    }
+    });
+
+    punti.addTo(map);
+
+    info.addTo(map);
+
+    var hash = new L.Hash(map);
+    var zoomHome = L.Control.zoomHome({position: 'topleft'});
+    zoomHome.addTo(map);
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 0.2,
+        fillOpacity: 0.2
+    };
+
+          });
+     
+    </script>
+
+
+

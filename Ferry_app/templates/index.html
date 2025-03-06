@@ -1,0 +1,1045 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+{% load static %} 
+
+{% block content %}
+
+
+<!-- add graphs and data description here -->
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/wordcloud.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/modules/wordcloud.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/timeline.js"></script>
+
+
+<h2>Tunisian FerryBox project presentation</h2>
+
+<p>Project timeline, goals, scheme, database and devices description, and more</p>
+
+<br>
+<div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-header card-header-info"  style="color:#427CDD;">
+            <!-- <div class="ct-chart" id="dailySalesChart"></div> -->
+          </div>
+          <div class="card-body" href="index.html">
+            <h4 class="card-title" href="index.html">Visualize FerryBox Marine data</h4>
+            <p class="card-category">
+              <span class="text-success"><i class="fa fa-long-arrow-up"></i> {{ nbr_files }} </span> recieved files.</p>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> updated 1 day ago
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-header card-header-success" style="color:#3E5A8E;">
+            <!-- <div class="ct-chart" id="websiteViewsChart"></div> -->
+          </div>
+          <div class="card-body">
+            <h4 class="card-title">Test data seasonality</h4>
+            <p class="card-category">Data repartition per month</p>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> All data included
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-header card-header-primary">
+            <!-- <div class="ct-chart" id="completedTasksChart"></div> -->
+          </div>
+          <div class="card-body">
+            <h4 class="card-title">Asses data quality</h4>
+            <p class="card-category">% of truncated vs correct files</p>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Only correct files are accessible
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- <div class="container"> -->
+<!-- deshow : 3 photos with captions ( 2 sec display) --> 
+
+
+
+
+<!-- 
+
+<div class="slideshow-container">
+
+<div class="mySlides fade">
+  <div class="numbertext">1 / 3</div>
+  <img src="/static/assets/images/bg_headers_the_one.jpg" style="width:100%">
+  <div class="text">Tunisian FerryBox Project</div>
+</div>
+
+<div class="mySlides fade">
+  <div class="numbertext">2 / 3</div>
+  <img src="/static/assets/images/one.jpg" style="width:100%">
+  <div class="text">Tunisian FerryBox Project</div>
+</div>
+
+<div class="mySlides fade">
+  <div class="numbertext">3 / 3</div>
+  <img src="/static/assets/images/ferry_7_.png" style="width:100%">
+  <div class="text">Tunisian FerryBox Project</div>
+</div>
+
+<a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+<a class="next" onclick="plusSlides(1)">&#10095;</a>
+
+</div>
+<br>
+
+<div style="text-align:center">
+  <span class="dot" ></span> 
+  <span class="dot" ></span> 
+  <span class="dot" ></span> 
+</div> -->
+
+
+<!-- slideshow ends here -->
+<hr>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="C:/Users/tunfe/Desktop/Ferry_app/static/js/jQuery.headroom.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="C:/Users/tunfe/Desktop/Ferry_app/static/js/bootstrap-hover-dropdown.min.js"></script>
+    <script src="C:/Users/tunfe/Desktop/Ferry_app/static/js/headroom.min.js"></script>
+    <script src="C:/Users/tunfe/Desktop/Ferry_app/static/js/template.js"></script>
+
+
+
+
+
+
+
+<br>
+
+<div class="container">
+  <div calss="row">
+<div class="col-md-24">
+
+
+  <div class="mySlides">
+    <div class="numbertext">1 / 6</div>
+        <!-- try adding the text on block -->
+    <div class="container">
+      <img src="/static/assets/images/bg_headers_the_one.jpg" style="width:100%">
+  <div class="text-block" style="  position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    background-color: black;
+                                    color: white;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    opacity: 0.7;">
+    <h3>FerryBox</h3>
+    <!-- ur phrase should reach this point ......................................................................... -->
+    <p>Applying innovative technologies in service of surface marine data collecting, storage, treatment and exploitation</p>
+  </div>
+</div>
+<!-- block text ends here -->
+    
+  </div>
+
+  <div class="mySlides">
+    <div class="numbertext">2 / 6</div>
+        <!-- try adding the text on block -->
+    <div class="container">
+      <img src="/static/assets/images/ferry_12.jpg" style="width:100%">
+  <div class="text-block" style="  position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    background-color: black;
+                                    color: white;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    opacity: 0.7;">
+    <h3>FerryBox</h3>
+    <!-- ur phrase should reach this point ......................................................................... -->
+    <p>Applying innovative technologies in service of surface marine data collecting, storage, treatment and exploitation</p>
+  </div>
+</div>
+<!-- block text ends here -->
+    
+  </div>
+
+  <div class="mySlides">
+    <div class="numbertext">3 / 6</div>
+    <!-- try adding the text on block -->
+    <div class="container">
+      <img src="/static/assets/images/ferry_7_.png" style="width:100%">
+  <div class="text-block" style="  position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    background-color: black;
+                                    color: white;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    opacity: 0.7;">
+    <h3>FerryBox</h3>
+    <!-- ur phrase should reach this point ......................................................................... -->
+    <p>Applying innovative technologies in service of surface marine data collecting, storage, treatment and exploitation</p>
+  </div>
+</div>
+<!-- block text ends here -->
+    
+  </div>
+    
+  <div class="mySlides">
+    <div class="numbertext">4 / 6</div>
+        <!-- try adding the text on block -->
+    <div class="container">
+     <img src="/static/assets/images/ferry_13.jpg" style="width:100%">
+  <div class="text-block" style="  position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    background-color: black;
+                                    color: white;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    opacity: 0.7;">
+    <h3>FerryBox</h3>
+    <!-- ur phrase should reach this point ......................................................................... -->
+    <p>Applying innovative technologies in service of surface marine data collecting, storage, treatment and exploitation</p>
+  </div>
+</div>
+<!-- block text ends here -->
+    
+    
+  </div>
+
+  <div class="mySlides">
+    <div class="numbertext">5 / 6</div>
+        <!-- try adding the text on block -->
+    <div class="container">
+     <img src="/static/assets/images/one.jpg" style="width:100%">
+  <div class="text-block" style="  position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    background-color: black;
+                                    color: white;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    opacity: 0.7;">
+    <h3>FerryBox</h3>
+    <!-- ur phrase should reach this point ......................................................................... -->
+    <p>Applying innovative technologies in service of surface marine data collecting, storage, treatment and exploitation</p>
+  </div>
+</div>
+<!-- block text ends here -->
+    
+    
+  </div>
+    
+  <div class="mySlides">
+    <div class="numbertext">6 / 6</div>
+        <!-- try adding the text on block -->
+    <div class="container">
+      <img src="/static/assets/images/ferry_14.jpg" style="width:100%">
+  <div class="text-block" style="  position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    background-color: black;
+                                    color: white;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    opacity: 0.7;">
+    <h3>FerryBox</h3>
+    <!-- ur phrase should reach this point ......................................................................... -->
+    <p>Applying innovative technologies in service of surface marine data collecting, storage, treatment and exploitation</p>
+  </div>
+</div>
+<!-- block text ends here -->
+    
+    
+  </div>
+    
+  <a class="prev" onclick="plusSlides(-1)">❮</a>
+  <a class="next" style="right: 16px;"  onclick="plusSlides(1)">❯</a>
+
+
+
+</div>
+</div>
+</div>
+</div>
+
+<br>
+
+<hr>
+
+<!-- the images start here -->
+
+
+<!-- style is inserted in base.html part -->
+<!-- <div class="container">
+  <img src="/static/assets/img/table.png" alt="Notebook" style="width:100%;">
+  <div class="content">
+    <h1>Heading</h1>
+    <p>Lorem ipsum dolor sit amet, an his etiam torquatos. Tollit soleat phaedrum te duo, eum cu recteque expetendis neglegentur. Cu mentitum maiestatis persequeris pro, pri ponderum tractatos ei.</p>
+  </div>
+</div> -->
+
+<!-- </div> -->
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-12 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-tabs card-header-info">
+            <div class="nav-tabs-navigation">
+              <div class="nav-tabs-wrapper">
+                <span class="nav-tabs-title">Presentation:</span>
+                <ul class="nav nav-tabs" data-tabs="tabs">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#profile" data-toggle="tab">
+                      <i class="material-icons"></i> Project
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#transects" data-toggle="tab">
+                      <i class="material-icons"></i> Transects
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#messages" data-toggle="tab">
+                      <i class="material-icons"></i> Devices
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#settings" data-toggle="tab">
+                      <i class="material-icons"></i> Statistics
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <!-- u have to add these two parts -->
+                  <li class="nav-item">
+                    <a class="nav-link" href="#metadata" data-toggle="tab">
+                      <i class="material-icons"></i> Metadata
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#treatments" data-toggle="tab">
+                      <i class="material-icons"></i> Pretreatments
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#quality" data-toggle="tab">
+                      <i class="material-icons"></i> Quality control
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#graphics" data-toggle="tab">
+                      <i class="material-icons"></i> Graphics
+                      <div class="ripple-container"></div>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="tab-content">
+              <div class="tab-pane active" id="profile">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+<!-- 
+
+
+put ur content here
+
+
+
+
+ -->
+
+  <div class="row">
+
+      <div class="card-group vgr-cards">
+
+    <div class="card">
+
+      <div class="card-body">
+
+<p class="card-text">The Tunisian FerryBox project is an initiative that’s targeting water masse tracking and measuring. It is materialized by a set of sensors that are implemented in Carthage ferry, at 5 meters depth. It is measuring, for each minute of the ferry’s trip, several parameters (Temperature, Salinity, Dissolved oxygen, Turbidity, pH…)
+The first launch of FerryBox data collecting campaigns was on 2016. The growing database offers several interesting scientific possibilities: 
+<li>  Statistical studies </li>
+<li>  Comparison with satellite data </li>
+<li>  Insight into the Mediterranean marine dynamics... </li>
+<br>
+Currently, The Tunisian FerryBox is involved in the CLAIM EU 2020 project. </p>
+
+<p class="card-text">The Tunisian FerryBox device is a measuring device tracking water masses properties and dynamics. 
+    The device is fixed at 5 meter depth, in Carthage ferry. It has a sampling frequency of 1 minute, and measures, for each sample :             
+    <li> Temperature</li>
+    <li> Salinity</li>
+    <li> Dissolved oxygen</li>
+    <li> Turbidity</li>
+    <li> pH..</li>
+    <br>
+    Below is the timeline of the FerryBox project main events and ameliorations:
+</p>
+
+     </div>
+
+       <div class="card-body">
+        <div id="container8" style="height: 400px; width: 980px"></div>
+
+        <script type="text/javascript">
+  
+  Highcharts.chart('container8', {
+    chart: {
+        type: 'timeline'
+    },
+    accessibility: {
+        screenReaderSection: {
+            beforeChartFormat: '<h5>{chartTitle}</h5>' +
+                '<div>{typeDescription}</div>' +
+                '<div>{chartSubtitle}</div>' +
+                '<div>{chartLongdesc}</div>' +
+                '<div>{viewTableButton}</div>'
+        },
+        point: {
+            valueDescriptionFormat: '{index}. {point.label}. {point.description}.'
+        }
+    },
+    xAxis: {
+        visible: false
+    },
+    yAxis: {
+        visible: false
+    },
+    title: {
+        text: 'Timeline of the Tunisian FerryBox implementation'
+    },
+    subtitle: {
+        text: 'Innovative technology applied since 2016'
+    },
+    colors: [
+        '#4185F3',
+        '#427CDD',
+        '#406AB2',
+        '#3E5A8E',
+        '#3B4A68',
+        '#363C46'
+    ],
+    series: [{
+        data: [{
+            name: 'Implementation',
+            label: '2016: Carthage Ferry',
+            description: '( Februray 2016 )'
+        }, {
+            name: 'New sensors',
+            label: '2016: Cytosens / pCO2',
+            description: 'CHROM project : December to January'
+        }, {
+            name: 'Calibration campaign',
+            label: 'October 2016',
+            description: ''
+        }, {
+            name: 'New device',
+            label: '2019: Auto-sampler',
+            description: ''
+        }, {
+            name: 'New device ',
+            label: '2020: Microplastics filter',
+            description: ''
+        }, ]
+    }]
+});
+</script>
+</div>
+</div></div>
+
+
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+
+              <div class="tab-pane" id="transects">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+  <div class="row">
+
+      <div class="card-group vgr-cards">
+
+    <div class="card">
+
+      <div class="card-body">
+
+<p class="card-text">Write something here</p>
+
+
+     </div>
+<center>
+
+<img src="/static/assets/images/paths.PNG" style="width:80%" alt="Italian Trulli">
+
+</center>
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+
+
+
+
+
+              <div class="tab-pane" id="messages">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+<!-- 
+
+
+put ur content here
+
+
+
+
+ -->
+
+<div class="row">
+  <div class="col-sm-4">
+    <div class="card">
+      <img src="/static/assets/devices/Seapoint_Turbidity_Meter.png" alt="Jane" style="width:50%">
+      <div class="container">
+        <h3>Seapoint Turbidity Meter</h3>
+       <br><br><br>
+        <p>The Seapoint Turbidity Meter detects light scatterd by particles suspended in water, generating an output voltage proportional to turbidity or suspended solids.</p>
+        <br><br>
+        <p class="text-center"><a href="http://www.seapoint.com/stm.htm" class="btn btn-default">Learn more</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-4">
+    <div class="card">
+      <img src="/static/assets/devices/SBE38_Digital_Oceanographic_Thermometer.png" alt="Mike" style="width:50%">
+       <br>
+      <div class="container">
+        <h3>SBE38 Digital Oceanographic Thermometer</h3>
+                 <br>     
+        <p>The SBE 38 is frequently integrated as a remote temperature sensor with an SBE 21 Thermosalinograph or SBE 45 MicroTSG, to provide accurate sea surface temperature.</p>
+     <br>
+        <p class="text-center"><a href="https://www.seabird.com/moving-platform/sbe-38-digital-oceanographic-thermometer/family?productCategoryId=54627473791" class="btn btn-default">Learn more</a></p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-sm-4">
+    <div class="card">
+      <img src="/static/assets/devices/AADI_Oxygen_optode.png" alt="John" style="width:50%">
+      <div class="container">
+        <h3>AADI Oxygen optode</h3>
+              <br><br>
+        <p>The Oxygen optode is designed to measure absolute oxygen concentration and % saturation. The optode can be used from streams to deep sea, from fish farms to waste water and from polar ice areas to hydrothermal vents.</p>
+                <br>         
+           <p class="text-center"><a href="https://www.aanderaa.com/productsdetail.php?Oxygen-Optodes-2" class="btn btn-default">Learn more</a></p>
+      </div>
+    </div>
+  </div>
+
+    <hr>
+
+    <!-- services section 1 -->
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="card">
+                        <img src="/static/assets/devices/SBE45_MicroTSG_Thermosalinograph.png" alt="Mike" style="width:30%">
+                        <br><br>
+                <!-- <div class="col-sm-6"> -->
+                    <!-- <div class="panel panel-box"> -->
+                        <!-- <div class="panel-thumbnail"><img src="{% static 'devices/' %}" class="img-responsive" style="width:50%"></div> -->
+                        <div class="container">
+                            <h3>SBE45 MicroTSG Thermosalinograph</h3>
+                            <p>The externally powered SBE 45, typically mounted near the ship’s seawater intake, accurately determines sea surface temperature and conductivity from underway vessels. Measured data and derived variables (salinity, sound velocity) are output in real-time in engineering units.
+                            </p>
+                          <br><br><br>
+                            <p class="text-center"><a href="https://www.seabird.com/sbe45-microtsg-thermosalinograph/product?id=54627900541" class="btn btn-default">Learn more</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                  <div class="card">
+                    <br>
+                    <img src="/static/assets/devices/Seapoint_Chlorophyll-a.png" alt="Mike" style="width:30%">
+                    <!-- <div class="panel panel-box"> -->
+                        <!-- <div class="panel-thumbnail"><img src="{% static 'devices/' %}" class="img-responsive" style="width:50%"></div> -->
+                        <br>
+                        <div class="container">
+                            <h3>Seapoint Chlorophyll-a </h3>
+                            <p>The Seapoint Chlorophyll Fluorometer (SCF) is a high-performance, low power instrument for in situ measurements of chlorophyll. Its small size, very low power consumption, high sensitivity, wide dynamic range, 6000 meter depth capability, and open or pump-through sample volume options provide the power and flexibility to measure chlorophyll in a wide variety of conditions.</p>
+                          <br>
+                            <p class="text-center"><a href="http://www.seapoint.com/scf.htm" class="btn btn-default">Learn more</a></p>
+                        </div>
+                    </div>
+                </div>
+
+    <!-- </section> -->
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="tab-pane" id="settings">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+<!-- 
+
+
+put ur content here
+
+
+
+
+ -->
+
+ 
+  <div class="row">
+
+
+  <div class="card-group vgr-cards">
+       
+    <div class="card">
+      <div class="card-img-body">
+        <br>
+
+<figure class="highcharts-figure">
+    <div id="container6" style="height: 500px; width: 500px"></div>
+</figure>
+
+<script type="text/javascript">
+
+      Highcharts.setOptions({
+    colors: ['#1A658F', '#01ADDD',]
+            });
+
+   Highcharts.chart('container6', {
+
+    title: {
+        text: 'Data seasonality'
+    },
+    xAxis: {
+        categories: ['Tunis‐Genova', 'Tunis‐Marseille'],
+    },
+    labels: {
+        items: [{
+            html: 'Total number of files',
+            style: {
+                left: '280px',
+                top: '60px',
+                color: ( // theme
+                    Highcharts.defaultOptions.title.style &&
+                    Highcharts.defaultOptions.title.style.color
+                ) || 'black'
+            }
+        }]
+    },
+    series: [{
+        type: 'column',
+        name: 'Summer',
+        color: Highcharts.getOptions().colors[0],
+        data: [120,49]
+    }, {
+        type: 'column',
+        name: 'Winter',
+        color: Highcharts.getOptions().colors[1],
+        data: [79,87]
+    },  {
+        type: 'spline',
+        name: 'Average',
+        data: [99.5, 65.5],
+        marker: {
+            lineWidth: 2,
+            lineColor: Highcharts.getOptions().colors[0],
+            fillColor: 'white'
+        }
+    }, {
+        type: 'pie',
+        name: 'Total number of files ',
+        data: [{
+            name: 'Tunis‐Genova',
+            y: 199,
+            color: Highcharts.getOptions().colors[0] // Jane's color
+        }, {
+            name: 'Tunis‐Marseille',
+            y: 131,
+            color: Highcharts.getOptions().colors[1] // John's color
+        }],
+        center: [320, -10],
+        size: 100,
+        showInLegend: false,
+        dataLabels: {
+            enabled: false
+        }
+    }]
+});
+
+</script>
+      </div>
+
+
+      <div class="card-body">
+        <p class="card-text">Carthage is a Tunisian ferry of opportunity that makes regular trips between : Tunis - Genova and Tunis - Marseille. Back and forth. 
+            <p>These trips are more frequent in summer season, thus, The research team in INSTM are recieving more data in this period of the year. </p>
+        The graph above is showing statistics about the FerryBox data seasonality.</p>
+      </div>
+    </div>
+
+   <span></span> 
+
+    <div class="card">
+
+      <div class="card-body" >
+        
+        <p class="card-text">The Tunisian FerryBox device is sending data, via ComBox, to the research center, each time it detects one of the assigned ports ( Tunis, Genova, Marseille). ie. at the end of each trip.
+        <p>However, it is observed that some recieved files are truncated, incomplete or errored. These are generally sent along with an errorlog file that details the origin of the technical problem that caused the error. </p>
+        <p>This FerryBox Dashboard is presenting only the correct portion of the marine data. </p>
+        Some of the application users may be interested in more insight into the full database state. Hence, the statistics presented below: </p>
+
+      </div>
+
+       <div class="card-body">
+        <div id="container2" style="height: 400px; width: 480px"></div>
+
+        <script type="text/javascript">
+    Highcharts.setOptions({
+    colors: [ '#1A658F', '#01ADDD', ] });
+           
+
+  
+  Highcharts.chart('container2', {
+    chart: {
+        type: 'bar'
+    },
+    title: {
+        text: 'Exploitable database'
+    },
+
+    xAxis: {
+        categories: ['Tunis‐Genova', 'Tunis‐Marseille'],
+        title: {
+            text: null
+        }
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Number of FerryBox trips',
+            
+        },
+        labels: {
+            overflow: 'justify'
+        }
+    },
+    tooltip: {
+        valueSuffix: ' files'
+    },
+    plotOptions: {
+        bar: {
+            dataLabels: {
+                enabled: true
+            }
+        }
+    },
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'top',
+        x: -5,
+        y: 280,
+        floating: true,
+        borderWidth: 1,
+        backgroundColor:
+            Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+        shadow: true
+    },
+    credits: {
+        enabled: false
+    },
+
+   series: [{
+        name: 'Correct files',
+        // backgroundColor: Highcharts.getOptions().colors[6],
+        data: [199, 185]
+    }, {
+        name: 'Truncated files',
+        // Color: Highcharts.getOptions().colors[5],
+        data: [131, 117]
+    
+    }]
+});
+</script>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="tab-pane" id="metadata">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+                        <!-- put ur content here -->
+  <div class="row">
+
+      <div class="card-group vgr-cards">
+
+    <div class="card">
+
+      <div class="card-body">
+        <p class="card-text">The metadata table is produced automatically at every refreshment process. In fact, The FerryBox team are developing a full application that reproduces, periodically, the same pre-treatments and quality control, for every received file. The database is, then, stocked in the web server that hosts the dynamic web application. 
+        Metadata table is stocking the following information:             
+            <li> Path reference</li>
+            <li> Date</li>
+            <li> Departure</li>
+            <li> Destination</li>
+            <li> Start time </li>
+            <li> End time</li>
+            <li> Trip duration</li> 
+            <li> Distance</li>  
+            <li> File's size</li> 
+            <li> Number of lines</li> 
+            
+</p>
+      </div>
+<center>
+<!-- <img src="/static/assets/quality/qc.PNG" style="width:70%" alt="Italian Trulli"> -->
+<img src="/static/assets/images/file.PNG" style="width:80%" alt="Italian Trulli">
+
+
+
+</center>
+
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="tab-pane" id="treatments">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+                        <!-- put ur content here -->
+  <div class="row">
+
+      <div class="card-group vgr-cards">
+
+    <div class="card">
+
+      <div class="card-body">
+        <p class="card-text">Write something here
+            
+</p>
+      </div>
+<center>
+<img src="/static/assets/images/file_pre.png" style="width:100%" alt="Italian Trulli"><br>
+
+</center>
+
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="tab-pane" id="quality">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+                        <!-- put ur content here -->
+
+  <div class="row">
+
+      <div class="card-group vgr-cards">
+
+    <div class="card">
+
+      <div class="card-body">
+        <div><p class="card-text">Data quality control has the following objective: <br><br>
+
+<cite> <center>“To ensure the data consistency within a single data set and within a collection of data sets and to ensure that the quality and errors of the data are apparent to the user who has sufficient information to assess its suitability for a task.”
+
+(IOC/CEC Manual, 1993) </center></cite>
+<br><br>
+
+FerryBox datasets are respecting SeaDataNet quality control normalizations. 
+<br><br>
+<center>
+<img src="/static/assets/quality/qc.PNG" style="width:70%" alt="Italian Trulli"></center>
+<br><br>
+
+<b>NB:</b> <b>SeaDataNet</b> is a European Infrastructure (DG-Research – FP6) project which is developing and operating a Pan-European infrastructure for managing, indexing and providing access to ocean and marine environmental data sets and data products and for safeguarding the long term archival and stewardship of these data sets. Data are derived from many different sensors installed on research vessels, satellites and InSite platforms that are part of various ocean and marine observing systems.
+</p>
+
+<p>Data can be considered ‘trustworthy’ after thorough processing methods have been carried out. At this stage they can be incorporated into databases or distributed to users via national or international exchange. </p>
+      </div>
+
+<center>
+<!-- <img src="/static/assets/quality/qc.PNG" style="width:70%" alt="Italian Trulli"> -->
+<img src="/static/assets/quality/qc_1.PNG" style="width:70%" alt="Italian Trulli">
+<img src="/static/assets/quality/qc_2.PNG"style="width:70%"  alt="Italian Trulli">
+<img src="/static/assets/quality/qc_3.PNG" style="width:70%" alt="Italian Trulli">
+</center>
+
+      </div>
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+
+
+              <div class="tab-pane" id="graphics">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+
+<center>
+<img src="/static/assets/graphics/map.PNG"style="width:100%"  alt="Italian Trulli">
+<img src="/static/assets/graphics/parameter.PNG"style="width:100%"  alt="Italian Trulli">
+<img src="/static/assets/graphics/scatter.PNG"style="width:100%"  alt="Italian Trulli">
+<img src="/static/assets/graphics/time.PNG"style="width:100%"  alt="Italian Trulli">
+
+</center>
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+
+
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+<!-- end of image -->
+
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      md.initDashboardPageCharts();
+
+    });
+
+
+    // sideshow script 
+      var slideIndex = 1;
+      showSlides(slideIndex);
+
+      function plusSlides(n) {
+        showSlides(slideIndex += n);
+      }
+
+      function currentSlide(n) {
+        showSlides(slideIndex = n);
+      }
+
+      function showSlides(n) {
+        var i;
+        var slides = document.getElementsByClassName("mySlides");
+        var dots = document.getElementsByClassName("demo");
+        var captionText = document.getElementById("caption");
+        if (n > slides.length) {slideIndex = 1}
+        if (n < 1) {slideIndex = slides.length}
+        for (i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        for (i = 0; i < dots.length; i++) {
+            dots[i].className = dots[i].className.replace(" active", "");
+        }
+        slides[slideIndex-1].style.display = "block";
+        dots[slideIndex-1].className += " active";
+        captionText.innerHTML = dots[slideIndex-1].alt;
+      }
+// sideshow script ends here
+
+  </script>
+
+{% endblock javascripts %}

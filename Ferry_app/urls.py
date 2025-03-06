@@ -1,0 +1,53 @@
+
+from django.contrib import admin
+from django.urls import path, include  # add this
+from django.conf.urls import url
+from django.views.generic import RedirectView
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
+from Ferry_plot import views
+from Ferry_plot.views import page_user_view
+
+
+app_name = "Ferry_plot"
+
+
+urlpatterns = [
+    path("", views.index, name="home"),  # Définit la page d'accueil
+    path("index/", views.index, name="index"),  # Permet d'accéder aussi via index.html
+    path("admin/", admin.site.urls),
+    path("", include("authentication.urls")),  # Change "" en "auth/" pour éviter le conflit
+    path("", include("Ferry_plot.urls")),  # Change "" en "ferry/" pour éviter le conflit
+    path("user/", views.page_user_view, name="datatest"),  # Change "" en "user/"
+]
+
+# #table download part
+# from Ferry_plot.views import PersonListView, PersonCreateView, PersonUpdateView
+
+
+# urlpatterns += [
+#     path('', PersonListView.as_view(), name='person_list'),
+#     path('add/', PersonCreateView.as_view(), name='person_add'),
+#     path('<int:pk>/edit/', PersonUpdateView.as_view(), name='person_edit'),
+# ]
+
+
+
+admin.site.site_header = "FerryBox administration"
+admin.site.site_title = "FerryBox Admin"
+admin.site.index_title = "Tunisian FerryBox database - Admin"
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+
+
+
+
+
+

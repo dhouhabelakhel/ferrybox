@@ -1,0 +1,152 @@
+{% load leaflet_tags %}
+{% load static %}
+
+{% leaflet_js %}
+{% leaflet_css %}
+
+
+
+<script type="text/javascript" id="container1" >
+
+
+      window.addEventListener("map:init", function (event) {
+        var map = event.detail.map;
+
+
+        // Download GeoJSON data with Ajax
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        }).addTo(map);
+
+
+        // add the gulfs
+
+                var Tunis = L.marker([36.794918,10.349404]).bindPopup('Gulf of Tunis'),
+                    Genova    = L.marker([43.286082,5.327058]).bindPopup('Gulf of Genova'),
+                    Marseille    = L.marker([44.360921,8.964116]).bindPopup('Gulf of Marseille');
+
+                var Gulfs = L.layerGroup([Tunis, Genova, Marseille]);
+
+
+                var overlayMaps = {
+                    "gulfs": Gulfs
+                };
+
+
+
+L.control.layers(overlayMaps).addTo(map);
+
+          var Goulette_Genova = [
+
+          {% for q in qs_genova %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Chl_a":{{ q.Chl_a }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+    ]; 
+
+    L.geoJson(Goulette_Genova, {
+        style: function (feature) {
+            return {
+             "opacity": 1,
+            }}
+    }).addTo(map);
+
+
+
+
+
+         var Goulette_Marseille = [
+
+          {% for q in qs_marseille %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Chl_a":{{ q.Chl_a }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+    ]; 
+
+    L.geoJson(Goulette_Marseille, {
+        style: function (feature) {
+            return {
+             "opacity": 1,
+            }}
+    }).addTo(map);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var punti = L.geoJson(nidi_pt, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+    }
+    });
+
+    punti.addTo(map);
+
+    info.addTo(map);
+
+    var hash = new L.Hash(map);
+    var zoomHome = L.Control.zoomHome({position: 'topleft'});
+    zoomHome.addTo(map);
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 0.2,
+        fillOpacity: 0.2
+    };
+
+          });
+     
+    </script>
+
+
+

@@ -1,0 +1,79 @@
+    <div class="sidebar" data-color="purple" data-background-color="white" data-image="/static/assets/img/sidebar_ferry.png">
+      <div class="logo">
+        <a href="" class="simple-text logo-normal">
+          FerryBox Dashboard 
+        </a>
+      </div>
+      {% if user.is_authenticated %}
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item {% if overview %} active {% endif %}">
+            <a class="nav-link" href="/index">
+              <i class="material-icons"></i>
+              <p>Data Overview</p>
+            </a>
+          </li>
+          <li class="nav-item {% if 'page-user' in segment %} active {% endif %}">
+            <a class="nav-link" href="/transect_plotting">
+              <i class="material-icons"></i>
+              <p>Data access</p>
+            </a>
+          </li>
+
+          {% if not_admin %}
+          <li class="nav-item {% if 'page-user' in segment %} active {% endif %}">
+            <a class="nav-link" href="/page-user.html">
+              <i class="material-icons"></i>
+              <p>Data download</p>
+            </a>
+          </li>
+          {% endif %}
+
+<!-- u need to figure out how to seperate the admin part -->
+
+          
+          {% if is_admin %}
+          <li class="nav-item {% if 'ui-notifications' in segment %} active {% endif %}">
+            <a class="nav-link" href="/ui-notifications.html">
+              <i class="material-icons"></i>
+              <p>Admin interface</p>
+            </a>
+          </li>   
+          {% endif %}    
+
+
+          <li class="nav-item ">
+            <a class="nav-link" href="{% url 'logout' %}" >
+              <i class="material-icons"></i>
+              <p>Logout</p>
+            </a>
+          </li>
+
+        </ul>
+      </div>
+      {% else %}
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+      <li class="nav-item {% if 'index' == segment %} active {% endif %}">
+        <a class="nav-link" href="index.html">
+          <i class="material-icons"></i>
+          <p>Data Overview</p>
+        </a>
+      </li>
+      <li class="nav-item {% if 'page-user' in segment %} active {% endif %}">
+        <a class="nav-link" href="/transect_plotting.html">
+          <i class="material-icons"></i>
+          <p>Data access</p>
+        </a>
+      </li>
+          <li class="nav-item {% if 'index' == segment %} active {% endif %}">
+            <a class="nav-link" href="login/">
+              <i class="material-icons"></i>
+              <p>Login</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+
+    </div>

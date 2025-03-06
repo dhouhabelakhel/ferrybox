@@ -1,0 +1,71 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Login {% endblock %}
+
+{% block content %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector("form");
+    const loginButton = document.querySelector("button[name='login']");
+
+    form.addEventListener("submit", function() {
+      loginButton.disabled = true;
+      loginButton.innerText = "Logging in...";
+    });
+  });
+</script>
+
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card" style="border: 2px solid #4a90e2;">
+      <div class="card-header text-center" style="background-color: #4a90e2; color: #ffffff;">
+        <h4 class="card-title">
+          Login to Your Account
+        </h4>
+      </div>
+      <div class="card-body">
+        <br />
+
+        <form role="form" method="post" action="">
+          {% csrf_token %}
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label class="bmd-label-floating" style="color: #1a73e8;">Username</label>
+                {{ form.username }}
+              </div>
+            </div>
+          </div>
+
+          <br />
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label class="bmd-label-floating" style="color: #1a73e8;">Password</label>
+                {{ form.password }}
+              </div>
+            </div>
+          </div>
+
+          <br />
+
+          <button type="submit" name="login" class="btn btn-primary" style="background-color: #1a73e8; border-color: #1a73e8;">Login</button>
+
+          <br />
+
+          <span class="text-center">
+            Don't have an account? <a href="{% url 'register' %}" class="text-primary" style="color: #4a90e2;">Create</a>
+          </span>
+
+          <div class="clearfix"></div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

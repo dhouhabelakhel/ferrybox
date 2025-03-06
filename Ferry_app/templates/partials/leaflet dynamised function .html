@@ -1,0 +1,21 @@
+  {% for q in qs %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Salinity_SBE45":{{ q.Salinity_SBE45 }}
+        }
+    },
+      {% endfor %} 

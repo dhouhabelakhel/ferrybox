@@ -1,0 +1,211 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} UI Notifications {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-warning card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="material-icons"></i> -->
+            </div>
+            <p class="card-category">Total Space</p>
+            <h3 class="card-title">{{ sum_size }}
+              <small>MO</small>
+            </h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons text-danger"></i>
+              <a>Estimation after pre-treatments</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-success card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="material-icons"></i> -->
+            </div>
+            <p class="card-category">Nbr of files</p>
+            <h3 class="card-title">{{ nbr_files }}</h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Last 24 Hours
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-danger card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="material-icons"></i> -->
+            </div>
+            <p class="card-category">Downloaded data</p>
+            <h3 class="card-title">-</h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Tracked from Web app
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-info card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="fa fa-twitter"></i> -->
+            </div>
+            <p class="card-category">Users</p>
+            <h3 class="card-title">+{{ nbr_users }}</h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Just Updated
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+<div class="row">
+      <div class="col-lg-12 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-tabs card-header-info">
+            <div class="nav-tabs-navigation">
+              <div class="nav-tabs-wrapper">
+                <span class="nav-tabs-title">Options:</span>
+                <ul class="nav nav-tabs" data-tabs="tabs">
+                  <li class="nav-item">
+                    <a class="nav-link " href="ui-notifications.html">
+                      <i class="material-icons"></i> Requests
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#download" data-toggle="tab">
+                      <i class="material-icons"></i> Download
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link " href="upload.html">
+                      <i class="material-icons"></i> Upload
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link " href="data_description.html">
+                      <i class="material-icons"></i> Data description
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="tab-content">
+
+<!-- second option starts here -->
+
+              <div class="tab-pane active" id="download">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="form-check">
+<!-- option content starts here -->
+                <div class="card-body">
+           
+                  <form>
+                    {% csrf_token %}
+                  
+                    
+
+                
+        <!-- the buttons group starts here-->        
+            <label for="metadata">Download FerryBox data</label>
+                       <hr> 
+                       <div class="row">
+                        <div class="col-md-8">
+            <select id="path_selection" multiple class="custom-select" name="transect_select_download">
+              {% for trans in metadata %}
+              <option >{{ trans.Name }}</option>
+              {% endfor %}
+            </select>
+                </div>
+
+                  
+                </div> 
+                 <hr>
+                  <button type="submit" class="btn btn-info btn-round">Download</button>
+
+                </form>
+
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+<!-- third option starts here -->
+
+
+
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+                        <!-- <button class="btn btn-primary btn-block" onclick="md.showNotification('top','right')">Top Right</button> -->
+<!--                       </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div> -->
+
+
+<!-- Specific Page JS goes HERE  -->
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      //init DateTimePickers
+      md.initFormExtendedDatetimepickers();
+    });
+  </script>
+  
+{% endblock javascripts %}
+
+
+
+
+

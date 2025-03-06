@@ -1,0 +1,176 @@
+{% load leaflet_tags %}
+{% load static %}
+
+{% leaflet_js %}
+{% leaflet_css %}
+
+
+
+<script type="text/javascript" >
+
+
+      window.addEventListener("map:init", function (event) {
+    //     var map = event.detail.map;
+
+
+    //     // Download GeoJSON data with Ajax
+
+
+function addMapPicker() {
+    var mapCenter = [22, 87];
+   var map = L.map('map', {center : mapCenter, zoom : 3});
+
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        }).addTo(map);
+
+
+
+    var marker = L.marker(mapCenter).addTo(map);
+    function updateMarker(lat, lng) {
+        marker
+            .setLatLng([lat, lng])
+            // .bindPopup("Time series location :  " + marker.getLatLng().toString())
+            // .openPopup();
+        return false;
+    };
+    
+    map.on('click', function(e) {
+        $('#latInput').val(e.latlng.lat);
+        $('#lngInput').val(e.latlng.lng);
+        updateMarker(e.latlng.lat, e.latlng.lng);
+    });
+    
+    
+    var updateMarkerByInputs = function() {
+        return updateMarker( $('#latInput').val() , $('#lngInput').val());
+    }
+    $('#latInput').on('input', updateMarkerByInputs);
+    $('#lngInput').on('input', updateMarkerByInputs);
+}
+
+$(document).ready(function() {
+    addMapPicker();
+L.control.layers(overlayMaps).addTo(map);
+
+          var Goulette_Genova = [
+
+          {% for q in qs_genova %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Chl_a":{{ q.Chl_a }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+    ]; 
+
+    L.geoJson(Goulette_Genova, {
+        style: function (feature) {
+            return {
+             "opacity": 1,
+            }}
+    }).addTo(map);
+
+
+
+
+
+         var Goulette_Marseille = [
+
+          {% for q in qs_marseille %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Chl_a":{{ q.Chl_a }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+    ]; 
+
+    L.geoJson(Goulette_Marseille, {
+        style: function (feature) {
+            return {
+             "opacity": 1,
+            }}
+    }).addTo(map);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var punti = L.geoJson(nidi_pt, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+    }
+    });
+
+    punti.addTo(map);
+
+    info.addTo(map);
+
+    var hash = new L.Hash(map);
+    var zoomHome = L.Control.zoomHome({position: 'topleft'});
+    zoomHome.addTo(map);
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 0.2,
+        fillOpacity: 0.2
+    };
+});
+
+
+
+
+
+
+          });
+     
+    </script>
+
+
+

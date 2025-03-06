@@ -1,0 +1,227 @@
+  {% load leaflet_tags %}
+{% load static %}
+
+{% leaflet_js %}
+{% leaflet_css %}
+
+<style type="text/css">
+  .info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+</style>
+
+<script type="text/javascript" id="container8" >
+
+
+      window.addEventListener("map:init", function (event) {
+        var map = event.detail.map;
+        // Download GeoJSON data with Ajax
+
+  
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+            maxZoom: 13
+        }).addTo(map);
+
+          var Goulette_Genova = [
+          {% for q in queryset %}
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ],
+                [
+                    {{ q.Longitude }},
+                    {{ q.Latitude }}
+                ]
+            ]
+        },
+        "properties": {
+            "Oxygen":{{ q.Oxygen }},
+            "Longitude":{{ q.Longitude }},
+            "Latitude":{{ q.Latitude }}
+        }
+    },
+      {% endfor %} 
+
+]; 
+
+
+
+     function showData (feature, layer) {
+        layer.bindPopup(
+            '<p><b>Oxygen : </b>' +
+             + feature.properties.Chl_a + '    ml/l' + '</p>' +
+        '<b>LatLng ( </b>' + feature.properties.Latitude + ' ,  ' +feature.properties.Longitude + ')' )
+        ;
+    }
+
+
+
+    L.geoJson(Goulette_Genova, {
+        style: function (feature) {
+            return {
+            "color": getColor_oxygen(feature.properties.Oxygen),
+             "opacity": 1,
+            }},
+        onEachFeature: showData,
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 4,
+                color: "red"
+            })
+        },
+    }).addTo(map);
+
+
+
+    function getColor_oxygen(x) {
+      return x < 4.5     ?   '#9999CC':
+             x < 4.6     ?   '#9966FF':
+             x < 4.7     ?   '#9966CC':
+             x < 4.8     ?   '#9933CC':
+             x < 5       ?   '#990099':
+             x < 5.1     ?   '#663366':
+             x < 5.2     ?   '#66392E': 
+             x < 5.31    ?   '#663900':
+             x < 5.32    ?   '#660000':
+             x < 5.33    ?   '#990100':
+             x < 5.34    ?   '#B60D00':
+             x < 5.35    ?   '#D01E00':                                                                
+             x < 5.37    ?   '#EF3B00':
+             x < 5.38    ?   '#FB6000':
+             x < 5.39    ?   '#FD8F02':
+             x < 5.49    ?   '#F69309':
+             x < 5.54    ?   '#E1D01E':
+             x < 5.6     ?   '#C4EB5A':
+             x < 5.69    ?   '#A7F858':
+             x < 5.72    ?   '#80FF7F':
+             x < 5.73    ?   '#80FF7F':
+             x < 5.74    ?   '#58F8A7':
+             x < 5.75    ?   '#35E6CA': 
+             x < 5.79    ?   '#19CAE6':
+             x < 5.81    ?   '#07A7F8':
+             x < 5.82    ?   '#0180FF':
+             x < 5.83    ?   '#0058F8':
+                             '#0035E6' ;
+    };
+
+// add the title
+
+
+function highlightFeature(e) {
+    var layer = e.target;
+    info.update(layer.feature.properties);
+}
+
+function resetHighlight(e) {
+    
+    info.update();
+}
+
+var info = L.control();
+
+info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); 
+    this.update();
+    return this._div;
+};
+
+info.update = function (props) {
+    this._div.innerHTML = '<h5>Trip details</h5>' +  
+    (props ? '<b>' + props.Chl_a + '</b>' + props.Longitude + ' people / mi<sup>2</sup>': '<b>Trip ref</b> : {{ trip }}')+
+    '<br><b>Transect</b> : {{ transect }}'+
+    '<br><b>Date</b> : {{ date }}'+
+    '<br><b>Parameter</b> : Oxygen'+
+    '<br><b>Quality</b> : {{ quality }}';
+};
+
+info.addTo(map);
+
+// new options for a legend 
+
+
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [4.5,4.8,5,5.2,5.4,5.5,5.55,5.6,5.7,5.75,5.8],
+        labels = [];
+        div.innerHTML +='<h5>Legend (ml/l)</h5>';
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor_oxygen(grades[i] + 0.01) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+
+
+
+
+    //other options to controle the map
+
+    // info.update = function (props) {
+    // this._div.innerHTML = '<img src="http://www.dailyfocus.net/wp-content/uploads/2014/05/Logo-Terna.jpg" alt="Smiley face" height="58" width="120">';
+    // };
+
+    var punti = L.geoJson(nidi_pt, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+    }
+    });
+
+    punti.addTo(map);
+
+    info.addTo(map);
+
+    var hash = new L.Hash(map);
+    var zoomHome = L.Control.zoomHome({position: 'topleft'});
+    zoomHome.addTo(map);
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 0.2,
+        fillOpacity: 0.2
+    };
+
+          });
+     
+    </script>
+
+
+

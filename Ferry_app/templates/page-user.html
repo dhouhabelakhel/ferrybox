@@ -1,0 +1,111 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Page User {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-warning">
+                  <h4 class="card-title">Download data</h4>
+                  <p class="card-category">Fill in the download form</p>
+                </div>
+                <br>
+                <div class="card-body">
+
+              <form method="POST" action=".">
+              {% csrf_token %}
+
+                    <div class="row">
+                      <div class="col-md-3">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">UserID (disabled)</label>
+                          <input type="text" class="form-control" disabled value="{{ request.user.id }}" name="user_id">
+                        <!-- </div> -->
+                      </div>
+<!--                       <div class="col-md-3">
+                        <div class="form-group">
+                          <label class="bmd-label-floating">Username</label>
+                          <input type="text" class="form-control" value="{{ request.user.username }}" name="user_name">
+                        </div>
+                      </div> -->
+                      <div class="col-md-8">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Email address</label>
+                          <input type="email" class="form-control" value="{{ request.user.email }}" name="email_address">
+                        <!-- </div> -->
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Fist Name</label>
+                          <input type="text" class="form-control" name="first_name">
+                        <!-- </div> -->
+                      </div>
+                      <div class="col-md-6">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Last Name</label>
+                          <input type="text" class="form-control" name="last_name"> 
+                        <!-- </div> -->
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Subject</label>
+                          <input type="text" class="form-control" name="subject">
+                        <!-- </div> -->
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12">
+                        <!-- <div class="form-group"> -->
+                          <label class="bmd-label-floating">Transect reference</label>
+                          <select id="path_selection" multiple class="custom-select" name="transect_select_download">
+                             {% for trans in metadata %}
+                            <option >{{ trans.Name }}</option>
+                            {% endfor %}
+                          </select>
+
+                        <!-- </div> -->
+                      </div>
+                    </div>
+<!-- <div class="container">
+<select class="mdb-select md-form" multiple>
+  <option value="" disabled selected>Choose your country</option>
+  <option value="1">USA</option>
+  <option value="2">Germany</option>
+  <option value="3">France</option>
+  <option value="3">Poland</option>
+  <option value="3">Japan</option>
+</select>
+<label class="mdb-main-label">Label example</label>
+<button class="btn-save btn btn-primary btn-sm">Save</button>
+</div> -->
+
+<!-- <script>
+  // Material Select Initialization
+$(document).ready(function() {
+$('.mdb-select').materialSelect();
+});
+
+</script> -->                     
+
+                    <button type="submit" class="btn btn-warning pull-right">Send request</button>
+                    
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
+</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

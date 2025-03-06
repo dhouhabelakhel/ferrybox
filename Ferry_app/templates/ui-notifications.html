@@ -1,0 +1,488 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} UI Notifications {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->
+
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+
+{% block content %}
+
+    <div class="row">
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-warning card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="material-icons"></i> -->
+            </div>
+            <p class="card-category">Total Space</p>
+            <h3 class="card-title">{{ sum_size }}
+              <small>MO</small>
+            </h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons text-danger"></i>
+              <a>Estimation before pre-treatments</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-success card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="material-icons"></i> -->
+            </div>
+            <p class="card-category">Nbr of files</p>
+            <h3 class="card-title">{{ nbr_files }}</h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Last 24 Hours
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-danger card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="material-icons"></i> -->
+            </div>
+            <p class="card-category">Downloaded data</p>
+            <h3 class="card-title">-</h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Tracked from Web app
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-info card-header-icon">
+            <div class="card-icon">
+              <!-- <i class="fa fa-twitter"></i> -->
+            </div>
+            <p class="card-category">Users</p>
+            <h3 class="card-title">+{{ nbr_users }}</h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons"></i> Just Updated
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+    <div class="row">
+      <div class="col-lg-12 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-tabs card-header-info">
+            <div class="nav-tabs-navigation">
+              <div class="nav-tabs-wrapper">
+                <span class="nav-tabs-title">Options:</span>
+                <ul class="nav nav-tabs" data-tabs="tabs">
+                  <li class="nav-item">
+                    <a class="nav-link active " href="#requests"  data-toggle="tab">
+                      <i class="material-icons"></i> Requests
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="download.html">
+                      <i class="material-icons"></i> Download
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link " href="upload.html">
+                      <i class="material-icons"></i> Upload
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link " href="data_description.html">
+                      <i class="material-icons"></i> Data description
+                      <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+
+
+          <div class="card-body">
+            <div class="tab-content">
+              <div class="tab-pane active" id="transect">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>
+
+
+<!-- 
+
+
+   <div class="row clearfix">
+      <div class="col-md-12 table-responsive">
+      <table class="table table-hover-warning table-sm"  id="tab_logic">
+        <thead>
+          <tr >
+            <th class="text-center b-none">
+              User ID
+            </th>
+            <th class="text-center">
+              Name
+            </th>
+            <th class="text-center">
+              Subject
+            </th>
+            <th class="text-center">
+              Requested file
+            </th>
+              <th class="text-center">
+              E-mail
+            </th>
+                <th class="text-center" style="border-top: 1px solid #ffffff; border-right: 1px solid #ffffff;">
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for down in qs_down %}
+
+            <tr id='addr0' data-id="0" class="hidden" align="center">
+
+
+            <td class="b-none" data-name="id_hidden" name='id_hidden'>
+                <input type="text"   placeholder='Name' class="form-control"/>
+                {{ down.ID_user }}
+            </td>
+
+            <td data-name="user_id" name='user_id'>
+                <input type="text"   placeholder='Name' class="form-control"/>
+                {{ down.Name }}
+            </td>
+            <td data-name="subject" name='subject'>
+                <input type="text"  placeholder='Email' class="form-control"/>
+                {{ down.Subject }}
+            </td>
+            <td data-name="request_file" name="request_file">
+                <input  placeholder="Description" class="form-control"></input>
+                {{ down.Transects }}
+            </td>
+            <td data-name="mail" name="mail">
+                <input  placeholder="Description" class="form-control"></input>
+                {{ down.Email }}
+            </td>
+              <td data-name="answer">
+                <select name="answer">
+                        <option type="submit" class="btn btn-success" style="width: 150px">Accept</option>
+                        <option type="submit" class="btn btn-danger" style="width: 150px">Reject</option>
+                </select>
+            </td>
+          </tr>
+          {% endfor %}
+
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+ -->
+
+
+<!-- this part functions with a get form -->
+
+
+
+
+
+            <form method="GET" action=".">
+              {% csrf_token %}
+
+              <div class="row">
+
+            
+
+            <div class="col-md-2 d-none">   
+ 
+<!-- 
+            <label for="metadata">ID</label>
+            <select id="path_selection" class="custom-select" name="id">
+              {% for q in qs_down %}
+              <option >{{ q.ID_user }}</option>
+              {% endfor %}
+            </select>
+                </div>
+ -->
+
+
+
+                <div class="col-md-2">   
+
+
+            <label for="metadata">User ID</label>
+            <select id="path_selection" class="custom-select" name="user_id">
+              {% for q in qs_down %}
+              <option >{{ q.Name }}</option>
+              {% endfor %}
+            </select>
+                </div>
+
+
+            <div class="col-md-3">
+            <label for="parameter">Requested file</label>
+            <select id="path_selection"  class="custom-select" name="request_file">
+              {% for q in qs_down %}
+              <option >{{ q.Transects }}</option>
+              {% endfor %}
+            </select>
+
+                </div>
+   
+  
+             <div class="col-md-3">
+
+            <label for="metadata">Subject</label>
+              <select class="custom-select" name="subject">
+              {% for q in qs_down %}
+              <option >{{ q.Subject }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+            <div class="col-md-2">
+             <label for="metadata">E-mail</label>
+              <select class="custom-select" name="mail">
+              {% for q in qs_down %}
+              <option >{{ q.Email }}</option>
+              {% endfor %}
+            </select>
+          </div> 
+
+
+            <div class="col-md-2">
+             <label for="metadata">Answer</label>
+              <select class="custom-select" name="answer">
+
+              <option >Accept</option>
+               <option >Reject</option>
+
+            </select>
+          </div> 
+
+
+
+                </div>
+            </div>   
+           <hr> 
+           <div class="container"> 
+<div class="col-md-48">
+          <button type="submit" class="btn btn-primary  float-right" style="width: 150px">Apply</button>
+
+
+      </div>
+    </div>
+
+          </div>
+        </div>
+            </form>
+                  </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+</div>
+
+<!-- end of the functioning part -->
+
+                      
+
+<!-- <table id="dtBasicExample" class="table table-hover-warning table-sm" cellspacing="0" width="100%" >
+
+  <thead>
+    <tr align="center">
+
+
+                <th>ID</th>            
+                <th>First name</th>
+                <th>Last name</th>
+                <th>Email</th>
+               <th>Subject</th>
+                <th>Transects</th>
+                <th>Action</th>
+                
+      </tr>
+  </thead>
+
+  <tbody>
+
+                          {% for down in qs_down %}
+                          <tr align="center">                              
+                              <td align="center">{{ down.Name }}</td>
+                              <td align="center">{{ down.Email }}</td>
+                              <td align="center">{{ down.Subject }}</td>
+                              <td align="center">{{ down.Transects }}</td>
+                              <td href="" class="btn btn-success " align="center">Confirm </td>
+                              <td href="" class="btn btn-danger " align="center">Reject </td>
+                          </tr>
+                          {% endfor %}
+
+
+
+
+
+
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div> -->
+<!-- second option starts here -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+                        <!-- <button class="btn btn-primary btn-block" onclick="md.showNotification('top','right')">Top Right</button> -->
+<!--                       </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div> -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      //init DateTimePickers
+      md.initFormExtendedDatetimepickers();
+    });
+    $(document).ready(function () {
+  $('#dtBasicExample').DataTable();
+  $('.dataTables_length').addClass('bs-select');
+});
+
+
+
+
+    $(document).ready(function() {
+    $("#add_row").on("click", function() {
+        // Dynamic Rows Code
+        
+        // Get max row id and set new id
+        var newid = 0;
+        $.each($("#tab_logic tr"), function() {
+            if (parseInt($(this).data("id")) > newid) {
+                newid = parseInt($(this).data("id"));
+            }
+        });
+        newid++;
+        
+        var tr = $("<tr></tr>", {
+            id: "addr"+newid,
+            "data-id": newid
+        });
+        
+        // loop through each td and create new elements with name of newid
+        $.each($("#tab_logic tbody tr:nth(0) td"), function() {
+            var td;
+            var cur_td = $(this);
+            
+            var children = cur_td.children();
+            
+            // add new td and element if it has a nane
+            if ($(this).data("name") !== undefined) {
+                td = $("<td></td>", {
+                    "data-name": $(cur_td).data("name")
+                });
+                
+                var c = $(cur_td).find($(children[0]).prop('tagName')).clone().val("");
+                c.attr("name", $(cur_td).data("name") + newid);
+                c.appendTo($(td));
+                td.appendTo($(tr));
+            } else {
+                td = $("<td></td>", {
+                    'text': $('#tab_logic tr').length
+                }).appendTo($(tr));
+            }
+        });
+        
+        // add delete button and td
+        /*
+        $("<td></td>").append(
+            $("<button class='btn btn-danger glyphicon glyphicon-remove row-remove'></button>")
+                .click(function() {
+                    $(this).closest("tr").remove();
+                })
+        ).appendTo($(tr));
+        */
+        
+        // add the new row
+        $(tr).appendTo($('#tab_logic'));
+        
+        $(tr).find("td button.row-remove").on("click", function() {
+             $(this).closest("tr").remove();
+        });
+});
+
+
+
+
+    // Sortable Code
+    var fixHelperModified = function(e, tr) {
+        var $originals = tr.children();
+        var $helper = tr.clone();
+    
+        $helper.children().each(function(index) {
+            $(this).width($originals.eq(index).width())
+        });
+        
+        return $helper;
+    };
+  
+    $(".table-sortable tbody").sortable({
+        helper: fixHelperModified      
+    }).disableSelection();
+
+    $(".table-sortable thead").disableSelection();
+
+
+
+    $("#add_row").trigger("click");
+});
+
+
+
+  </script>
+  
+{% endblock javascripts %}
