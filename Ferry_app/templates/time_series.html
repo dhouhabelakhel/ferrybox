@@ -47,25 +47,25 @@
                 <span class="nav-tabs-title">Graphs:</span>
                 <ul class="nav nav-tabs" data-tabs="tabs">
                   <li class="nav-item">
-                    <a class="nav-link" href="transect_plotting">
+                    <a class="nav-link" href="{% url 'Ferry_plot:transect_plotting' %}">
                       <i class="material-icons"></i> Transect
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="map">
+                    <a class="nav-link" href="{% url 'Ferry_plot:map' %}">
                       <i class="material-icons"></i> Map
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active" href="#times" data-toggle="tab">
+                    <a class="nav-link active" href="" data-toggle="tab">
                       <i class="material-icons"></i> Time series
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="scatter">
+                    <a class="nav-link" href="{% url 'Ferry_plot:scatter' %}">
                       <i class="material-icons"></i> Scatter
                       <!-- <div class="ripple-container"></div> -->
                     </a>
@@ -91,7 +91,7 @@
                     <tr>
                       <td>
 
-            <form method="GET" action=".">
+<form method="GET" action="{% url 'Ferry_plot:time_series' %}">
               {% csrf_token %}
 
                 <div class="row">
@@ -99,7 +99,7 @@
                       <div style="width: 170px; ">
                         <!-- <div class="form-group"> -->
                           <label class="bmd-label-floating">Transect</label>
-                          <select class="custom-select" name="transect_select_times">  
+                          <select class="custom-select"  name="transect_select_times">  
                             {% if  answered  %}
                             <option>{{ save_transect }}</option>
                             {% endif %}  
@@ -126,23 +126,62 @@
                               </select>
                         </div>
                    
-
-
-                  <!-- <div class="form-group "> -->
-                    <div class="col-md-3">
-                    <label for="publishDateMin">Start date</label>
-                    <input type="date" class="custom-select" name="date_min" value="{{ save_date1 }}">
-                  </div>
-              <!-- </div> -->
-                
-    
-
-                         <!-- <div class="form-group"> -->
-                  <div class="col-md-3">
-                    <label for="publishDateMin">End date</label>
-                    <input type="date" class="custom-select" name="date_max" value="{{ save_date2 }}">
-                  </div>
-              <!-- </div>      -->
+                        <div class="col-md-3">
+                          <label for="date_min">Start date</label>
+                          <input type="date" class="custom-select" name="date_min" id="date_min" 
+                                 min="2015-01-01" max="2025-12-31" value="{{ save_date1 }}">
+                        </div>
+                        
+                        <div class="col-md-3">
+                          <label for="date_max">End date</label>
+                          <input type="date" class="custom-select" name="date_max" id="date_max"
+                                 min="2015-01-01" max="2025-12-31" value="{{ save_date2 }}">
+                        </div>
+                        
+                        <script>
+                          document.addEventListener('DOMContentLoaded', function() {
+                            const startDateInput = document.getElementById('date_min');
+                            const endDateInput = document.getElementById('date_max');
+                            
+                            // Set initial min date for end date based on start date
+                            if (startDateInput.value) {
+                              endDateInput.min = startDateInput.value;
+                            } else {
+                              endDateInput.min = "2015-01-01";
+                            }
+                            
+                            // Update end date min when start date changes
+                            startDateInput.addEventListener('change', function() {
+                              if (this.value) {
+                                endDateInput.min = this.value;
+                                
+                                // If end date is now less than start date, update it
+                                if (endDateInput.value && endDateInput.value < this.value) {
+                                  endDateInput.value = this.value;
+                                }
+                              }
+                            });
+                            
+                            // Validate dates are within range on form submission
+                            startDateInput.form?.addEventListener('submit', function(e) {
+                              const startDate = new Date(startDateInput.value);
+                              const endDate = new Date(endDateInput.value);
+                              const minDate = new Date("2015-01-01");
+                              const maxDate = new Date("2025-12-31");
+                              
+                              if (startDate < minDate || startDate > maxDate) {
+                                e.preventDefault();
+                                alert("Start date must be between 2015 and 2025");
+                              } else if (endDate < minDate || endDate > maxDate) {
+                                e.preventDefault();
+                                alert("End date must be between 2015 and 2025");
+                              } else if (startDate > endDate) {
+                                e.preventDefault();
+                                alert("Start date must be before end date");
+                              }
+                            });
+                          });
+                        </script>
 
 
                     <div class="col-md-2">

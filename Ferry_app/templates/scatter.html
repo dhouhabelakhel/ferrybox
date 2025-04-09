@@ -63,7 +63,7 @@
                     <tr>
                       <td>
 
-            <form method="GET" action=".">
+            <form method="GET" action="{% url 'Ferry_plot:scatter' %}">
               {% csrf_token %}
 
               <div class="row">
@@ -78,7 +78,9 @@
               {% if  answered  %}
               <option>{{ save_transect }}</option>
               {% endif %}
-             
+              {% for trans in metadata %}
+              <option >{{ trans.Name }}</option>
+              {% endfor %}
             </select>
                 </div>
 

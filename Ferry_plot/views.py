@@ -4,6 +4,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template import loader
 from django.http import HttpResponse
 from django import template
+from .models import Measurements, Metadata, Parameters
+from django.db.models import Avg, Min, Max
 from django.views.generic import TemplateView, ListView, CreateView
 from django.core.files.storage import FileSystemStorage
 from django.urls import reverse_lazy
@@ -1019,7 +1021,7 @@ def transect_plotting(request):
                     #concerned data list: x-axis: categories with latitude
 
                     #the function
-                    takeClosest = lambda num,list_values:min(list_values,key=lambda x:abs(x-num))
+                    takeClosest = lambda num, list_values: min(list_values, key=lambda x: abs(x - num)) if list_values else None
                     direction=False
 
                     #pick the path: 
@@ -1031,17 +1033,29 @@ def transect_plotting(request):
                         #limit 1:
                         #coordinates: latitude : 37.229189
                         in_list_value_1=takeClosest(37.229189,index_latitude)
-                        limit_1=index_latitude.index(in_list_value_1)
+                        if in_list_value_1 is None or in_list_value_1 not in index_latitude:
+                            messages.error(request, "La valeur de latitude sélectionnée est invalide ou manquante.")
+                            return redirect("Ferry_plot:transect_plotting")  
+                        else:
+                           limit_1 = index_latitude.index(in_list_value_1)
 
                         #limit 2:
                         #coordinates: latitude : 38.871362
                         in_list_value_2=takeClosest(38.871362,index_latitude)
-                        limit_2=index_latitude.index(in_list_value_2)
+                        if in_list_value_2 is None or in_list_value_2 not in index_latitude:
+                            messages.error(request, "La valeur de latitude sélectionnée est invalide ou manquante.")
+                            return redirect("Ferry_plot:transect_plotting")  
+                        else:
+                           limit_2 = index_latitude.index(in_list_value_2)
 
                         #limit 3:
                         #coordinates: latitude : 41.741184
                         in_list_value_3=takeClosest(41.741184,index_latitude)
-                        limit_3=index_latitude.index(in_list_value_3)
+                        if in_list_value_3 is None or in_list_value_3 not in index_latitude:
+                            messages.error(request, "La valeur de latitude sélectionnée est invalide ou manquante.")
+                            return redirect("Ferry_plot:transect_plotting")  
+                        else:
+                           limit_3 = index_latitude.index(in_list_value_3)
 
                         limit_4=len(index_latitude)
                         limit_5=0
@@ -1052,22 +1066,38 @@ def transect_plotting(request):
                         #limit 1:
                         #coordinates: latitude : 37.229189
                         in_list_value_1=takeClosest(37.229189,index_latitude)
-                        limit_1=index_latitude.index(in_list_value_1)
+                        if in_list_value_1 is not None and in_list_value_1 in index_latitude:
+                            limit_1 = index_latitude.index(in_list_value_1)
+                        else:
+                          print(f"[DEBUG] in_list_value_1 est None ou absent de index_latitude: {in_list_value_1}")
+                          limit_1 = 1
 
                         #limit 2:
                         #coordinates: latitude : 39.07552 
                         in_list_value_2=takeClosest(39.07552,index_latitude)
-                        limit_2=index_latitude.index(in_list_value_2)
+                        if in_list_value_2 is None or in_list_value_2 not in index_latitude:
+                            messages.error(request, "La valeur de latitude sélectionnée est invalide ou manquante.")
+                            return redirect("Ferry_plot:transect_plotting")  
+                        else:
+                           limit_2 = index_latitude.index(in_list_value_2)
 
                         #limit 3:
                         #coordinates: latitude : 41.312946 
                         in_list_value_3=takeClosest(41.312946 ,index_latitude)
-                        limit_3=index_latitude.index(in_list_value_3)
+                        if in_list_value_3 is None or in_list_value_3 not in index_latitude:
+                            messages.error(request, "La valeur de latitude sélectionnée est invalide ou manquante.")
+                            return redirect("Ferry_plot:transect_plotting")  
+                        else:
+                           limit_3 = index_latitude.index(in_list_value_3)
 
                         #limit 4:
                         #coordinates: latitude : 43.013796
                         in_list_value_4=takeClosest(43.013796,index_latitude)
-                        limit_4=index_latitude.index(in_list_value_4)
+                        if in_list_value_4 is None or in_list_value_4 not in index_latitude:
+                            messages.error(request, "La valeur de latitude sélectionnée est invalide ou manquante.")
+                            return redirect("Ferry_plot:transect_plotting")  
+                        else:
+                           limit_4 = index_latitude.index(in_list_value_4)
 
                         limit_5=len(index_latitude)
 
@@ -1972,58 +2002,95 @@ def scatter_view(request):
 
 
 def time_series(request):
+    # Récupération de toutes les données
+    qs1 = Measurements.objects.all()
+    qs_genova = qs1.filter(Ref_trip=99)
+    qs_marseille = qs1.filter(Ref_trip=171)
 
-    # plot the two segments for point picker
-    qs1=Measurements.objects.all()
-    qs_genova = qs1.filter(Ref_trip=59) #genova
-    qs_marseille = qs1.filter(Ref_trip=110) #marseille
+    template_name = "time_series.html"
 
-
-    template_name="time_series.html"
-
-
-    #this block is picking "admin interface" or "data dowbload"
+    # Bloc admin
     try:
-        is_admin=bool(False)  
-
-        if (str(request.user.groups.all()[0]))=="admin":
-            is_admin=bool(True)
-            down=str("true")
-
-        context= { 'is_admin': is_admin,
-        'queryset': qs1,
-        "metadata": Metadata.objects.all(),
-        "Measurements" : Measurements.objects.all(),
-        "parameter": Parameters.objects.all(),
-        "down":down,
-        "qs_genova":qs_genova,
-        "qs_marseille":qs_marseille,
-        "access":True,
-
-         }
-
+        is_admin = False
+        down = "false"
+        if str(request.user.groups.all()[0]) == "admin":
+            is_admin = True
+            down = "true"
     except IndexError:
-        down=str("false")
-        context={"not_admin": bool(True),
-        'queryset': qs1,
-        "metadata": Metadata.objects.all(),
-        "Measurements" : Measurements.objects.all(),
-        "parameter": Parameters.objects.all(),
-        "down":down,
-        "qs_genova":qs_genova,
-        "qs_marseille":qs_marseille,
-        "access":True,
-}    
+        is_admin = False
+        down = "false"
+
+    # Initialiser le context
+    context = {
+        'is_admin': is_admin,
+        'down': down,
+        'qs_genova': qs_genova,
+        'qs_marseille': qs_marseille,
+        'metadata': Metadata.objects.all(),
+        'Measurements': Measurements.objects.all(),
+        'parameter': Parameters.objects.all(),
+        'access': True
+    }
+
+    # Traitement du formulaire GET
+    if request.GET.get("parameter_selection_times"):
+        param = request.GET.get("parameter_selection_times")
+        date_min = request.GET.get("date_min")
+        date_max = request.GET.get("date_max")
+        lat = request.GET.get("position_times_lat")
+        lon = request.GET.get("position_times_lon")
+        size = float(request.GET.get("size_times", 2))
+
+        # Filtrage des mesures autour du point sélectionné
+        filtered = Measurements.objects.filter(
+            Latitude__range=(float(lat)-size, float(lat)+size),
+            Longitude__range=(float(lon)-size, float(lon)+size),
+        )
+
+        if date_min:
+            filtered = filtered.filter(Date__gte=date_min)
+        if date_max:
+            filtered = filtered.filter(Date__lte=date_max)
+
+        # Grouper par date, faire moy, min, max
+        grouped = filtered.values("Date").annotate(
+            avg_value=Avg(param),
+            min_value=Min(param),
+            max_value=Max(param)
+        ).order_by("Date")
+
+        categories = [item["Date"].strftime("%Y-%m-%d") for item in grouped]
+        values = [item["avg_value"] for item in grouped]
+        min_graph = [item["min_value"] for item in grouped]
+        max_graph = [item["max_value"] for item in grouped]
+
+        context.update({
+            "categories": categories,
+            "values": values,
+            "min_graph": min_graph,
+            "max_graph": max_graph,
+            "title_graph": f"{param} over time",
+            "param_name": param,
+            "answered": True,
+            "save_parameter": param,
+            "save_position_lat": lat,
+            "save_position_lon": lon,
+            "save_date1": date_min,
+            "save_date2": date_max,
+            "save_size": size
+        })
+
+    return render(request, template_name, context)
 
 
-    return render(request, template_name,context)
 
 
 
+NOTIFICATIONS = []
 
-
-
-
+def get_notifications(request):
+    """Renvoie les notifications stockées."""
+    return JsonResponse({"notifications": NOTIFICATIONS})
 
 def map_view(request):
 

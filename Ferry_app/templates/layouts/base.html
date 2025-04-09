@@ -25,7 +25,30 @@
 
 <style>
 
-
+      .notification-icon {
+        position: relative;
+        font-size: 1.5rem;
+        margin-right: 20px;
+      }
+    
+      .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        background: red;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 0.7rem;
+        display: none;
+      }
+    
+      .dropdown-menu.notifications {
+        max-height: 250px;
+        overflow-y: auto;
+        width: 300px;
+      }
+    
   /*<!-- this is the justifying part for yout texts -->*/
 
 div {
@@ -238,7 +261,7 @@ img {
           
           <li class="nav-item {% if overview %} active {% endif %} ">
             
-            <a class="nav-link" href="index">
+            <a class="nav-link" href="index.html">
               <i class="material-icons"></i>
               <p>Data Overview</p>
             </a>
@@ -307,6 +330,38 @@ img {
       {% endif %}
 
     </div>
+    <script>
+      const socket = new WebSocket("ws://localhost:8000/ws/notifications/");
+    
+      socket.onopen = function () {
+        console.log("WebSocket connecté");
+      };
+    
+      socket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        const notifIcon = document.getElementById("notifIcon");
+        const notifBadge = document.getElementById("notifBadge");
+        const notifMenu = document.getElementById("notifMenu");
+    
+        // Afficher le badge et incrémenter le compteur
+        let count = parseInt(notifBadge.innerText || "0");
+        notifBadge.style.display = "inline-block";
+        notifBadge.innerText = count + 1;
+    
+        // Supprimer le message "No new notifications"
+        const placeholder = notifMenu.querySelector(".text-muted");
+        if (placeholder) placeholder.remove();
+    
+        // Créer un nouvel élément de notification
+        const notifItem = document.createElement("a");
+        notifItem.className = "dropdown-item";
+        notifItem.href = "#";
+        notifItem.innerText = data.message;
+    
+        // Ajouter la notification en haut du menu
+        notifMenu.prepend(notifItem);
+      };
+    </script>
 
 
       <!-- Navbar -->
@@ -316,6 +371,18 @@ img {
 
           <div class="collapse navbar-collapse justify-content-end">
             <ul class="navbar-nav">
+              <li class="nav-item dropdown">
+                <a class="nav-link" href="#" id="notifDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <div class="notification-icon">
+                    <i class="fa fa-bell" id="notifIcon"></i>
+                    <span id="notifBadge" class="notification-badge">0</span>
+                  </div>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right notifications" aria-labelledby="notifDropdown" id="notifMenu">
+                  <a class="dropdown-item text-muted" href="#">No new notifications</a>
+                </div>
+              </li>
+              
                         <div class="navbar-wrapper">
             <a class="navbar-brand" href="javascript:;">Hello  <b>{{ user.username }}</b></a>
           </div>

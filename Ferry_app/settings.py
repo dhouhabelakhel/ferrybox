@@ -13,14 +13,17 @@ SECRET_KEY = config('SECRET_KEY', default='S#perS3crEt_1122')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+APPEND_SLASH = False
 
 # load production server from .env
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.78'),'*']
+ASGI_APPLICATION = "Ferry_app.asgi.application"
 
 # Application definition
 
 INSTALLED_APPS = [
     'Ferry_app.apps.FerryAppConfig',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Ferry_plot',
+    'channels',
     # "authentication",
     'django_mysql',
     'jquery',
@@ -125,6 +129,11 @@ USE_L10N = True
 USE_TZ = True
 
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 
 # Static files (CSS, JavaScript, Images)

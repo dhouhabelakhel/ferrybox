@@ -15,12 +15,14 @@ app_name = "Ferry_plot"
 
 
 urlpatterns = [
-    path("", views.index, name="home"),  # Définit la page d'accueil
-    path("index/", views.index, name="index"),  # Permet d'accéder aussi via index.html
-    path("admin/", admin.site.urls),
-    path("", include("authentication.urls")),  # Change "" en "auth/" pour éviter le conflit
-    path("", include("Ferry_plot.urls")),  # Change "" en "ferry/" pour éviter le conflit
-    path("user/", views.page_user_view, name="datatest"),  # Change "" en "user/"
+    path('', include('Ferry_plot.urls')),
+	path('index.html', views.index, name='home'),
+    path('admin/', admin.site.urls),
+    path("", include("authentication.urls")),  # add this
+    path("", include("Ferry_plot.urls")),  # add this
+
+        #these are replacing pages funtion
+    path('', page_user_view, name='datatest'),
 ]
 
 # #table download part

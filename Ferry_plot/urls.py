@@ -26,11 +26,12 @@ urlpatterns = [
     # these are supporting the main filter functioning
     # path('data_access.html', views.data_access,  name='data_access'),
     path('map', views.map_view, name='map'),
-    path('time_series', views.time_series, name='time_series'),
+    path('time_series/', views.time_series, name='time_series'),
     path('scatter', views.scatter_view, name='scatter'),
     # path('heat.html', views.heat_view, name='heat'),
 
     #these are the general pages
+    path('api/notifications/', views.get_notifications, name='get_notifications'),
 
     path('data', views.data, name='data3'),    
         #these are replacing pages funtion
