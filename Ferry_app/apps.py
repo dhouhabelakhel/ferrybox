@@ -3,52 +3,59 @@ import threading
 import importlib.util
 import sys
 import time
+import os
 
 class FerryAppConfig(AppConfig):
     name = 'Ferry_app'  
-
-    # Dictionnaire pour stocker les threads en cours
+    
+    # Dictionnaire statique pour stocker les threads en cours
     running_threads = {}
+    
+    # Variable pour suivre si ready() a déjà été exécuté
+    is_ready_executed = False
 
     def ready(self):
-        print("=============================  AppConfig FerryAppConfig chargé ======================================")  
-
-        # Vérification et démarrage du script d'import des emails
-        if "email_check_thread" not in FerryAppConfig.running_threads or not FerryAppConfig.running_threads["email_check_thread"].is_alive():
-            print(" ---------------------- Démarrage du script de vérification des emails ---------------------")
-            self.start_email_check(r'C:\dsi3\stage Pfe\ferrybox-2\FB_refresh_process\2_E-mail_download.py', "email_download", 60)
+        # Évite l'exécution multiple de ready() en utilisant une variable de classe
+        if FerryAppConfig.is_ready_executed:
+            return
         
-        # Vérification et démarrage du script de classification
-        if "classification_thread" not in FerryAppConfig.running_threads or not FerryAppConfig.running_threads["classification_thread"].is_alive():
-            print("------------------------ Démarrage du script classification --------------------")
-            self.start_script(r'C:\dsi3\stage Pfe\ferrybox-2\FB_refresh_process\classification.py', "classification")
+        # Vérifier si nous sommes dans le processus principal 
+        # (évite l'exécution en double lors de l'utilisation de runserver avec autoreload)
+        if os.environ.get('RUN_MAIN') != 'true':
+            FerryAppConfig.is_ready_executed = True
+            print("=============================  AppConfig FerryAppConfig chargé ======================================")  
 
-        # Vérification et démarrage du script de prétraitement
-        if "pretreatement_thread" not in FerryAppConfig.running_threads or not FerryAppConfig.running_threads["pretreatement_thread"].is_alive():
-            print(" ------------------------ Démarrage du pretreatement ---------------------")
-            self.start_script(r'C:\dsi3\stage Pfe\ferrybox-2\FB_refresh_process\pretreatement.py', "pretreatement")
-               # Vérification et démarrage du script de time series
-        if "timeSeries_thread" not in FerryAppConfig.running_threads or not FerryAppConfig.running_threads["timeSeries_thread"].is_alive():
-            print(" ------------------------ Démarrage du timeSeries ---------------------")
-            self.start_script(r'C:\dsi3\stage Pfe\ferrybox-2\FB_refresh_process\timeSeries.py', "timeSeries")
-        if "metadata_thread" not in FerryAppConfig.running_threads or not FerryAppConfig.running_threads["metadata_thread"].is_alive():
-            print(" ------------------------ Démarrage du metadata ---------------------")
-            self.start_script(r'C:\dsi3\stage Pfe\ferrybox-2\FB_refresh_process\metadata.py', "metadata")
+            # Vérification et démarrage du script d'import des emails
+            self.start_email_check(r'.\FB_refresh_process\2_E-mail_download.py', "email_download", 60)
+            
+            # Vérification et démarrage du script de classification
+            self.start_script(r'.\FB_refresh_process\classification.py', "classification")
+
+            # Vérification et démarrage du script de prétraitement
+            self.start_script(r'.\FB_refresh_process\pretreatement.py', "pretreatement")
+            
+            # Vérification et démarrage du script de time series
+            self.start_script(r'.\FB_refresh_process\timeSeries.py', "timeSeries")
+            
+            # Vérification et démarrage du script de metadata
+            self.start_script(r'.\FB_refresh_process\metadata.py', "metadata")
 
     def start_script(self, module_path, module_name):
-          """Charge et exécute un script de manière dynamique."""
-          thread_key = f"{module_name}_thread"
+        """Charge et exécute un script de manière dynamique."""
+        thread_key = f"{module_name}_thread"
 
-          if thread_key in FerryAppConfig.running_threads:
-             existing_thread = FerryAppConfig.running_threads[thread_key]
-             if existing_thread.is_alive():
-               print(f"Le thread pour '{module_name}' est déjà en cours d'exécution.")
-               return
+        if thread_key in FerryAppConfig.running_threads:
+            existing_thread = FerryAppConfig.running_threads[thread_key]
+            if existing_thread.is_alive():
+                print(f"Le thread pour '{module_name}' est déjà en cours d'exécution.")
+                return
+            else:
+                print(f"Le thread pour '{module_name}' a été arrêté. Démarrage d'un nouveau thread.")
 
-          try:
+        try:
             spec = importlib.util.spec_from_file_location(module_name, module_path)
             module = importlib.util.module_from_spec(spec)
-            print("----------------- le module-----------------",module)
+            print(f"----------------- Chargement du module {module_name} -----------------")
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
 
@@ -57,13 +64,23 @@ class FerryAppConfig(AppConfig):
         
             FerryAppConfig.running_threads[thread_key] = thread
             print(f"Script '{module_name}' chargé avec succès et en cours d'exécution.")
-          except Exception as e:
-           print(f"Erreur lors du chargement de '{module_name}' : {e}")
-
-            
+        except Exception as e:
+            print(f"Erreur lors du chargement de '{module_name}' : {e}")
 
     def start_email_check(self, module_path, module_name, interval):
         """Démarre un script qui s'exécute périodiquement pour vérifier les emails."""
+        thread_key = "email_check_thread"
+        
+        if thread_key in FerryAppConfig.running_threads:
+            existing_thread = FerryAppConfig.running_threads[thread_key]
+            if existing_thread.is_alive():
+                print(f"Le thread pour la vérification des emails est déjà en cours d'exécution.")
+                return
+            else:
+                print(f"Le thread pour la vérification des emails a été arrêté. Démarrage d'un nouveau thread.")
+        
+        print(" ---------------------- Démarrage du script de vérification des emails ---------------------")
+        
         def email_checker():
             while True:
                 try:
@@ -75,7 +92,7 @@ class FerryAppConfig(AppConfig):
                     if hasattr(module, "process_new_emails"):
                         module.process_new_emails()
                     else:
-                        print(f"Le module '{module_name}' ne contient pas de fonction ' process_new_emails'.")
+                        print(f"Le module '{module_name}' ne contient pas de fonction 'process_new_emails'.")
 
                 except Exception as e:
                     print(f"Erreur lors de l'exécution du script '{module_name}' : {e}")
@@ -85,6 +102,5 @@ class FerryAppConfig(AppConfig):
         thread = threading.Thread(target=email_checker, daemon=True)
         thread.start()
         
-        FerryAppConfig.running_threads["email_check_thread"] = thread
+        FerryAppConfig.running_threads[thread_key] = thread
         print(f"Script de vérification des emails '{module_name}' lancé avec succès.")
-

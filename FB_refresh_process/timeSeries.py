@@ -13,20 +13,12 @@ from connect import connect_db
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Dossiers
-DIR_PATH = 'C:/FerryBox/Processed_Files/'
-TIME_SERIES_PATH = 'C:/FerryBox/time_series/'
-
-for path in [DIR_PATH, TIME_SERIES_PATH]:
-    os.makedirs(path, exist_ok=True)
-    logger.info(f"Répertoire vérifié : {path}")
-
-warnings.filterwarnings('ignore', category=FutureWarning)
-
 # Constantes
 PARAMETERS = ["Salinity_SBE45", "Temp_in_SBE38", "Oxygen", "Turbidity", "Chl_a"]
 DEPART_REFERENCES = ['goulette', 'Goulette']
 CELL_SIZE = 5
+
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 def listen_for_notifications():
     conn = connect_db()
@@ -75,11 +67,6 @@ def listen_for_notifications():
                         continue
 
                     file_libelle, file_binary = result
-                    file_path = os.path.join(DIR_PATH, file_libelle)
-                    with open(file_path, 'wb') as f:
-                        f.write(file_binary)
-                    logger.info(f"Fichier indexée enregistré : {file_path}")
-
                     process_binary_file(file_binary, file_libelle, name)
 
         except Exception as e:
@@ -111,13 +98,10 @@ def process_binary_file(file_binary, file_name, transect_name):
                 continue
 
             series = compute_parameter_series(df, param, total_distance, depart)
-
-            # Fixer le nombre de colonnes à 178
             FIXED_SIZE = 900
-            series += [float('nan')] * (FIXED_SIZE - len(series))  # Compléter avec NaN si nécessaire
-            series = series[:FIXED_SIZE]  # Tronquer si dépasse
+            series += [float('nan')] * (FIXED_SIZE - len(series))
+            series = series[:FIXED_SIZE]
 
-            # Créer le DataFrame avec les colonnes C_1 à C_178
             columns = ["Date"] + [f"C_{i}" for i in range(1, FIXED_SIZE + 1)] + ["Parameter", "Transect"]
             row = [file_date] + series + [param, transect_name]
             df_series = pd.DataFrame([row], columns=columns)
@@ -127,18 +111,11 @@ def process_binary_file(file_binary, file_name, transect_name):
     except Exception as e:
         logger.error(f"Erreur dans process_binary_file : {e}", exc_info=True)
 
-
 def try_read_binary_to_df(file_binary, file_name):
     try:
         return pd.read_csv(StringIO(file_binary.decode('utf-8')), delimiter=',', encoding='unicode_escape')
     except Exception:
-        temp_path = os.path.join(DIR_PATH, f"temp_{file_name}")
-        with open(temp_path, 'wb') as f:
-            f.write(file_binary)
-        try:
-            return pd.read_csv(temp_path, delimiter=',', encoding='unicode_escape')
-        finally:
-            os.remove(temp_path)
+        return None
 
 def extract_date(file_name):
     try:
@@ -177,38 +154,13 @@ def compute_parameter_series(df, param, total_distance, depart):
     return series
 
 def save_time_series(new_data, transect, parameter, date):
-    output_path = os.path.join(TIME_SERIES_PATH, f"{transect}_{parameter}.csv")
-    libelle = os.path.basename(output_path)
+    libelle = f"{transect}_{parameter}.csv"
 
     try:
-        if os.path.exists(output_path):
-            df_existing = pd.read_csv(output_path)
-            if date not in df_existing["Date"].values:
-                result = pd.concat([df_existing, new_data], ignore_index=True)
-                result.sort_values("Date", inplace=True)
-                result.to_csv(output_path, index=False)
-                logger.info(f"Données mises à jour : {output_path}")
-            else:
-                logger.info(f"Date déjà existante pour {parameter} : {date}")
-                return
-        else:
-            new_data.to_csv(output_path, index=False)
-            logger.info(f"Fichier créé : {output_path}")
-
-        insert_csv_to_db(output_path, libelle)
-
-    except Exception as e:
-        logger.error(f"Erreur en sauvegardant la série temporelle : {e}")
-
-def insert_csv_to_db(csv_path, libelle):
-    conn = connect_db()
-    if conn is None:
-        logger.error(f"Connexion à la BD échouée pour {libelle}")
-        return
-
-    try:
-        with open(csv_path, 'rb') as f:
-            binary_data = f.read()
+        conn = connect_db()
+        if conn is None:
+            logger.error(f"Connexion échouée pour {libelle}")
+            return
 
         table_name = os.path.splitext(libelle)[0].lower().replace('-', '_').replace(' ', '_')
 
@@ -221,26 +173,48 @@ def insert_csv_to_db(csv_path, libelle):
                 );
             ''')
 
-            cur.execute(f'SELECT id FROM "{table_name}" WHERE libelle = %s;', (libelle,))
+            cur.execute(f'SELECT fichier FROM "{table_name}" WHERE libelle = %s;', (libelle,))
             result = cur.fetchone()
+
+            if result:
+                try:
+                    old_csv_binary = result[0]
+                    old_df = pd.read_csv(StringIO(old_csv_binary.decode('utf-8')))
+                    if date in old_df["Date"].values:
+                        logger.info(f"Date déjà existante pour {parameter} : {date}")
+                        return
+                    combined_df = pd.concat([old_df, new_data], ignore_index=True)
+                    combined_df.sort_values("Date", inplace=True)
+                except Exception as e:
+                    logger.warning(f"Erreur lecture ancienne version de {libelle} : {e}")
+                    combined_df = new_data
+            else:
+                combined_df = new_data
+
+            csv_buffer = StringIO()
+            combined_df.to_csv(csv_buffer, index=False)
+            binary_csv = csv_buffer.getvalue().encode('utf-8')
 
             if result:
                 cur.execute(f'''
                     UPDATE "{table_name}"
                     SET fichier = %s
                     WHERE libelle = %s;
-                ''', (binary_data, libelle))
-                logger.info(f"Fichier '{libelle}' mis à jour dans la table {table_name}.")
+                ''', (binary_csv, libelle))
+                logger.info(f"Mise à jour : {libelle} dans {table_name}")
             else:
                 cur.execute(f'''
                     INSERT INTO "{table_name}" (libelle, fichier)
                     VALUES (%s, %s);
-                ''', (libelle, binary_data))
-                logger.info(f"Fichier '{libelle}' inséré dans la table {table_name}.")
+                ''', (libelle, binary_csv))
+                logger.info(f"Insertion : {libelle} dans {table_name}")
 
             conn.commit()
 
     except Exception as e:
-        logger.error(f"Erreur lors de l'insertion ou mise à jour de {csv_path} dans {table_name} : {e}")
+        logger.error(f"Erreur durant save_time_series pour {libelle} : {e}", exc_info=True)
     finally:
-        conn.close()
+        if conn:
+            conn.close()
+
+

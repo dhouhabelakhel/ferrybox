@@ -16,13 +16,10 @@ from connect import connect_db
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from connect import connect_db
 
-# Dossier de sauvegarde
-save_dir = "C:\\processed_files"
-os.makedirs(save_dir, exist_ok=True)
-
 # Configuration du logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 def insert_indexed_file_into_db(table_name, file_name, file_data, db_conn):
     try:
         with db_conn.cursor() as cur:
@@ -33,6 +30,7 @@ def insert_indexed_file_into_db(table_name, file_name, file_data, db_conn):
     except Exception as e:
         logger.error(f"Erreur lors de l'insertion dans {table_name}: {e}")
         db_conn.rollback()
+
 def listen_for_notifications():
     """Écoute les notifications PostgreSQL et récupère les fichiers classifiés."""
     conn = connect_db()
@@ -77,15 +75,14 @@ def listen_for_notifications():
 
                 # Déterminer la table en fonction du libellé
                 table_name = None
-                insert_table=None
+                insert_table = None
                 if "genova" in new_file_libelle.lower():
                     table_name = '"Ferry_plot_binary_classifiedgenova"'
-                    insert_table="ferry_plot_binary_indexedgenova"
+                    insert_table = "ferry_plot_binary_indexedgenova"
                     destination = "Genova"
                 elif "marseille" in new_file_libelle.lower():
                     table_name = '"Ferry_plot_binary_classifiedmarseille"'
-                    insert_table="ferry_plot_binary_indexedmarseille"
-
+                    insert_table = "ferry_plot_binary_indexedmarseille"
                     destination = "Marseille"
 
                 if not table_name:
@@ -370,17 +367,18 @@ def listen_for_notifications():
                         # Réorganiser les colonnes
                         df = df[final_columns]
                         
-                        # Sauvegarde du fichier traité
+                        # Conversion du DataFrame en fichier CSV binaire pour stockage en BDD
                         buffer = io.StringIO()
                         df.to_csv(buffer, index=False, encoding="utf-8-sig")
                         file_data = buffer.getvalue().encode("utf-8")  # Convertir en binaire
 
+                        # Insertion du fichier traité dans la base de données
                         insert_indexed_file_into_db(insert_table, new_file_libelle, file_data, conn)
                         logger.info(f"Fichier traité inséré dans la base de données sous le libellé : {new_file_libelle}")
-                        save_path = os.path.join(save_dir, f"{new_file_libelle}.csv")
-                        df.to_csv(save_path, index=False, encoding="utf-8-sig")
-                        logger.info(f"Fichier traité enregistré sous : {save_path}")
+                        
+                        # Insertion des données dans le modèle Measurements
                         insert_into_measurements(df)
+                        logger.info(f"Données du fichier {new_file_libelle} insérées dans le modèle Measurements.")
 
                     except Exception as e:
                         logger.error(f"Erreur lors du traitement du fichier : {e}", exc_info=True)
@@ -397,7 +395,6 @@ def listen_for_notifications():
         cur.close()
         conn.close()
         logger.info("Connexion PostgreSQL fermée.")
-
 
 
 def insert_into_measurements(df):
@@ -472,3 +469,4 @@ def insert_into_measurements(df):
             logger.info(f"{len(measurements)} lignes insérées dans Measurements.")
         except Exception as e:
             logger.error(f"Erreur lors de l'insertion dans Measurements : {e}", exc_info=True)
+

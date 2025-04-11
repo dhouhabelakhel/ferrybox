@@ -1,9 +1,9 @@
-import os
-import zipfile
 import imaplib
 import email
 import psycopg2
 import unicodedata
+import zipfile
+from io import BytesIO
 from datetime import datetime
 from django.conf import settings
 from asgiref.sync import async_to_sync
@@ -12,11 +12,7 @@ from channels.layers import get_channel_layer
 # Configuration IMAP Gmail
 EMAIL_USER = settings.EMAIL_HOST_USER
 EMAIL_PASS = settings.EMAIL_HOST_PASSWORD
-SENDER_EMAIL = "dhouhabelakhel2001@gmail.com"
-
-# Dossier temporaire pour stocker les fichiers
-DOWNLOAD_DIR = "C:/FerryBox/Mails/"
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+SENDER_EMAIL = "ferryboxinstm@gmail.com"
 
 # Connexion à la base de données PostgreSQL
 def connect_db():
@@ -35,23 +31,20 @@ def connect_db():
         print(f"Erreur de connexion à PostgreSQL : {e}")
         return None
 
-# Enregistrement du fichier dans la base de données + notification
-def save_file_to_db(file_path, file_name):
+# Enregistrement en base de données depuis des données binaires en mémoire
+def save_file_to_db_memory(file_data, file_name):
     connection = None
     cursor = None
     try:
         connection = connect_db()
         if connection is None:
             return
-        
+
         cursor = connection.cursor()
         cursor.execute("SELECT 1 FROM ferry_plot_binary_email WHERE file_name = %s", (file_name,))
         if cursor.fetchone():
             print(f"Le fichier {file_name} existe déjà dans la base de données. Ignorer l'insertion.")
             return
-
-        with open(file_path, "rb") as file:
-            file_data = file.read()
 
         query = """
             INSERT INTO ferry_plot_binary_email (file_name, file_data, received_at)
@@ -61,18 +54,16 @@ def save_file_to_db(file_path, file_name):
         connection.commit()
         print(f"Fichier {file_name} enregistré dans PostgreSQL.")
 
-        # Envoi de notification en temps réel via Django Channels
+        # Notification en temps réel
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "notifications",  # nom du groupe
+            "notifications",
             {
-                "type": "send_notification",  # nom du handler dans consumer.py
+                "type": "send_notification",
                 "message": f"Nouveau fichier reçu : {file_name}",
             },
         )
 
-        os.remove(file_path)
-        print(f"Fichier {file_name} supprimé après enregistrement.")
     except psycopg2.Error as err:
         print(f"Erreur PostgreSQL : {err}")
     finally:
@@ -80,6 +71,19 @@ def save_file_to_db(file_path, file_name):
             cursor.close()
         if connection:
             connection.close()
+
+# Décompression et traitement des fichiers ZIP en mémoire
+def unzip_and_save_memory(zip_bytes):
+    try:
+        with zipfile.ZipFile(BytesIO(zip_bytes)) as zip_ref:
+            for file_info in zip_ref.infolist():
+                with zip_ref.open(file_info.filename) as extracted_file:
+                    file_data = extracted_file.read()
+                    file_name = unicodedata.normalize('NFKD', file_info.filename)
+                    save_file_to_db_memory(file_data, file_name)
+        print("ZIP traité entièrement en mémoire.")
+    except Exception as e:
+        print(f"Erreur lors de la gestion du ZIP en mémoire : {e}")
 
 # Traitement des nouveaux emails
 def process_new_emails():
@@ -116,14 +120,12 @@ def process_new_emails():
                                 file_name = file_name.decode()
                             file_name = unicodedata.normalize('NFKD', file_name)
 
-                            file_path = os.path.join(DOWNLOAD_DIR, file_name)
-                            with open(file_path, "wb") as f:
-                                f.write(part.get_payload(decode=True))
+                            file_data = part.get_payload(decode=True)
 
                             if file_name.endswith(".zip"):
-                                unzip_and_save(file_path)
+                                unzip_and_save_memory(file_data)
                             else:
-                                save_file_to_db(file_path, file_name)
+                                save_file_to_db_memory(file_data, file_name)
                 except Exception as e:
                     print(f"Erreur lors du traitement d'un e-mail : {e}")
 
@@ -131,17 +133,3 @@ def process_new_emails():
         print("Traitement des e-mails terminé.")
     except Exception as e:
         print(f"Erreur : {e}")
-
-# Extraction des fichiers ZIP et traitement
-def unzip_and_save(zip_file_path):
-    try:
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-            zip_ref.extractall(DOWNLOAD_DIR)
-            print(f"Fichier ZIP {zip_file_path} extrait.")
-            for file_name in zip_ref.namelist():
-                file_path = os.path.join(DOWNLOAD_DIR, file_name)
-                save_file_to_db(file_path, file_name)
-        os.remove(zip_file_path)
-        print(f"Fichier ZIP {zip_file_path} supprimé après extraction.")
-    except Exception as e:
-        print(f"Erreur lors de la gestion du ZIP : {e}")

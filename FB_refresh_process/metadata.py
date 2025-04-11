@@ -4,7 +4,7 @@ import time
 import logging
 import select
 import warnings
-from io import StringIO
+from io import StringIO, BytesIO
 from datetime import datetime
 import pandas as pd
 import geopy.distance as geo_dist
@@ -13,6 +13,7 @@ import django
 
 # Setup Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Ferry_app.settings") 
+django.setup()
 
 from Ferry_plot.models import Metadata
 from connect import connect_db
@@ -21,11 +22,6 @@ from connect import connect_db
 warnings.simplefilter(action='ignore', category=FutureWarning)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-METADATA_PATH = "C:/FerryBox/Metadata/"
-CLASSIFIED_PATH = "C:/FerryBox/Classified_Files/"
-os.makedirs(METADATA_PATH, exist_ok=True)
-os.makedirs(CLASSIFIED_PATH, exist_ok=True)
 
 # --- ÉCOUTE DES NOTIFICATIONS ---
 def listen_for_notifications():
@@ -75,33 +71,29 @@ def process_classified_file(file_id, libelle, cur, table_name):
             return
 
         binary_data = result[0]
-        file_path = os.path.join(CLASSIFIED_PATH, libelle)
-        with open(file_path, 'wb') as f:
-            f.write(binary_data)
-        logger.info(f"Fichier sauvegardé : {file_path}")
+        file_stream = BytesIO(binary_data)
 
-        if not file_path.lower().endswith('.csv'):
+        if not libelle.lower().endswith('.csv'):
             logger.warning("Le fichier reçu n'est pas un CSV. Abandon du traitement.")
             return
 
-        df = pd.read_csv(file_path, encoding='ISO-8859-1', skiprows=1)
+        df = pd.read_csv(file_stream, encoding='ISO-8859-1', skiprows=1)
 
         if not {'Date', 'Time', 'Latitude', 'Longitude'}.issubset(df.columns):
-            logger.warning(f"Colonnes nécessaires manquantes dans {file_path}")
+            logger.warning(f"Colonnes nécessaires manquantes dans {libelle}")
             return
 
-        metadata = extract_metadata(df, file_path)
+        metadata = extract_metadata(df, libelle, binary_data)
         if metadata and not Metadata.objects.filter(Name=metadata["Name"]).exists():
-            append_metadata_to_csv(metadata)
             save_metadata_to_db(metadata)
 
     except Exception as e:
         logger.error(f"Erreur de traitement fichier classifié : {e}", exc_info=True)
 
 # --- EXTRACTION DES MÉTADONNÉES ---
-def extract_metadata(df, file_path):
+def extract_metadata(df, libelle, binary_data):
     try:
-        file_name = os.path.basename(file_path)
+        file_name = os.path.basename(libelle)
         name = file_name.split(".csv")[0]
         info = name.split("_")
         ref = int(info[0])
@@ -138,7 +130,7 @@ def extract_metadata(df, file_path):
             "End_time": end_time.time(),
             "Duration_h": int(duration),
             "Distance_km": distance_km,
-            "Size_ko": int(os.path.getsize(file_path) / 1024),
+            "Size_ko": int(len(binary_data) / 1024),
             "Number_of_lines": len(df)
         }
 
@@ -146,45 +138,25 @@ def extract_metadata(df, file_path):
         logger.error(f"Erreur extraction métadonnées : {e}", exc_info=True)
         return None
 
-# --- SAUVEGARDE EN FICHIER CSV LOCAL ---
-def append_metadata_to_csv(data):
-    try:
-        metadata_file = os.path.join(METADATA_PATH, "Metadata.csv")
-        df_new = pd.DataFrame([data])
-        if os.path.exists(metadata_file):
-            df_existing = pd.read_csv(metadata_file)
-            if data["Name"] not in df_existing["Name"].values:
-                df_result = pd.concat([df_existing, df_new], ignore_index=True)
-                df_result.sort_values("Path_Reference", inplace=True)
-                df_result.to_csv(metadata_file, index=False)
-                logger.info(f"Métadonnées ajoutées à {metadata_file}")
-        else:
-            df_new.to_csv(metadata_file, index=False)
-            logger.info(f"Fichier Metadata.csv créé avec première ligne.")
-    except Exception as e:
-        logger.error(f"Erreur lors de l'ajout aux métadonnées locales : {e}", exc_info=True)
+# --- GÉNÉRATION CSV EN MÉMOIRE ---
+from django.forms.models import model_to_dict
 
-# --- SAUVEGARDE EN BASE DJANGO ---
+def build_metadata_csv_from_db():
+    all_metadata = Metadata.objects.all().order_by("Path_Reference")
+    df = pd.DataFrame([model_to_dict(meta) for meta in all_metadata])
+    return df.to_csv(index=False).encode("utf-8")
+
+# --- SAUVEGARDE EN BASE DJANGO & PG ---
 def save_metadata_to_db(data):
     try:
-        # 1. Sauvegarde via Django ORM
         meta = Metadata(**data)
         meta.save()
         logger.info(f"Métadonnées insérées en base : {data['Name']}")
 
-        # 2. Sauvegarde du fichier Metadata.csv dans la table Ferry_plot_binary_metadata
-        metadata_csv_path = os.path.join(METADATA_PATH, "Metadata.csv")
-        if not os.path.exists(metadata_csv_path):
-            logger.warning(f"Fichier Metadata.csv introuvable à {metadata_csv_path}")
-            return
-
-        with open(metadata_csv_path, 'rb') as f:
-            csv_binary = f.read()
-
+        csv_binary = build_metadata_csv_from_db()
         conn = connect_db()
         cur = conn.cursor()
-        
-        # Vérifie si le fichier Metadata.csv existe déjà dans la table
+
         cur.execute("""
             SELECT 1 FROM "Ferry_plot_binary_metadata" WHERE libelle = %s
         """, ("Metadata.csv",))
@@ -210,5 +182,3 @@ def save_metadata_to_db(data):
 
     except Exception as e:
         logger.error(f"Erreur d’insertion en base Django ou PostgreSQL : {e}", exc_info=True)
-
-
