@@ -1,4 +1,3 @@
-import os
 import json
 import time
 import logging
@@ -10,10 +9,9 @@ import pandas as pd
 import geopy.distance as geo_dist
 import psycopg2
 import django
-
+import os
 # Setup Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Ferry_app.settings") 
-django.setup()
 
 from Ferry_plot.models import Metadata
 from connect import connect_db
@@ -71,29 +69,30 @@ def process_classified_file(file_id, libelle, cur, table_name):
             return
 
         binary_data = result[0]
-        file_stream = BytesIO(binary_data)
 
-        if not libelle.lower().endswith('.csv'):
-            logger.warning("Le fichier reçu n'est pas un CSV. Abandon du traitement.")
-            return
+        # Conversion de memoryview en bytes
+        if isinstance(binary_data, memoryview):
+            binary_data = bytes(binary_data)
 
-        df = pd.read_csv(file_stream, encoding='ISO-8859-1', skiprows=1)
+        # Lecture du fichier CSV depuis les données binaires
+        csv_content = binary_data.decode('ISO-8859-1')
+        df = pd.read_csv(StringIO(csv_content), encoding='ISO-8859-1', skiprows=1)
 
         if not {'Date', 'Time', 'Latitude', 'Longitude'}.issubset(df.columns):
             logger.warning(f"Colonnes nécessaires manquantes dans {libelle}")
             return
 
-        metadata = extract_metadata(df, libelle, binary_data)
+        metadata = extract_metadata(df, libelle, binary_data)  # Passer binary_data ici
         if metadata and not Metadata.objects.filter(Name=metadata["Name"]).exists():
+            append_metadata_to_csv_in_memory(metadata)
             save_metadata_to_db(metadata)
 
     except Exception as e:
         logger.error(f"Erreur de traitement fichier classifié : {e}", exc_info=True)
 
 # --- EXTRACTION DES MÉTADONNÉES ---
-def extract_metadata(df, libelle, binary_data):
+def extract_metadata(df, file_name, binary_data):
     try:
-        file_name = os.path.basename(libelle)
         name = file_name.split(".csv")[0]
         info = name.split("_")
         ref = int(info[0])
@@ -130,7 +129,7 @@ def extract_metadata(df, libelle, binary_data):
             "End_time": end_time.time(),
             "Duration_h": int(duration),
             "Distance_km": distance_km,
-            "Size_ko": int(len(binary_data) / 1024),
+            "Size_ko": len(binary_data) // 1024,  # Taille en Ko
             "Number_of_lines": len(df)
         }
 
@@ -138,25 +137,62 @@ def extract_metadata(df, libelle, binary_data):
         logger.error(f"Erreur extraction métadonnées : {e}", exc_info=True)
         return None
 
-# --- GÉNÉRATION CSV EN MÉMOIRE ---
-from django.forms.models import model_to_dict
-
-def build_metadata_csv_from_db():
-    all_metadata = Metadata.objects.all().order_by("Path_Reference")
-    df = pd.DataFrame([model_to_dict(meta) for meta in all_metadata])
-    return df.to_csv(index=False).encode("utf-8")
-
-# --- SAUVEGARDE EN BASE DJANGO & PG ---
-def save_metadata_to_db(data):
+# --- SAUVEGARDE EN FICHIER CSV LOCAL ---
+def append_metadata_to_csv_in_memory(data):
     try:
-        meta = Metadata(**data)
-        meta.save()
-        logger.info(f"Métadonnées insérées en base : {data['Name']}")
+        # Charger les métadonnées existantes depuis la base de données ou créer un nouveau DataFrame
+        existing_metadata = get_existing_metadata_from_db()
+        df_existing = pd.DataFrame(existing_metadata)
 
-        csv_binary = build_metadata_csv_from_db()
+        df_new = pd.DataFrame([data])
+        if not df_existing.empty:
+            if data["Name"] not in df_existing["Name"].values:
+                df_result = pd.concat([df_existing, df_new], ignore_index=True)
+                df_result.sort_values("Path_Reference", inplace=True)
+        else:
+            df_result = df_new
+
+        # Sauvegarder en mémoire
+        csv_buffer = StringIO()
+        df_result.to_csv(csv_buffer, index=False)
+        csv_content = csv_buffer.getvalue()
+
+        # Sauvegarder dans la base de données
+        save_metadata_csv_to_db(csv_content)
+
+        logger.info("Métadonnées ajoutées en mémoire et sauvegardées dans la base de données.")
+
+    except Exception as e:
+        logger.error(f"Erreur lors de l'ajout aux métadonnées locales : {e}", exc_info=True)
+
+# --- RECUPERATION DES METADONNÉES EXISTANTES DEPUIS LA BASE DE DONNEES ---
+def get_existing_metadata_from_db():
+    try:
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT fichier FROM "Ferry_plot_binary_metadata" WHERE libelle = %s
+        """, ("Metadata.csv",))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if result:
+            csv_content = result[0].tobytes().decode('utf-8')
+            return pd.read_csv(StringIO(csv_content)).to_dict(orient='records')
+        return []
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des métadonnées existantes : {e}", exc_info=True)
+        return []
+
+# --- SAUVEGARDE DU FICHIER CSV EN BASE DE DONNEES ---
+def save_metadata_csv_to_db(csv_content):
+    try:
         conn = connect_db()
         cur = conn.cursor()
 
+        # Vérifie si le fichier Metadata.csv existe déjà dans la table
         cur.execute("""
             SELECT 1 FROM "Ferry_plot_binary_metadata" WHERE libelle = %s
         """, ("Metadata.csv",))
@@ -167,13 +203,13 @@ def save_metadata_to_db(data):
                 UPDATE "Ferry_plot_binary_metadata"
                 SET fichier = %s
                 WHERE libelle = %s
-            """, (psycopg2.Binary(csv_binary), "Metadata.csv"))
+            """, (psycopg2.Binary(csv_content.encode('utf-8')), "Metadata.csv"))
             logger.info("Fichier Metadata.csv mis à jour dans Ferry_plot_binary_metadata.")
         else:
             cur.execute("""
                 INSERT INTO "Ferry_plot_binary_metadata" (libelle, fichier)
                 VALUES (%s, %s)
-            """, ("Metadata.csv", psycopg2.Binary(csv_binary)))
+            """, ("Metadata.csv", psycopg2.Binary(csv_content.encode('utf-8'))))
             logger.info("Fichier Metadata.csv inséré dans Ferry_plot_binary_metadata.")
 
         conn.commit()
@@ -181,4 +217,15 @@ def save_metadata_to_db(data):
         conn.close()
 
     except Exception as e:
-        logger.error(f"Erreur d’insertion en base Django ou PostgreSQL : {e}", exc_info=True)
+        logger.error(f"Erreur lors de la sauvegarde du fichier CSV en base de données : {e}", exc_info=True)
+
+# --- SAUVEGARDE EN BASE DJANGO ---
+def save_metadata_to_db(data):
+    try:
+        # Sauvegarde via Django ORM
+        meta = Metadata(**data)
+        meta.save()
+        logger.info(f"Métadonnées insérées en base : {data['Name']}")
+
+    except Exception as e:
+        logger.error(f"Erreur d’insertion en base Django : {e}", exc_info=True)

@@ -1,11 +1,11 @@
-import os
 import json
 import time
 import logging
 import select
 import warnings
-from io import StringIO
-
+from io import StringIO, BytesIO
+import os
+import psycopg2
 import pandas as pd
 from connect import connect_db
 
@@ -13,12 +13,12 @@ from connect import connect_db
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+warnings.filterwarnings('ignore', category=FutureWarning)
+
 # Constantes
 PARAMETERS = ["Salinity_SBE45", "Temp_in_SBE38", "Oxygen", "Turbidity", "Chl_a"]
 DEPART_REFERENCES = ['goulette', 'Goulette']
 CELL_SIZE = 5
-
-warnings.filterwarnings('ignore', category=FutureWarning)
 
 def listen_for_notifications():
     conn = connect_db()
@@ -83,6 +83,10 @@ def detect_transect_table(libelle):
 
 def process_binary_file(file_binary, file_name, transect_name):
     try:
+        # Conversion de memoryview en bytes
+        if isinstance(file_binary, memoryview):
+            file_binary = bytes(file_binary)
+
         df = try_read_binary_to_df(file_binary, file_name)
         if df is None or "Cumul_Distance" not in df.columns:
             logger.error(f"Fichier invalide ou 'Cumul_Distance' manquant : {file_name}")
@@ -98,15 +102,18 @@ def process_binary_file(file_binary, file_name, transect_name):
                 continue
 
             series = compute_parameter_series(df, param, total_distance, depart)
-            FIXED_SIZE = 900
-            series += [float('nan')] * (FIXED_SIZE - len(series))
-            series = series[:FIXED_SIZE]
 
+            # Fixer le nombre de colonnes à 900
+            FIXED_SIZE = 900
+            series += [float('nan')] * (FIXED_SIZE - len(series))  # Compléter avec NaN si nécessaire
+            series = series[:FIXED_SIZE]  # Tronquer si dépasse
+
+            # Créer le DataFrame avec les colonnes C_1 à C_900
             columns = ["Date"] + [f"C_{i}" for i in range(1, FIXED_SIZE + 1)] + ["Parameter", "Transect"]
             row = [file_date] + series + [param, transect_name]
             df_series = pd.DataFrame([row], columns=columns)
 
-            save_time_series(df_series, transect_name, param, file_date)
+            save_time_series_in_memory(df_series, transect_name, param, file_date)
 
     except Exception as e:
         logger.error(f"Erreur dans process_binary_file : {e}", exc_info=True)
@@ -114,7 +121,8 @@ def process_binary_file(file_binary, file_name, transect_name):
 def try_read_binary_to_df(file_binary, file_name):
     try:
         return pd.read_csv(StringIO(file_binary.decode('utf-8')), delimiter=',', encoding='unicode_escape')
-    except Exception:
+    except Exception as e:
+        logger.error(f"Erreur lors de la lecture du fichier binaire : {e}")
         return None
 
 def extract_date(file_name):
@@ -153,17 +161,63 @@ def compute_parameter_series(df, param, total_distance, depart):
         logger.error(f"Erreur dans compute_parameter_series pour {param} : {e}")
     return series
 
-def save_time_series(new_data, transect, parameter, date):
-    libelle = f"{transect}_{parameter}.csv"
+def save_time_series_in_memory(new_data, transect, parameter, date):
+    table_name = f"{transect}_{parameter}".lower().replace('-', '_').replace(' ', '_')
 
     try:
-        conn = connect_db()
-        if conn is None:
-            logger.error(f"Connexion échouée pour {libelle}")
-            return
+        # Récupérer les données existantes depuis la base de données
+        existing_data = get_existing_time_series_from_db(table_name)
+        if existing_data:
+            df_existing = pd.DataFrame(existing_data)
+            if date not in df_existing["Date"].values:
+                result = pd.concat([df_existing, new_data], ignore_index=True)
+                result.sort_values("Date", inplace=True)
+            else:
+                logger.info(f"Date déjà existante pour {parameter} : {date}")
+                return
+        else:
+            result = new_data
 
-        table_name = os.path.splitext(libelle)[0].lower().replace('-', '_').replace(' ', '_')
+        # Sauvegarder le résultat en mémoire
+        buffer = StringIO()
+        result.to_csv(buffer, index=False)
+        csv_content = buffer.getvalue().encode('utf-8')
 
+        # Insérer ou mettre à jour les données dans la base de données
+        insert_or_update_csv_in_db(table_name, f"{transect}_{parameter}.csv", csv_content)
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la sauvegarde de la série temporelle : {e}")
+
+def get_existing_time_series_from_db(table_name):
+    conn = connect_db()
+    if conn is None:
+        logger.error("Impossible de se connecter à la base de données.")
+        return []
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"""
+                SELECT fichier FROM "{table_name}"
+                WHERE libelle = %s
+            """, (f"{table_name}.csv",))
+            result = cur.fetchone()
+            if result:
+                csv_content = result[0].tobytes().decode('utf-8')
+                return pd.read_csv(StringIO(csv_content)).to_dict(orient='records')
+            return []
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des données existantes : {e}")
+        return []
+
+def insert_or_update_csv_in_db(table_name, libelle, csv_content):
+    conn = connect_db()
+    if conn is None:
+        logger.error(f"Connexion à la BD échouée pour {libelle}")
+        return
+
+    try:
         with conn.cursor() as cur:
             cur.execute(f'''
                 CREATE TABLE IF NOT EXISTS "{table_name}" (
@@ -173,48 +227,26 @@ def save_time_series(new_data, transect, parameter, date):
                 );
             ''')
 
-            cur.execute(f'SELECT fichier FROM "{table_name}" WHERE libelle = %s;', (libelle,))
+            cur.execute(f'SELECT id FROM "{table_name}" WHERE libelle = %s;', (libelle,))
             result = cur.fetchone()
-
-            if result:
-                try:
-                    old_csv_binary = result[0]
-                    old_df = pd.read_csv(StringIO(old_csv_binary.decode('utf-8')))
-                    if date in old_df["Date"].values:
-                        logger.info(f"Date déjà existante pour {parameter} : {date}")
-                        return
-                    combined_df = pd.concat([old_df, new_data], ignore_index=True)
-                    combined_df.sort_values("Date", inplace=True)
-                except Exception as e:
-                    logger.warning(f"Erreur lecture ancienne version de {libelle} : {e}")
-                    combined_df = new_data
-            else:
-                combined_df = new_data
-
-            csv_buffer = StringIO()
-            combined_df.to_csv(csv_buffer, index=False)
-            binary_csv = csv_buffer.getvalue().encode('utf-8')
 
             if result:
                 cur.execute(f'''
                     UPDATE "{table_name}"
                     SET fichier = %s
                     WHERE libelle = %s;
-                ''', (binary_csv, libelle))
-                logger.info(f"Mise à jour : {libelle} dans {table_name}")
+                ''', (psycopg2.Binary(csv_content), libelle))
+                logger.info(f"Fichier '{libelle}' mis à jour dans la table {table_name}.")
             else:
                 cur.execute(f'''
                     INSERT INTO "{table_name}" (libelle, fichier)
                     VALUES (%s, %s);
-                ''', (libelle, binary_csv))
-                logger.info(f"Insertion : {libelle} dans {table_name}")
+                ''', (libelle, psycopg2.Binary(csv_content)))
+                logger.info(f"Fichier '{libelle}' inséré dans la table {table_name}.")
 
             conn.commit()
 
     except Exception as e:
-        logger.error(f"Erreur durant save_time_series pour {libelle} : {e}", exc_info=True)
+        logger.error(f"Erreur lors de l'insertion ou mise à jour de {libelle} dans {table_name} : {e}")
     finally:
-        if conn:
-            conn.close()
-
-
+        conn.close()
