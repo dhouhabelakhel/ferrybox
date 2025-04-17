@@ -1235,8 +1235,8 @@ def transect_plotting(request):
                             if is_valid_queryparam(qc_param_query_times):
                                 # plot the two segments for point picker
                                 qs1=Measurements.objects.all()
-                                qs_genova = qs1.filter(Ref_trip=59) #genova
-                                qs_marseille = qs1.filter(Ref_trip=124) #marseille
+                                qs_genova = qs1.filter(Ref_trip=116) #genova
+                                qs_marseille = qs1.filter(Ref_trip=102) #marseille
                                 
 
                                 meta=Metadata.objects.all()                      
@@ -2004,8 +2004,8 @@ def scatter_view(request):
 def time_series(request):
     # Récupération de toutes les données
     qs1 = Measurements.objects.all()
-    qs_genova = qs1.filter(Ref_trip=71)
-    qs_marseille = qs1.filter(Ref_trip=124)
+    qs_genova = qs1.filter(Ref_trip=116)
+    qs_marseille = qs1.filter(Ref_trip=102)
 
     template_name = "time_series.html"
 
@@ -2139,8 +2139,8 @@ def popup_map(request):
     template_name="popup_map.html"
         # plot the two segments for point picker
     qs1=Measurements.objects.all()
-    qs_genova = qs1.filter(Ref_trip=184) #genova
-    qs_marseille = qs1.filter(Ref_trip=124) #marseille
+    qs_genova = qs1.filter(Ref_trip=116) #genova
+    qs_marseille = qs1.filter(Ref_trip=102) #marseille
 
 
     #this part is to select the available transects in the database
