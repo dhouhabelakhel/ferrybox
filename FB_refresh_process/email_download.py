@@ -12,7 +12,7 @@ import logging
 # Configuration IMAP Gmail
 EMAIL_USER = settings.EMAIL_HOST_USER
 EMAIL_PASS = settings.EMAIL_HOST_PASSWORD
-SENDER_EMAIL = "dhouhabelakhel2001@gmail.com"
+SENDER_EMAIL = "ferryboxinstm@gmail.com"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
