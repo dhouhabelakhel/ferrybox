@@ -1,117 +1,259 @@
 {% extends "layouts/base.html" %}
 {% load static %}
-{% block title %} Page Blank {% endblock %}
+{% block title %} Page Blank {% endblock %} 
 
+<!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
+<!-- Ajout des styles Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+  /* Style supplémentaire pour Select2 */
+  .select2-container {
+    width: 100% !important;
+  }
+  
+  /* Ajustements pour correspondre au style de votre site */
+  .select2-container--default .select2-selection--single {
+    height: 38px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 38px;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+  }
+</style>
 {% endblock stylesheets %}
 
 {% block content %}
-<div class="row">
-  <div class="col-lg-12 col-md-12">
-    <div class="card">
-      <div class="card-header card-header-tabs" style="background-color: #003f5c !important;">
-        <div class="nav-tabs-navigation">
-          <div class="nav-tabs-wrapper">
-            <span class="nav-tabs-title">Graphs:</span>
-            <ul class="nav nav-tabs" data-tabs="tabs">
-              <li class="nav-item"><a class="nav-link active" href="#transect" data-toggle="tab">Transect</a></li>
-              <li class="nav-item"><a class="nav-link" href="map">Map</a></li>
-              <li class="nav-item"><a class="nav-link" href="time_series/">Time series</a></li>
-              <li class="nav-item"><a class="nav-link" href="scatter">Scatter</a></li>
-              <li class="nav-item"><a class="nav-link" href="heat">Heat</a></li>
-            </ul>
+  <!-- Choose the type of graph -->
+  <!-- This is the new navbar ( pretty one) , it's calling other sections using the href items, save the names and try this new architechture.. -->
+  <div class="row">
+    <div class="col-lg-12 col-md-12" >
+      <div class="card" >
+        <div class="card-header card-header-tabs "  style="background-color: #003f5c !important;">
+          <div class="nav-tabs-navigation">
+            <div class="nav-tabs-wrapper">
+              <span class="nav-tabs-title">Graphs:</span>
+              <ul class="nav nav-tabs" data-tabs="tabs">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#transect" data-toggle="tab">
+                    <i class="material-icons"></i> Transect
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="map">
+                    <i class="material-icons"></i> Map
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="time_series/">
+                    <i class="material-icons"></i> Time series
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="scatter">
+                    <i class="material-icons"></i> Scatter
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="heat">
+                    <i class="material-icons"></i> Heat 
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="card-body">
-        <div class="tab-content">
-          <div class="tab-pane active" id="transect">
-            <form method="GET" action="{% url 'Ferry_plot:transect_plotting' %}">
-              {% csrf_token %}
-              <div class="row">
+        <!-- These are the navbars called items ( the different graphs forms ) -->
+        <div class="card-body">
+          <div class="tab-content">
+            <!-- this div is just replacing the tab pane part -->
+            <div class="tab-pane active" id="transect">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <td>
+                      <form method="GET" action="{% url 'Ferry_plot:transect_plotting' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                          <div class="col-md-5">
+                            <label for="metadata">Transect reference</label>
+                            
+                            <!-- Select2 pour la sélection du transect -->
+                            <select id="transect_select" class="select2" name="metadata" required>
+                              {% if answered %}
+                                <option value="{{ save_transect }}" selected>{{ save_transect }}</option>
+                              {% endif %}
+                              {% for trans in metadata %}
+                                <option value="{{ trans.Name }}">{{ trans.Name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          
+                          <div class="col-md-3">
+                            <label for="parameter">Parameter</label>
+                            <select id="parameter_select" class="select2" name="parameter_selection">
+                              {% if answered %}
+                                <option value="{{ save_parameter }}" selected>{{ save_parameter }}</option>
+                              {% endif %}
+                              <option value="Salinity_SBE45">Salinity_SBE45</option>
+                              <option value="Temp_in_SBE38">Temp_in_SBE38</option>
+                              <option value="Oxygen">Oxygen</option>
+                              <option value="Turbidity">Turbidity</option>  
+                              <option value="Chl_a">Chl_a</option>
+                            </select>
+                          </div>
+                          
+                          <div class="col-md-2">
+                            <label for="xaxis_label">Xaxis Label</label>
+                            <select id="xaxis_select" class="select2" name="xaxis_label">
+                              {% if answered %}
+                                <option value="{{ save_xaxis }}" selected>{{ save_xaxis }}</option>
+                              {% endif %}
+                              <option value="Distance">Distance</option>
+                              <option value="Longitude">Longitude</option>
+                              <option value="Latitude">Latitude</option>  
+                            </select>
+                          </div>
+                          
+                          <div class="col-md-2">
+                            <label for="qc_param">Quality Control</label>
+                            <select id="qc_select" class="select2" name="qc_param">
+                              {% if answered %}
+                                <option value="{{ save_qc }}" selected>{{ save_qc }}</option>
+                              {% endif %}
+                              <option value="0 - None">0 - None</option>
+                              <option value="1 - Good">1 - Good</option>
+                              <option value="2 - Probably good">2 - Probably good</option>  
+                              <option value="3 - Probably bad">3 - Probably bad</option> 
+                              <option value="4 - Bad">4 - Bad</option> 
+                            </select>
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="container"> 
+                          <div class="col-md-48">
+                            <button type="submit" class="btn btn-primary float-right" style="width: 150px;background-color:#003f5c">Plot</button>
+                          </div>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-                <div class="col-md-5">
-                  <label for="metadata">Transect reference</label>
-                  <select id="transect_select" class="form-control select2" name="metadata" required>
-                    {% if answered %}
-                      <option selected>{{ save_transect }}</option>
-                    {% endif %}
-                    {% for trans in metadata %}
-                      <option value="{{ trans.Name }}">{{ trans.Name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-
-                <div class="col-md-3">
-                  <label for="parameter">Parameter</label>
-                  <select id="parameter_select" class="form-control select2" name="parameter_selection">
-                    {% if answered %}
-                      <option selected>{{ save_parameter }}</option>
-                    {% endif %}
-                    <option>Salinity_SBE45</option>
-                    <option>Temp_in_SBE38</option>
-                    <option>Oxygen</option>
-                    <option>Turbidity</option>
-                    <option>Chl_a</option>
-                  </select>
-                </div>
-
-                <div class="col-md-2">
-                  <label for="xaxis_label">X-axis Label</label>
-                  <select class="form-control select2" name="xaxis_label">
-                    {% if answered %}
-                      <option selected>{{ save_xaxis }}</option>
-                    {% endif %}
-                    <option>Distance</option>
-                    <option>Longitude</option>
-                    <option>Latitude</option>
-                  </select>
-                </div>
-
-                <div class="col-md-2">
-                  <label for="qc_param">Quality Control</label>
-                  <select class="form-control select2" name="qc_param">
-                    {% if answered %}
-                      <option selected>{{ save_qc }}</option>
-                    {% endif %}
-                    <option>0 - None</option>
-                    <option>1 - Good</option>
-                    <option>2 - Probably good</option>
-                    <option>3 - Probably bad</option>
-                    <option>4 - Bad</option>
-                  </select>
-                </div>
+            <div class="border" id="container8" style="height:500px;">
+              <div class="col-md-48">
+                <!-- Le script Highcharts reste inchangé -->
+                <script src="https://code.highcharts.com/highcharts.js"></script>
+                <script src="https://code.highcharts.com/modules/exporting.js"></script>
+                <script src="https://code.highcharts.com/modules/export-data.js"></script>
+                
+                <script>
+                  _categories = {{categories|safe}};
+                  _values = {{values|safe}};
+                  
+                  Highcharts.chart('container8', {    
+                    xAxis: {
+                      categories: _categories,
+                      labels: {
+                        step: 100
+                      }
+                    },
+                    yAxis: {
+                      title: {
+                        text: '{{ axe_title }}'
+                      }
+                    },
+                    exporting: {
+                      enabled: {{ down }}
+                    },
+                    title: {
+                      text: ' '
+                    },
+                    subtitle: {
+                      text: '{{ title }}'
+                    },
+                    tooltip: {
+                      pointFormat: '<tr><td style="color:{series.color};padding:0">{{ axe_title }}: </td>' +
+                        '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
+                    },
+                    series: [{
+                      data: _values,
+                      name: "Gulf of Tunis",
+                      zoneAxis: 'x',
+                      zones: [{
+                        name:'Gulf of Tunis',
+                        value:{{ limit_1 }},
+                        dashStyle: 'solid',
+                        color:'#07B1C5',
+                      }, {
+                        name:'Sardinia canal',
+                        value:{{ limit_2 }},
+                        dashStyle: 'solid',
+                        color:'#9A33B1',
+                      }, {
+                        value: {{ limit_3 }},  
+                        name:'West of Sardinia',    
+                        dashStyle: 'solid',
+                        color:'#4FA953'
+                      }, {
+                        value:{{ limit_4 }},
+                        name:'North of PLB',
+                        dashStyle: 'solid',
+                        color:'#FD9F1B',
+                      }]
+                    }, {
+                      data:[],
+                      name:'Sardinia canal',
+                      color:'#9A33B1',
+                    }, {
+                      data:[],
+                      name:'West of Sardinia',
+                      color:'#4FA953',
+                    }, {
+                      data:[],
+                      name:'North of PLB',
+                      color:'#FD9F1B',
+                    }]
+                  });
+                </script>
               </div>
-
-              <div class="text-right mt-4">
-                <button type="submit" class="btn btn-primary" style="background-color:#003f5c; width: 150px;">Plot</button>
-              </div>
-            </form>
+            </div> 
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+  <br>
 {% endblock content %}
 
+<!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+<!-- Ajout des scripts jQuery et Select2 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
-  // Initialiser Select2
-  $(document).ready(function () {
-    $('.select2').select2();
-
-    // Recherche personnalisée pour le champ transect
-    $('#transectSearch').on('keyup', function () {
-      const searchVal = $(this).val().toLowerCase();
-      $('#transect_select option').each(function () {
-        const text = $(this).text().toLowerCase();
-        $(this).toggle(text.includes(searchVal));
-      });
+  $(document).ready(function() {
+    // Initialisation de tous les sélecteurs Select2
+    $('.select2').select2({
+      width: '100%',
+      placeholder: "Sélectionnez une option...",
+      allowClear: true
+    });
+    
+    // Configuration spécifique pour le sélecteur de transect avec une option de recherche plus visible
+    $('#transect_select').select2({
+      width: '100%',
+      placeholder: "Rechercher ou sélectionner un transect...",
+      allowClear: true
     });
   });
 </script>

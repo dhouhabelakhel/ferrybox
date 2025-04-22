@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'Ferry_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ferry',
+        'NAME': 'Ferrydb',
         'USER': 'postgres',
         'PASSWORD': 'dhouha',
         'HOST': '127.0.0.1',
