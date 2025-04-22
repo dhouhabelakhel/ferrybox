@@ -4,7 +4,9 @@
 {% block title %} Page Blank {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
+{% block stylesheets %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock stylesheets %}
 
 
 {% block content %}
@@ -74,19 +76,18 @@
 
               <div class="row">
 
-                <div class="col-md-5">   
-        <!-- the buttons group starts here-->        
-            <label for="metadata">Transect reference</label>
-            <select id="path_selection" class="custom-select" name="metadata">
-              {% if  answered  %}
-              <option>{{ save_transect }}</option>
-              {% endif %}
-              {% for trans in metadata %}
-              <option >{{ trans.Name }}</option>
-              {% endfor %}
-            </select>
+             
+                <div class="col-md-5">
+                  <label for="metadata">Transect reference</label>
+                  <select id="transect_select" class="form-control select2" name="metadata" required>
+                    {% if answered %}
+                      <option selected>{{ save_transect }}</option>
+                    {% endif %}
+                    {% for trans in metadata %}
+                      <option value="{{ trans.Name }}">{{ trans.Name }}</option>
+                    {% endfor %}
+                  </select>
                 </div>
-
 
             <div class="col-md-3">
             <label for="parameter">Parameter</label>
@@ -330,17 +331,22 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-<script>
-  function filterTransects() {
-    const input = document.getElementById("transectSearch").value.toLowerCase();
-    const select = document.getElementById("path_selection");
-    const options = select.getElementsByTagName("option");
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    for (let i = 0; i < options.length; i++) {
-      const txt = options[i].textContent.toLowerCase();
-      options[i].style.display = txt.includes(input) ? "" : "none";
-    }
-  }
+<script>
+  // Initialiser Select2
+  $(document).ready(function () {
+    $('.select2').select2();
+
+    // Recherche personnalisée pour le champ transect
+    $('#transectSearch').on('keyup', function () {
+      const searchVal = $(this).val().toLowerCase();
+      $('#transect_select option').each(function () {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(text.includes(searchVal));
+      });
+    });
+  });
 </script>{% endblock javascripts %}
 
 
