@@ -1,152 +1,213 @@
-
 {% extends "layouts/base.html" %}
 {% load static %}
-{% block title %} Page Blank {% endblock %} 
 
-<!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
+{% block title %}Heatmap Viewer{% endblock %}
 
-{% block content %}                                <!-- Choose the type of graph -->
+{% block stylesheets %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
+<style>
+  .info-legend {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  }
+  .info-legend h4 {
+    margin: 0 0 5px;
+    color: #555;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+  }
+  .color-box {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+  }
+</style>
+{% endblock stylesheets %}
 
-
-<!-- This is the new navbar ( pretty one) , it's calling other sections using the href items, save the names and try this new architechture.. -->
-    <div class="row">
-      <div class="col-lg-12 col-md-12">
-        <div class="card">
-          <div class="card-header card-header-tabs card-header-primary">
-            <div class="nav-tabs-navigation">
-              <div class="nav-tabs-wrapper">
-                <span class="nav-tabs-title">Graphs:</span>
-                <ul class="nav nav-tabs" data-tabs="tabs">
-                  <li class="nav-item">
-                    <a class="nav-link" href="transect_plotting.html">
-                      <i class="material-icons"></i> Transect
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="map.html">
-                      <i class="material-icons"></i> Map
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="time_series.html">
-                      <i class="material-icons"></i> Time series
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="scatter.html">
-                      <i class="material-icons"></i> Scatter
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#heat" data-toggle="tab">
-                      <i class="material-icons"></i> Heat
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-<!-- These are the navbars called items ( the different graphs forms ) -->
-
-          <div class="card-body">
-            <div class="tab-content">
-              <!-- this div is just replacing the tab pane part -->
-              <div class="tab-pane active" id="transect">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>
-
-            <form method="GET" action=".">
-              {% csrf_token %}
-
-              <div class="row">
-
-
-                 <div class="col-md-5">
-        <!-- the buttons group starts here-->        
-            <label for="metadata">Transect reference</label>
-            <select id="path_selection"  class="custom-select" name="transect_selection_heat">
-              {% for trans in av_transects %}
-              <option value="{{ trans }}">{{ trans }}</option>
-              {% endfor %}
-            </select>
-                </div>
-
-
-            <div class="col-md-3">
-
-            <label for="parameter">Parameter</label>
-            <select id="path_selection"  class="custom-select" name="parameter_selection_heat">
-                <option>Salinity_SBE45</option>
-                <option>Temp_in_SBE38</option>
-                <option>Oxygen</option>
-                <option>Turbidity</option>  
-                <option>Chl_a</option>
-            </select>
-                </div>
-
-
-                <div class="col-md-2">
-                     <label for="metadata">Quality Control</label>
-                      <select class="custom-select" name="qc_param_heat">
-                        <option>0</option>
-                        <option>1</option>
-                        <option>2</option>  
-                        <option>3</option> 
-                        <option>4</option> 
-                    </select>
-                  </div>
-
-
-
-                </div>
-            </div>   
-           <hr> 
-        <button type="submit" class="btn btn-primary" style="width: 130px;right: -860px; ">Plot</button>
-
+{% block content %}
+<div class="row">
+  <div class="col-lg-12 col-md-12">
+    <div class="card">
+      <div class="card-header card-header-tabs "  style="background-color: #003f5c !important;">
+        <div class="nav-tabs-navigation">
+          <div class="nav-tabs-wrapper">
+            <span class="nav-tabs-title">Graphs:</span>
+            <ul class="nav nav-tabs" data-tabs="tabs">
+              <li class="nav-item"><a class="nav-link" href="transect_plotting">Transect</a></li>
+              <li class="nav-item"><a class="nav-link" href="map">Map</a></li>
+              <li class="nav-item"><a class="nav-link" href="time_series/">Time series</a></li>
+              <li class="nav-item"><a class="nav-link" href="scatter">Scatter</a></li>
+              <li class="nav-item"><a class="nav-link active" href="#heat" data-toggle="tab">Heat</a></li>
+            </ul>
           </div>
         </div>
+      </div>
+
+      <div class="card-body">
+        <div class="tab-content">
+          <div class="tab-pane active" id="heat">
+            <form method="GET" action="{% url 'Ferry_plot:heat' %}">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-md-5">
+                  
+                  <label for="transect_selection_heat">Transect reference</label>
+                  <select name="transect_selection_heat" id="transect_selection_heat" class="custom-select">
+                    {% for id, name ,trip_ref in av_transects %}
+                      <option value="{{ trip_ref }}" {% if id|stringformat:"s" == selected_transect %}selected{% endif %}>
+                        {{ name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="parameter_selection_heat">Parameter</label>
+                  <select id="parameter_selection_heat" class="custom-select" name="parameter_selection_heat">
+                    <option value="Salinity_SBE45" {% if selected_param == "Salinity_SBE45" %}selected{% endif %}>Salinity_SBE45</option>
+                    <option value="Temp_in_SBE38" {% if selected_param == "Temp_in_SBE38" %}selected{% endif %}>Temp_in_SBE38</option>
+                    <option value="Oxygen" {% if selected_param == "Oxygen" %}selected{% endif %}>Oxygen</option>
+                    <option value="Turbidity" {% if selected_param == "Turbidity" %}selected{% endif %}>Turbidity</option>
+                    <option value="Chl_a" {% if selected_param == "Chl_a" %}selected{% endif %}>Chl_a</option>
+                  </select>
+                </div>
+
+                <div class="col-md-2">
+                  <label for="qc_param_heat">Quality Control</label>
+                  <select class="custom-select" name="qc_param_heat" id="qc_param_heat">
+                    <option value="0 - None" {% if selected_qc == "0 - None" %}selected{% endif %}>0 - None</option>
+                    <option value="1 - Good" {% if selected_qc == "1 - Good" %}selected{% endif %}>1 - Good</option>
+                    <option value="2 - Probably good" {% if selected_qc == "2 - Probably good" %}selected{% endif %}>2 - Probably good</option>
+                    <option value="3 - Probably bad" {% if selected_qc == "3 - Probably bad" %}selected{% endif %}>3 - Probably bad</option>
+                    <option value="4 - Bad" {% if selected_qc == "4 - Bad" %}selected{% endif %}>4 - Bad</option>
+                  </select>
+                </div> 
+              </div>
+
+              <hr>
+
+              <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Plot</button>
+              </div>
             </form>
-                  </td>
-                    </tr>
-                  </tbody>
-                </table>
 
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+              {{ error }}
+            </div>
+            {% endif %}
+
+            <!-- Map Container -->
+            <div id="heatmap" style="height: 500px; margin-top: 20px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-<div class="border" id="container8" style="position:relative; width: 1000px; height:500px;">
-
-
-
-
-
-</div>
-</div></div></div></div>
-
-
-
-<br>
-
-
-
-<!-- main content -->
-
- 
-
-   <!-- end of page content section -->
-                    
-
-    
 {% endblock content %}
 
-<!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const filteredData = {{ filtered_data|safe }};
+    const selectedParam = "{{ selected_param }}";
 
+    const map = L.map('heatmap');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
+    const defaultCenter = [40.0, 10.0];
+    const defaultZoom = 5;
+
+    if (filteredData && filteredData.length > 0) {
+      let minValue = Number.MAX_VALUE;
+      let maxValue = Number.MIN_VALUE;
+
+      filteredData.forEach(point => {
+        const value = parseFloat(point[2]);
+        if (!isNaN(value)) {
+          minValue = Math.min(minValue, value);
+          maxValue = Math.max(maxValue, value);
+        }
+      });
+
+      const heatData = filteredData.map(point => {
+        return [parseFloat(point[0]), parseFloat(point[1]), parseFloat(point[2])];
+      });
+      
+      
+
+      if (heatData.length > 0) {
+        const bounds = L.latLngBounds(heatData.map(p => [p[0], p[1]]));
+        map.fitBounds(bounds);
+
+        const heatmapLayer = L.heatLayer(heatData, {
+          radius: 25,       // Augmenter le rayon pour mieux voir les points
+          blur: 15,
+          maxZoom: 17,
+          max: maxValue,
+          minOpacity: 0.4,  // Assurer une opacité minimale
+          gradient: {0.4: 'blue', 0.5: 'cyan', 0.6: 'lime', 0.7: 'yellow', 1: 'red'}
+        }).addTo(map);
+        
+        // Ajouter cette ligne pour vérification
+        console.log("Nombre de points dans la heatmap:", heatData.length);
+        console.log("Échantillon de données:", heatData.slice(0, 3));
+        
+
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function(map) {
+          const div = L.DomUtil.create('div', 'info-legend');
+          div.innerHTML = `
+            <h4>${selectedParam}</h4>
+            <div class="legend-item"><div class="color-box" style="background: blue;"></div><span>${minValue.toFixed(2)}</span></div>
+            <div class="legend-item"><div class="color-box" style="background: cyan;"></div><span>${(minValue + (maxValue - minValue) * 0.25).toFixed(2)}</span></div>
+            <div class="legend-item"><div class="color-box" style="background: lime;"></div><span>${(minValue + (maxValue - minValue) * 0.5).toFixed(2)}</span></div>
+            <div class="legend-item"><div class="color-box" style="background: yellow;"></div><span>${(minValue + (maxValue - minValue) * 0.75).toFixed(2)}</span></div>
+            <div class="legend-item"><div class="color-box" style="background: red;"></div><span>${maxValue.toFixed(2)}</span></div>
+          `;
+          return div;
+        };
+        legend.addTo(map);
+
+        L.polyline(heatData.map(p => [p[0], p[1]]), {
+          color: 'black',
+          weight: 1,
+          dashArray: '5, 5',
+          opacity: 0.6
+        }).addTo(map);
+      } else {
+        map.setView(defaultCenter, defaultZoom);
+        showNoDataMessage("Données invalides pour le paramètre sélectionné");
+      }
+    } else {
+      map.setView(defaultCenter, defaultZoom);
+      showNoDataMessage("Aucune donnée disponible pour les paramètres sélectionnés");
+    }
+
+    function showNoDataMessage(message) {
+      const control = L.control({position: 'center'});
+      control.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'no-data-message');
+        div.innerHTML = `
+          <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                      background: white; padding: 10px; border-radius: 5px; z-index: 1000;
+                      box-shadow: 0 0 10px rgba(0,0,0,0.2);">
+            ${message}
+          </div>`;
+        return div;
+      };
+      control.addTo(map);
+    }
+  });
+</script>
+{% endblock javascripts %}

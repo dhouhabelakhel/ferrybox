@@ -1,373 +1,139 @@
-<!--
-=========================================================
- Material Dashboard - v2.1.1
-=========================================================
-
- Product Page: https://www.creative-tim.com/product/material-dashboard
- Copyright 2019 Creative Tim (https://www.creative-tim.com)
- Licensed under MIT (https://github.com/creativetimofficial/material-dashboard/blob/master/LICENSE.md)
-
- Coded by Creative Tim
-
-=========================================================
-
- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. -->
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
-
-
-  <!-- for the images in index page -->
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-
-      .notification-icon {
-        position: relative;
-        font-size: 1.5rem;
-        margin-right: 20px;
-      }
-    
-      .notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -10px;
-        background: red;
-        color: white;
-        border-radius: 50%;
-        padding: 2px 6px;
-        font-size: 0.7rem;
-        display: none;
-      }
-    
-      .dropdown-menu.notifications {
-        max-height: 250px;
-        overflow-y: auto;
-        width: 300px;
-      }
-    
-  /*<!-- this is the justifying part for yout texts -->*/
-
-div {
-  text-align: justify;
-  text-justify: inter-word;
-}
-
-
-/*<!-- justifying ends here -->*/
-  html {
-  box-sizing: border-box;
-}
-
-*, *:before, *:after {
-  box-sizing: inherit;
-}
-
-.column {
-  float: left;
-  width: 33.3%;
-  margin-bottom: 16px;
-  padding: 0 8px;
-}
-
-@media screen and (max-width: 650px) {
-  .column {
-    width: 100%;
-    display: block;
-  }
-}
-
-.card {
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-}
-
-.container {
-  padding: 0 16px;
-}
-
-.container::after, .row::after {
-  content: "";
-  clear: both;
-  display: table;
-}
-
-.title {
-  color: grey;
-}
-
-.button {
-  border: none;
-  outline: 0;
-  display: inline-block;
-  padding: 8px;
-  color: white;
-  background-color: #000;
-  text-align: center;
-  cursor: pointer;
-  width: 100%;
-}
-
-.button:hover {
-  background-color: #555;
-}
-body {
-  font-family: Arial;
-  margin: 0;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-img {
-  vertical-align: middle;
-}
-
-/* Position the image container (needed to position the left and right arrows) */
-.container {
-  position: relative;
-}
-
-/* Hide the images by default */
-.mySlides {
-  display: none;
-}
-
-/* Add a pointer when hovering over the thumbnail images */
-.cursor {
-  cursor: pointer;
-}
-
-/* Next & previous buttons */
-.prev,
-.next {
-  cursor: pointer;
-  position: absolute;
-  top: 40%;
-  width: auto;
-  padding: 16px;
-  margin-top: -50px;
-  color: white;
-  font-weight: bold;
-  font-size: 20px;
-  border-radius: 0 3px 3px 0;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Position the "next button" to the right */
-.next {
-  right: 0;
-  border-radius: 3px 0 0 3px;
-}
-
-/* On hover, add a black background color with a little bit see-through */
-.prev:hover,
-.next:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-/* Number text (1/3 etc) */
-.numbertext {
-  color: #f2f2f2;
-  font-size: 12px;
-  padding: 8px 12px;
-  position: absolute;
-  top: 0;
-}
-
-/* Container for image text */
-.caption-container {
-  text-align: center;
-  background-color: #142850;
-  padding: 1px 10px;
-  color: white;
-}
-
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-/* Six columns side by side */
-.column {
-  float: left;
-  width: 16.66%;
-}
-
-/* Add a transparency effect for thumnbail images */
-.demo {
-  opacity: 0.6;
-}
-
-.active,
-.demo:hover {
-  opacity: 1;
-}
-</style>
-
-<!-- leaflet part -->
-
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-   crossorigin=""/>
-
-    <!-- Make sure you put this AFTER Leaflet's CSS -->
- <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-   crossorigin=""></script>
-
-   <!-- end of leaflet part -->
-
-<!-- images part ends here -->
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Tunisian FerryBox Dashboard - {% block title %}{% endblock %} | AppSeed</title>
+
+  <!-- Favicon & Touch Icons -->
   <link rel="apple-touch-icon" sizes="76x76" href="/static/assets/img/apple-icon.png">
   <link rel="icon" type="image/png" href="/static/assets/img/favicon.png">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <title>
-    Tunisian FerryBox Dashboard - {% block title %}{% endblock %} | AppSeed
-  </title>
 
-  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
-  <!--     Fonts and icons     -->
-  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+  <!-- Fonts and icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
-  <!-- CSS Files -->
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
+
+  <!-- Material Dashboard CSS -->
   <link href="/static/assets/css/material-dashboard.css?v=2.1.1" rel="stylesheet" />
-  <!-- CSS Just for demo purpose, don't include it in your project -->
   <link href="/static/assets/demo/demo.css" rel="stylesheet" />
 
-  <!-- Specific Page CSS goes HERE  -->
   {% block stylesheets %}{% endblock stylesheets %}
 
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      color: #333;
+    }
+
+    .navbar {
+      background-color: #003f5c !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      
+    }
+
+    .navbar .nav-link,
+    .navbar .navbar-brand,
+    .navbar .material-icons,
+    .navbar .fa {
+      color: #ffffff !important;
+    }
+
+    .navbar .dropdown-menu {
+      background-color: #ffffff;
+    }
+
+    .navbar .dropdown-item:hover {
+      background-color: #f5f5f5;
+    }
+
+    .notification-icon {
+      position: relative;
+      font-size: 1.5rem;
+      margin-right: 20px;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -10px;
+      background: #ff6361;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      display: none;
+    }
+
+    .dropdown-menu.notifications {
+      max-height: 300px;
+      overflow-y: auto;
+      width: 350px;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar .logo img {
+      width: 10rem;
+      height: auto;
+    }
+
+    .sidebar .nav-link {
+      color: #fff;
+    }
+
+    .sidebar .nav-link:hover,
+    .sidebar .nav-item.active > .nav-link {
+      background-color: #003f5c;
+      color: #fff;
+    }
+
+    footer {
+      background-color: #003f5c;
+      color: #fff;
+      text-align: center;
+      padding: 10px 0;
+    }
+  </style>
 </head>
 
-<body class="">
-  <div class="wrapper ">
-
-        <div class="sidebar" data-color="purple" data-background-color="white" data-image="/static/assets/img/sidebar_ferry.png">
-      <div class="logo">
-        <a href="" class="simple-text logo-normal">
-          FerryBox Dashboard
+<body>
+  <div class="wrapper">
+    <div class="sidebar" data-color="purple" data-background-color="white" data-image="/static/assets/img/sidebar_ferry.png">
+      <div class="logo text-center">
+        <a href="/" class="logo-normal">
+          <img src="/static/assets/img/instmLogo.jpg" alt="INSTM Logo">
         </a>
       </div>
-      {% if user.is_authenticated %}
       <div class="sidebar-wrapper">
         <ul class="nav">
-          
-          <li class="nav-item {% if overview %} active {% endif %} ">
-            
-            <a class="nav-link" href="index.html">
-              <i class="material-icons"></i>
-              <p>Data Overview</p>
-            </a>
-          </li>
-          <li class="nav-item {% if access %} active {% endif %} ">
-            <a class="nav-link" href="/transect_plotting">
-              <i class="material-icons"></i>
-              <p>Data access</p>
-            </a>
-          </li>
-
-          {% if not_admin %}
-          <li class="nav-item {% if downed %} active {% endif %}">
-            <a class="nav-link" href="/page-user">
-              <i class="material-icons"></i>
-              <p>Data download</p>
-            </a>
-          </li>
+          <li class="nav-item {% if overview %} active {% endif %}"><a class="nav-link" href="/index.html"><p>Data Overview</p></a></li>
+          <li class="nav-item {% if access %} active {% endif %}"><a class="nav-link" href="/transect_plotting"><p>Data Access</p></a></li>
+          {% if user.is_authenticated %}
+          <li class="nav-item {% if downed %} active {% endif %}"><a class="nav-link" href="/page-user"><p>Data Download</p></a></li>
+          <li class="nav-item {% if interface %} active {% endif %}"><a class="nav-link" href="/ui-notifications.html"><p>Admin Interface</p></a></li>
+          <li class="nav-item {% if process %} active {% endif %}"><a class="nav-link" href="/process"><p>Process</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}"><p>Logout</p></a></li>
+          {% else %}
+          <li class="nav-item {% if inpage %} active {% endif %}"><a class="nav-link" href="/login/"><p>Login</p></a></li>
           {% endif %}
-
-<!-- u need to figure out how to seperate the admin part -->
-
-          
-          {% if is_admin %}
-          <li class="nav-item  {% if interface %} active {% endif %} ">
-            <a class="nav-link" href="/ui-notifications.html">
-              <i class="material-icons"></i>
-              <p>Admin interface</p>
-            </a>
-          </li>   
-          {% endif %}    
-
-
-          <li class="nav-item ">
-            <a class="nav-link" href="{% url 'logout' %}" >
-              <i class="material-icons"></i>
-              <p>Logout</p>
-            </a>
-          </li>
-
         </ul>
       </div>
-      {% else %}
-      <div class="sidebar-wrapper">
-        <ul class="nav">
-      <li class="nav-item {% if overview %} active {% endif %}">
-        <a class="nav-link" href="/index">
-          <i class="material-icons"></i>
-          <p>Data Overview</p>
-        </a>
-      </li>
-      <li class="nav-item {% if access %} active {% endif %}">
-        <a class="nav-link" href="/transect_plotting">
-          <i class="material-icons"></i>
-          <p>Data access</p>
-        </a>
-      </li>
-          <li class="nav-item {% if inpage %} active {% endif %}">
-            <a class="nav-link" href="/login">
-              <i class="material-icons"></i>
-              <p>Login</p>
-            </a>
-          </li>
-        </ul>
-      </div>
-      {% endif %}
-
     </div>
-    <script>
-      const socket = new WebSocket("ws://localhost:8000/ws/notifications/");
-    
-      socket.onopen = function () {
-        console.log("WebSocket connecté");
-      };
-    
-      socket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
-        const notifIcon = document.getElementById("notifIcon");
-        const notifBadge = document.getElementById("notifBadge");
-        const notifMenu = document.getElementById("notifMenu");
-    
-        // Afficher le badge et incrémenter le compteur
-        let count = parseInt(notifBadge.innerText || "0");
-        notifBadge.style.display = "inline-block";
-        notifBadge.innerText = count + 1;
-    
-        // Supprimer le message "No new notifications"
-        const placeholder = notifMenu.querySelector(".text-muted");
-        if (placeholder) placeholder.remove();
-    
-        // Créer un nouvel élément de notification
-        const notifItem = document.createElement("a");
-        notifItem.className = "dropdown-item";
-        notifItem.href = "#";
-        notifItem.innerText = data.message;
-    
-        // Ajouter la notification en haut du menu
-        notifMenu.prepend(notifItem);
-      };
-    </script>
 
-
+    <div class="main-panel">
       <!-- Navbar -->
-      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
+      <nav class="navbar navbar-expand-lg navbar-absolute fixed-top">
         <div class="container-fluid">
-{% if user.is_authenticated %}
+          {% if user.is_authenticated %}
+          <a class="navbar-brand d-flex align-items-center" href="/">
+            <span class="d-none d-md-inline text-white">Hello <b>{{ user.username }}</b></span>
+          </a>
 
           <div class="collapse navbar-collapse justify-content-end">
             <ul class="navbar-nav">
@@ -382,16 +148,10 @@ img {
                   <a class="dropdown-item text-muted" href="#">No new notifications</a>
                 </div>
               </li>
-              
-                        <div class="navbar-wrapper">
-            <a class="navbar-brand" href="javascript:;">Hello  <b>{{ user.username }}</b></a>
-          </div>
               <li class="nav-item dropdown">
-                <a class="nav-link" href="javascript:;" id="navbarDropdownProfile" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <a class="nav-link" href="#" id="navbarDropdownProfile" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <i class="material-icons">person</i>
-                  <p class="d-lg-none d-md-block">
-                    Account
-                  </p>
+                  <p class="d-lg-none d-md-block">Account</p>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownProfile">
                   <a class="dropdown-item" href="/page-user">Download data</a>
@@ -401,34 +161,47 @@ img {
               </li>
             </ul>
           </div>
+          {% endif %}
         </div>
-        {% endif %}
-   </nav>
+      </nav>
 
-
-
-    <div class="main-panel">
-
-       <!-- End Navbar -->
       <div class="content">
         <div class="container-fluid">
-
           {% block content %}{% endblock content %}
-
         </div>
       </div>
 
       {% include 'includes/footer.html' %}
-
     </div>
   </div>
 
-  {% include 'includes/scripts.html' %}
+  <!-- WebSocket Notification Script -->
+  <script>
+    const socket = new WebSocket("ws://localhost:8000/ws/notifications/");
+    socket.onopen = () => console.log("WebSocket connected");
+    socket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      const notifIcon = document.getElementById("notifIcon");
+      const notifBadge = document.getElementById("notifBadge");
+      const notifMenu = document.getElementById("notifMenu");
 
+      let count = parseInt(notifBadge.innerText || "0");
+      notifBadge.style.display = "inline-block";
+      notifBadge.innerText = count + 1;
+
+      const placeholder = notifMenu.querySelector(".text-muted");
+      if (placeholder) placeholder.remove();
+
+      const notifItem = document.createElement("a");
+      notifItem.className = "dropdown-item";
+      notifItem.href = "#";
+      notifItem.innerText = data.message;
+      notifMenu.prepend(notifItem);
+    };
+  </script>
+
+  {% include 'includes/scripts.html' %}
   {% include 'includes/scripts-sidebar.html' %}
-  
-  <!-- Specific Page JS goes HERE  -->
   {% block javascripts %}{% endblock javascripts %}
-  
 </body>
 </html>

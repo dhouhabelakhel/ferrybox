@@ -13,76 +13,10 @@
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 
 {% block content %}
-
-    <div class="row">
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-warning card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Total Space</p>
-            <h3 class="card-title">{{ sum_size }}
-              <small>MO</small>
-            </h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons text-danger"></i>
-              <a>Estimation before pre-treatments</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-success card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Nbr of files</p>
-            <h3 class="card-title">{{ nbr_files }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Last 24 Hours
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-danger card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Downloaded data</p>
-            <h3 class="card-title">-</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Tracked from Web app
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-info card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="fa fa-twitter"></i> -->
-            </div>
-            <p class="card-category">Users</p>
-            <h3 class="card-title">+{{ nbr_users }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Just Updated
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- Statistiques -->
+<div class="row">
+  {% include "layouts/stats_cards.html" %}
+</div>
 
 
 
@@ -97,31 +31,31 @@
               <div class="nav-tabs-wrapper">
                 <span class="nav-tabs-title">Options:</span>
                 <ul class="nav nav-tabs" data-tabs="tabs">
+             
                   <li class="nav-item">
-                    <a class="nav-link active " href="#requests"  data-toggle="tab">
-                      <i class="material-icons"></i> Requests
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="download.html">
-                      <i class="material-icons"></i> Download
-                      <!-- <div class="ripple-container"></div> -->
+                    <a class="nav-link active " href="#requests">
+                      <i class="material-icons">inbox</i> Requests
                     </a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link " href="upload.html">
-                      <i class="material-icons"></i> Upload
+                      <i class="material-icons">file_upload</i> Upload
                       <!-- <div class="ripple-container"></div> -->
+                    </a>
+                  </li>
+                 
+                  <li class="nav-item">
+                    <a class="nav-link" href="download.html">
+                      <i class="material-icons">file_download</i> Download
                     </a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link " href="data_description.html">
-                      <i class="material-icons"></i> Data description
-                      <!-- <div class="ripple-container"></div> -->
+                    <a class="nav-link" href="data_description.html">
+                      <i class="material-icons">info</i> Data description
                     </a>
                   </li>
                 </ul>
+               
               </div>
             </div>
           </div>
@@ -137,76 +71,64 @@
                       <td>
 
 
-<!-- 
 
 
-   <div class="row clearfix">
-      <div class="col-md-12 table-responsive">
-      <table class="table table-hover-warning table-sm"  id="tab_logic">
-        <thead>
-          <tr >
-            <th class="text-center b-none">
-              User ID
-            </th>
-            <th class="text-center">
-              Name
-            </th>
-            <th class="text-center">
-              Subject
-            </th>
-            <th class="text-center">
-              Requested file
-            </th>
-              <th class="text-center">
-              E-mail
-            </th>
-                <th class="text-center" style="border-top: 1px solid #ffffff; border-right: 1px solid #ffffff;">
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for down in qs_down %}
 
-            <tr id='addr0' data-id="0" class="hidden" align="center">
+                        <div class="row clearfix">
+                          <div class="col-md-12 table-responsive">
+                            <table class="table table-hover-warning table-sm" id="tab_logic">
+                              <thead>
+                                <tr>
+                                  <th class="text-center b-none">User ID</th>
+                                  <th class="text-center">Name</th>
+                                  <th class="text-center">Subject</th>
+                                  <th class="text-center">Requested file</th>
+                                  <th class="text-center">E-mail</th>
+                                  <th class="text-center" style="border-top: 1px solid #ffffff; border-right: 1px solid #ffffff;">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for down in qs_down %}
+                                <tr id="addr0" data-id="{{ down.id }}" align="center">
+                                  <td class="b-none" data-name="id_hidden">
+                                    <input type="text" placeholder="Name" class="form-control" value="{{ down.ID_user }}" readonly />
+                                  </td>
+                        
+                                  <td data-name="user_id">
+                                    <input type="text" placeholder="Name" class="form-control" value="{{ down.Name }}" readonly />
+                                  </td>
+                        
+                                  <td data-name="subject">
+                                    <input type="text" placeholder="Subject" class="form-control" value="{{ down.Subject }}" readonly />
+                                  </td>
+                        
+                                  <td data-name="request_file">
+                                    <input type="text" placeholder="Requested File Description" class="form-control" value="{{ down.Transects }}" readonly />
+                                  </td>
+                        
+                                  <td data-name="mail">
+                                    <input type="email" placeholder="Email" class="form-control" value="{{ down.Email }}" readonly />
+                                  </td>
+                        
+                                  <td data-name="answer">
+                                    <div class="d-flex justify-content-center">
+                                      <button type="button" class="btn btn-success btn-sm m-1" onclick="handleAction('{{ down.id }}', 'accept')">
+                                        <i class="material-icons">check</i> Accept
+                                      </button>
+                                      <button type="button" class="btn btn-danger btn-sm m-1" onclick="handleAction('{{ down.id }}', 'reject')">
+                                        <i class="material-icons">close</i> Reject
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        
+                        
 
-
-            <td class="b-none" data-name="id_hidden" name='id_hidden'>
-                <input type="text"   placeholder='Name' class="form-control"/>
-                {{ down.ID_user }}
-            </td>
-
-            <td data-name="user_id" name='user_id'>
-                <input type="text"   placeholder='Name' class="form-control"/>
-                {{ down.Name }}
-            </td>
-            <td data-name="subject" name='subject'>
-                <input type="text"  placeholder='Email' class="form-control"/>
-                {{ down.Subject }}
-            </td>
-            <td data-name="request_file" name="request_file">
-                <input  placeholder="Description" class="form-control"></input>
-                {{ down.Transects }}
-            </td>
-            <td data-name="mail" name="mail">
-                <input  placeholder="Description" class="form-control"></input>
-                {{ down.Email }}
-            </td>
-              <td data-name="answer">
-                <select name="answer">
-                        <option type="submit" class="btn btn-success" style="width: 150px">Accept</option>
-                        <option type="submit" class="btn btn-danger" style="width: 150px">Reject</option>
-                </select>
-            </td>
-          </tr>
-          {% endfor %}
-
-
-        </tbody>
-      </table>
-    </div>
-  </div>
-
- -->
 
 
 <!-- this part functions with a get form -->
@@ -236,81 +158,7 @@
 
 
 
-                <div class="col-md-2">   
-
-
-            <label for="metadata">User ID</label>
-            <select id="path_selection" class="custom-select" name="user_id">
-              {% for q in qs_down %}
-              <option >{{ q.Name }}</option>
-              {% endfor %}
-            </select>
-                </div>
-
-
-            <div class="col-md-3">
-            <label for="parameter">Requested file</label>
-            <select id="path_selection"  class="custom-select" name="request_file">
-              {% for q in qs_down %}
-              <option >{{ q.Transects }}</option>
-              {% endfor %}
-            </select>
-
-                </div>
-   
-  
-             <div class="col-md-3">
-
-            <label for="metadata">Subject</label>
-              <select class="custom-select" name="subject">
-              {% for q in qs_down %}
-              <option >{{ q.Subject }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-            <div class="col-md-2">
-             <label for="metadata">E-mail</label>
-              <select class="custom-select" name="mail">
-              {% for q in qs_down %}
-              <option >{{ q.Email }}</option>
-              {% endfor %}
-            </select>
-          </div> 
-
-
-            <div class="col-md-2">
-             <label for="metadata">Answer</label>
-              <select class="custom-select" name="answer">
-
-              <option >Accept</option>
-               <option >Reject</option>
-
-            </select>
-          </div> 
-
-
-
-                </div>
-            </div>   
-           <hr> 
-           <div class="container"> 
-<div class="col-md-48">
-          <button type="submit" class="btn btn-primary  float-right" style="width: 150px">Apply</button>
-
-
-      </div>
-    </div>
-
-          </div>
-        </div>
-            </form>
-                  </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-</div>
+              
 
 <!-- end of the functioning part -->
 
@@ -383,6 +231,7 @@
 {% block javascripts %}
 
   <script>
+    
     $(document).ready(function() {
       //init DateTimePickers
       md.initFormExtendedDatetimepickers();
@@ -481,7 +330,33 @@
     $("#add_row").trigger("click");
 });
 
+function handleAction(id, action) {
+  const url = `/update_request/${id}/`; 
+  const data = { action: action };
 
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}' 
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    console.log(result)
+    if (result.success) {
+      // Supprimer la ligne de la page après succès
+      $(`tr[data-id="${id}"]`).remove();
+    } else {
+      alert('An error occurred. Please try again.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred. Please try again.');
+  });
+}
 
   </script>
   

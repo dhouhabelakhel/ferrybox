@@ -7,75 +7,78 @@
 
 {% block content %}
 
-    <div class="row">
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-warning card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Total Space</p>
-            <h3 class="card-title">{{ sum_size }}
-              <small>MO</small>
-            </h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons text-danger"></i>
-              <a>Estimation after pre-treatments</a>
-            </div>
-          </div>
+<div class="row">
+  <div class="col-lg-3 col-md-6 col-sm-6">
+    <div class="card card-stats">
+      <div class="card-header card-header-warning card-header-icon">
+        <div class="card-icon">
+          <i class="material-icons">storage</i>
         </div>
+        <p class="card-category">Total Space</p>
+        <h3 class="card-title">{{ sum_size }}
+          <small>MO</small>
+        </h3>
       </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-success card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Nbr of files</p>
-            <h3 class="card-title">{{ nbr_files }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Last 24 Hours
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-danger card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Downloaded data</p>
-            <h3 class="card-title">-</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Tracked from Web app
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-info card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="fa fa-twitter"></i> -->
-            </div>
-            <p class="card-category">Users</p>
-            <h3 class="card-title">+{{ nbr_users }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Just Updated
-            </div>
-          </div>
+      <div class="card-footer">
+        <div class="stats">
+          <i class="material-icons text-danger">warning</i>
+          <a>Estimation before pre-treatments</a>
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 col-sm-6">
+    <div class="card card-stats">
+      <div class="card-header card-header-success card-header-icon">
+        <div class="card-icon">
+          <i class="material-icons">description</i>
+        </div>
+        <p class="card-category">Nbr of files</p>
+        <h3 class="card-title">{{ nbr_files }}</h3>
+      </div>
+      <div class="card-footer">
+        <div class="stats">
+          <i class="material-icons">update</i> Last 24 Hours
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 col-sm-6">
+    <div class="card card-stats">
+      <div class="card-header card-header-danger card-header-icon">
+        <div class="card-icon">
+          <i class="material-icons">cloud_download</i>
+        </div>
+        <p class="card-category">Downloaded data</p>
+        <h3 class="card-title">-</h3>
+      </div>
+      <div class="card-footer">
+        <div class="stats">
+          <i class="material-icons">track_changes</i> Tracked from Web app
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 col-sm-6">
+    <div class="card card-stats">
+      <div class="card-header card-header-info card-header-icon">
+        <div class="card-icon">
+          <i class="material-icons">people</i>
+        </div>
+        <p class="card-category">Users</p>
+        <h3 class="card-title">+{{ nbr_users }}</h3>
+      </div>
+      <div class="card-footer">
+        <div class="stats">
+          <i class="material-icons">person_add</i> Just Updated
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -90,28 +93,27 @@
               <div class="nav-tabs-wrapper">
                 <span class="nav-tabs-title">Options:</span>
                 <ul class="nav nav-tabs" data-tabs="tabs">
+             
                   <li class="nav-item">
-                    <a class="nav-link " href="ui-notifications.html">
-                      <i class="material-icons"></i> Requests
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#download" data-toggle="tab">
-                      <i class="material-icons"></i> Download
-                      <!-- <div class="ripple-container"></div> -->
+                    <a class="nav-link  " href="ui-notifications.html">
+                      <i class="material-icons">inbox</i> Requests
                     </a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link " href="upload.html">
-                      <i class="material-icons"></i> Upload
+                      <i class="material-icons">file_upload</i> Upload
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
+                 
                   <li class="nav-item">
-                    <a class="nav-link " href="data_description.html">
-                      <i class="material-icons"></i> Data description
-                      <!-- <div class="ripple-container"></div> -->
+                    <a class="nav-link active" href="#download">
+                      <i class="material-icons">file_download</i> Download
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="data_description.html">
+                      <i class="material-icons">info</i> Data description
                     </a>
                   </li>
                 </ul>
@@ -131,32 +133,57 @@
                         <div class="form-check">
 <!-- option content starts here -->
                 <div class="card-body">
-           
-                  <form>
-                    {% csrf_token %}
-                  
-                    
-
-                
-        <!-- the buttons group starts here-->        
-            <label for="metadata">Download FerryBox data</label>
-                       <hr> 
-                       <div class="row">
-                        <div class="col-md-8">
-            <select id="path_selection" multiple class="custom-select" name="transect_select_download">
-              {% for trans in metadata %}
-              <option >{{ trans.Name }}</option>
-              {% endfor %}
-            </select>
+           <!-- Fix the form to properly handle multiple checkbox selections -->
+<!-- Fix the form to use standard submission without relying on named URL -->
+<form method="post">
+  {% csrf_token %}
+  
+  <label for="metadata">Download FerryBox data</label>
+  <hr> 
+  <div class="row">
+    <div class="col-md-8">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="text-info">
+            <tr>
+              <th>Select</th>
+              <th>Transect Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for trans in metadata %}
+            <tr>
+              <td>
+                <div class="form-check">
+                  <label class="form-check-label">
+                    <!-- Use name that works with Django's request.POST.getlist() -->
+                    <input class="form-check-input" type="checkbox" name="transect_select_download" value="{{ trans.Name }}">
+                    <span class="form-check-sign">
+                      <span class="check"></span>
+                    </span>
+                  </label>
                 </div>
-
-                  
-                </div> 
-                 <hr>
-                  <button type="submit" class="btn btn-info btn-round">Download</button>
-
-                </form>
-
+              </td>
+              <td>{{ trans.Name }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <hr>
+  <!-- Add select all button -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <button type="button" id="select-all" class="btn btn-primary btn-sm">Select All</button>
+      <button type="button" id="deselect-all" class="btn btn-default btn-sm">Deselect All</button>
+    </div>
+  </div>
+  
+  <button type="submit" class="btn btn-info btn-round">Download</button>
+</form>
                         </td>
                     </tr>
                   </tbody>
@@ -197,9 +224,19 @@
 {% block javascripts %}
 
   <script>
+ 
     $(document).ready(function() {
-      //init DateTimePickers
+      // Select all checkboxes
       md.initFormExtendedDatetimepickers();
+
+      $("#select-all").click(function(){
+        $('input[name="transect_select_download"]').prop('checked', true);
+      });
+      
+      // Deselect all checkboxes
+      $("#deselect-all").click(function(){
+        $('input[name="transect_select_download"]').prop('checked', false);
+      });
     });
   </script>
   

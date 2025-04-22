@@ -1,0 +1,563 @@
+{% extends "layouts/base.html" %}
+{% block stylesheets %}
+  <style>
+    /* Reset body styling only for specific elements */
+    .terminal-container {
+      font-family: 'Courier New', Courier, monospace;
+      color: #d4d4d4;
+    }
+
+    .terminal-window {
+      position: fixed; /* Fixer le terminal à l'écran */
+      bottom: 60px; /* Espace pour footer */
+      right: 20px; /* Position à droite */
+      width: 80%; /* Largeur par défaut */
+      max-width: 900px;
+      height: 400px;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid #444;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #000;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      z-index: 1000;
+      transition: all 0.3s ease; /* Animation fluide */
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .terminal-window {
+        width: 95%;
+        right: 2.5%;
+        bottom: 50px;
+      }
+    }
+
+    .terminal-header {
+      background-color: #2d2d2d !important;
+      color: #ccc;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #444;
+    }
+
+    .terminal-header .title {
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal-header .title i {
+      color: #00ff00;
+    }
+
+    .terminal-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-btn {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .control-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      color: #333;
+    }
+
+    .minimize-btn {
+      background-color: #FFC107;
+    }
+    .minimize-btn::after {
+      content: '−';
+    }
+
+    .maximize-btn {
+      background-color: #4CAF50;
+    }
+    .maximize-btn::after {
+      content: '□';
+    }
+
+    .close-btn {
+      background-color: #F44336;
+      color: #333;
+      width: 16px;
+      height: 16px;
+      text-align: center;
+      line-height: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .close-btn::after {
+      content: '×';
+    }
+
+    #terminal {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      height: calc(100% - 37px);
+      font-size: 14px;
+      line-height: 1.4;
+      scrollbar-width: thin;
+      scrollbar-color: #444 #222;
+    }
+
+    #terminal::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #terminal::-webkit-scrollbar-track {
+      background: #222;
+    }
+
+    #terminal::-webkit-scrollbar-thumb {
+      background-color: #444;
+      border-radius: 6px;
+    }
+
+    .log-entry {
+      margin-bottom: 6px;
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .log-entry i {
+      margin-top: 2px;
+    }
+
+    .timestamp {
+      color: #888;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+
+    .info { 
+      color: lightgreen; 
+    }
+    .info i {
+      color: lightgreen;
+    }
+
+    .warning { 
+      color: #FFC107; 
+    }
+    .warning i {
+      color: #FFC107;
+    }
+
+    .error { 
+      color: #F44336; 
+    }
+    .error i {
+      color: #F44336;
+    }
+    
+    /* Blinking cursor effect */
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background-color: #d4d4d4;
+      animation: blink 1s step-start infinite;
+      margin-left: 2px;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* Bouton pour afficher le terminal */
+    .toggle-terminal {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #2d2d2d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      z-index: 1001;
+      display: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .toggle-terminal:hover {
+      background-color: #444;
+      transform: translateY(-2px);
+    }
+
+    /* État minimisé */
+    .minimized {
+      height: 37px !important;
+    }
+    .minimized #terminal {
+      display: none;
+    }
+
+    /* Animation d'entrée */
+    .terminal-enter {
+      animation: slideIn 0.3s forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Badge de notification */
+    .log-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #F44336;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+  <!-- Icônes FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="terminal-container">
+  <button id="showTerminal" class="toggle-terminal">
+    <i class="fas fa-terminal"></i> Show Terminal
+    <span id="logBadge" class="log-badge" style="display: none;">0</span>
+  </button>
+  <div class="terminal-window terminal-enter" id="terminalWindow">
+    <div class="terminal-header">
+      <span class="title">
+        <i class="fas fa-terminal"></i> 
+        Process terminal
+                <span id="processingIndicator" style="margin-left: 10px; font-size: 12px; display: none;">
+          <i class="fas fa-sync-alt fa-spin"></i> In progress...
+        </span>
+      </span>
+      <div class="terminal-controls">
+        <button class="control-btn minimize-btn" id="minimizeTerminal" title="Réduire"></button>
+        <button class="control-btn maximize-btn" id="maximizeTerminal" title="Agrandir"></button>
+        <button class="close-btn" id="closeTerminal" title="Fermer"></button>
+      </div>
+    </div>
+    <div id="terminal">
+      <div class="log-entry info">
+        <i class="fas fa-info-circle"></i>
+        <span><span class="timestamp">[Système]</span> Terminal initialisé, connexion établie...</span>
+      </div>
+      {% for log in logs %}
+        <div class="log-entry">
+          {% if 'INFO' in log %}
+          <i class="fas fa-info-circle"></i>
+          {% elif 'WARNING' in log %}
+          <i class="fas fa-exclamation-triangle"></i>
+          {% elif 'ERROR' in log or 'CRITICAL' in log %}
+          <i class="fas fa-times-circle"></i>
+          {% else %}
+          <i class="fas fa-chevron-right"></i>
+          {% endif %}
+          <span>{{ log }}</span>
+        </div>
+      {% endfor %}
+      <span class="cursor"></span>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+  // Gestion du terminal fixe
+  document.addEventListener('DOMContentLoaded', function() {
+    const terminal = document.getElementById('terminal');
+    const terminalWindow = document.getElementById('terminalWindow');
+    const showTerminalBtn = document.getElementById('showTerminal');
+    const closeTerminalBtn = document.getElementById('closeTerminal');
+    const minimizeTerminalBtn = document.getElementById('minimizeTerminal');
+    const maximizeTerminalBtn = document.getElementById('maximizeTerminal');
+    const processingIndicator = document.getElementById('processingIndicator');
+    const logBadge = document.getElementById('logBadge');
+    
+    let isMaximized = false;
+    let isMinimized = false;
+    let newLogCount = 0;
+    let originalHeight = '400px';
+    let originalWidth = '80%';
+    let originalPosition = {
+      bottom: '60px',
+      right: '20px'
+    };
+    
+    // Fonctions de contrôle du terminal
+    closeTerminalBtn.addEventListener('click', function() {
+      terminalWindow.style.display = 'none';
+      showTerminalBtn.style.display = 'flex';
+    });
+    
+    showTerminalBtn.addEventListener('click', function() {
+      terminalWindow.style.display = 'flex';
+      terminalWindow.classList.add('terminal-enter');
+      showTerminalBtn.style.display = 'none';
+      
+      // Réinitialiser le compteur de notifications
+      newLogCount = 0;
+      logBadge.style.display = 'none';
+      logBadge.textContent = '0';
+      
+      // Restaurer si minimisé
+      if (isMinimized) {
+        terminalWindow.classList.remove('minimized');
+        terminal.style.display = 'block';
+        isMinimized = false;
+      }
+      
+      // Retirer l'animation après
+      setTimeout(() => {
+        terminalWindow.classList.remove('terminal-enter');
+      }, 300);
+    });
+    
+    minimizeTerminalBtn.addEventListener('click', function() {
+      if (!isMinimized) {
+        terminalWindow.classList.add('minimized');
+        isMinimized = true;
+      } else {
+        terminalWindow.classList.remove('minimized');
+        terminal.style.display = 'block';
+        isMinimized = false;
+      }
+    });
+    
+    maximizeTerminalBtn.addEventListener('click', function() {
+      // S'assurer que le terminal est visible
+      if (isMinimized) {
+        terminalWindow.classList.remove('minimized');
+        terminal.style.display = 'block';
+        isMinimized = false;
+      }
+      
+      if (!isMaximized) {
+        // Sauvegarder les dimensions originales
+        if (terminalWindow.style.height && terminalWindow.style.height !== '37px') {
+          originalHeight = terminalWindow.style.height;
+        }
+        if (terminalWindow.style.width) {
+          originalWidth = terminalWindow.style.width;
+        }
+        if (terminalWindow.style.bottom) {
+          originalPosition.bottom = terminalWindow.style.bottom;
+        }
+        if (terminalWindow.style.right) {
+          originalPosition.right = terminalWindow.style.right;
+        }
+        
+        // Maximiser
+        terminalWindow.style.width = '90%';
+        terminalWindow.style.height = '80%';
+        terminalWindow.style.bottom = '10%';
+        terminalWindow.style.right = '5%';
+        
+        // Adapter pour mobile
+        if (window.innerWidth <= 768) {
+          terminalWindow.style.width = '95%';
+          terminalWindow.style.height = '70%';
+          terminalWindow.style.bottom = '15%';
+          terminalWindow.style.right = '2.5%';
+        }
+        
+        isMaximized = true;
+      } else {
+        // Restaurer
+        terminalWindow.style.height = originalHeight;
+        terminalWindow.style.width = originalWidth;
+        terminalWindow.style.bottom = originalPosition.bottom;
+        terminalWindow.style.right = originalPosition.right;
+        
+        isMaximized = false;
+      }
+    });
+    
+    // Double-clic sur la barre de titre pour maximiser/restaurer
+    document.querySelector('.terminal-header').addEventListener('dblclick', function(e) {
+      // Ignorer si le clic est fait sur les boutons de contrôle
+      if (!e.target.closest('.terminal-controls')) {
+        maximizeTerminalBtn.click();
+      }
+    });
+    
+    // Gérer la responsive
+    window.addEventListener('resize', function() {
+      if (isMaximized) {
+        if (window.innerWidth <= 768) {
+          terminalWindow.style.width = '95%';
+          terminalWindow.style.right = '2.5%';
+        } else {
+          terminalWindow.style.width = '90%';
+          terminalWindow.style.right = '5%';
+        }
+      }
+    });
+    
+    // Fonction pour formater l'horodatage
+    function getTimestamp() {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
+    }
+
+    // Fonction pour mettre à jour le badge de notification
+    function updateNotificationBadge() {
+      if (terminalWindow.style.display === 'none' || isMinimized) {
+        newLogCount++;
+        logBadge.style.display = 'flex';
+        logBadge.textContent = newLogCount > 99 ? '99+' : newLogCount;
+      }
+    }
+  });
+
+  // Fonction pour récupérer les logs
+  function fetchLogs() {
+    const processingIndicator = document.getElementById('processingIndicator');
+    processingIndicator.style.display = 'inline-block';
+    
+    fetch('process', {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      const terminal = document.getElementById('terminal');
+      terminal.innerHTML = ''; // Clear
+      
+      // Ajouter le message d'initialisation
+      const initLogEntry = document.createElement('div');
+      initLogEntry.className = 'log-entry info';
+      initLogEntry.innerHTML = `
+        <i class="fas fa-info-circle"></i>
+        <span><span class="timestamp">[Système]</span> Terminal initialisé, connexion établie...</span>
+      `;
+      terminal.appendChild(initLogEntry);
+      
+      // Ajouter les logs avec formatage amélioré
+      data.logs.forEach(log => {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        // Déterminer le type de log et ajouter l'icône appropriée
+        let iconHTML = '<i class="fas fa-chevron-right"></i>';
+        
+        if (log.includes('INFO')) {
+          logEntry.classList.add('info');
+          iconHTML = '<i class="fas fa-info-circle"></i>';
+        } else if (log.includes('WARNING')) {
+          logEntry.classList.add('warning');
+          iconHTML = '<i class="fas fa-exclamation-triangle"></i>';
+        } else if (log.includes('ERROR') || log.includes('CRITICAL')) {
+          logEntry.classList.add('error');
+          iconHTML = '<i class="fas fa-times-circle"></i>';
+        }
+        
+        // Ajouter horodatage si absent
+        let logText = log;
+        if (!log.match(/^\[\d{2}:\d{2}:\d{2}\]/)) {
+          const timestamp = getTimestamp();
+          logText = `<span class="timestamp">[${timestamp}]</span> ${log}`;
+        }
+        
+        logEntry.innerHTML = `${iconHTML}<span>${logText}</span>`;
+        terminal.appendChild(logEntry);
+        
+        // Mettre à jour le badge de notification
+        if (window.updateNotificationBadge) {
+          window.updateNotificationBadge();
+        }
+      });
+      
+      // Ajouter le curseur clignotant
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      terminal.appendChild(cursor);
+      
+      // Défiler vers le bas
+      terminal.scrollTop = terminal.scrollHeight;
+      
+      // Masquer l'indicateur de traitement
+      processingIndicator.style.display = 'none';
+    })
+    .catch(error => {
+      console.error("Erreur lors de la récupération des logs:", error);
+      processingIndicator.style.display = 'none';
+      
+      // Afficher l'erreur dans le terminal
+      const errorEntry = document.createElement('div');
+      errorEntry.className = 'log-entry error';
+      errorEntry.innerHTML = `
+        <i class="fas fa-times-circle"></i>
+        <span><span class="timestamp">[${getTimestamp()}]</span> Erreur de connexion au serveur. Nouvelle tentative dans 5 secondes...</span>
+      `;
+      terminal.appendChild(errorEntry);
+      terminal.scrollTop = terminal.scrollHeight;
+    });
+  }
+  
+  // Fonction pour obtenir l'horodatage
+  function getTimestamp() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  }
+  
+  // Mettre à jour les logs toutes les secondes
+  setInterval(fetchLogs, 1000);
+  
+  // Charger les logs au démarrage
+  document.addEventListener('DOMContentLoaded', function() {
+    fetchLogs();
+  });
+</script>
+{% endblock javascripts %}

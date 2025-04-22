@@ -54,6 +54,33 @@ from django.contrib.auth.models import Group
 from django.views.generic import ListView, CreateView, UpdateView
 from django.urls import reverse_lazy
 import importlib.util
+import io
+import sys
+from contextlib import redirect_stdout
+from django.http import HttpResponse
+from django.shortcuts import render
+import logging
+
+from django.shortcuts import render
+from Ferry_app.apps import FerryAppConfig
+from Ferry_plot.log_handler import WebLogHandler
+from django.http import JsonResponse
+from Ferry_plot.log_handler import WebLogHandler
+
+
+
+def terminal_view(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Requête AJAX
+        logs = WebLogHandler.get_logs()
+        return JsonResponse({"logs": logs})
+
+    # Cas du premier chargement de la page (non-AJAX)
+    logs = WebLogHandler.get_logs()
+    return render(request, "terminal.html", {"logs": logs})
+
+def first_page(request):
+    return render(request,"index.html")
+
 
 
 
@@ -90,179 +117,114 @@ from django.shortcuts import render
 def upload(request):
     # Votre logique de vue ici
     return render(request, 'upload.html')
+from django.db.models import Count
+from datetime import datetime
 
 # @login_required(login_url="/login/")
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from django.db.models.functions import ExtractYear, ExtractMonth, Concat
+from django.contrib.auth import get_user_model
+from .models import Metadata, Measurements
+import glob
+import csv
+import os
+from django.db.models import Value
+
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from django.db.models.functions import ExtractYear, ExtractMonth, Concat
+from django.contrib.auth import get_user_model
+from .models import Metadata, Measurements
+from django.db.models import Value, CharField
+from django.db import connection
+
+def get_table_count(table_name):
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        row = cursor.fetchone()
+    return row[0] if row else 0
 def index(request):
-
-    #total space
-    qs1=Metadata.objects.all()
-    from django.db.models import Sum
-
-    sum_size=qs1.aggregate(Sum('Size_ko'))
-    sum_size=int(sum_size['Size_ko__sum']/1000000)
-
-    # nbr of files 
-# Assuming 'Ref_trip' is the correct field name in your Measurements model
- 
-    df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once=list(set(list(df['Ref_trip'])))
-    df_once = list(map(int, df_once)) 
-
-    # print(df_once)
-    nbr_files=int(df_once[-1])
-
-    # downloaded data
-    #not yet
-
-    # users
-    from django.contrib.auth import get_user_model
+    # Calcul de l'espace total utilisé
+    qs1 = Metadata.objects.all()
+    sum_size = qs1.aggregate(Sum('Size_ko'))['Size_ko__sum'] or 0  # Éviter les erreurs si aucune donnée n'existe
+    sum_size = int(sum_size / 1000000)  # Conversion en Mo
+    
+    # Calcul du nombre de fichiers uniques (Ref_trip distincts)
+    unique_ref_trips = Measurements.objects.values_list('Ref_trip', flat=True).distinct()
+    nbr_files = len(unique_ref_trips)
+    
+    # Nombre d'utilisateurs
     User = get_user_model()
-
-    nbr_users=User.objects.count()
-
-    #statistics
-    #sum of summers
-
-    #sum of winters
-
-    #average values (summer/winter)
-
-    #total transect genova
-
-    #total transect marseille
-
-    #this block is picking "admin interface" or "data dowbload"
+    nbr_users = User.objects.count()
+    
+    # Répartition des données par mois
+    monthly_data = (
+        Measurements.objects.annotate(
+            year_month=Concat(
+                ExtractYear('Date'),
+                Value('-'),
+                ExtractMonth('Date'),
+                output_field=CharField()  # Spécifier le type de sortie comme CharField
+            )
+        )
+        .values('year_month')  # Grouper par année-mois
+        .annotate(count=Count('id'))  # Compter le nombre d'enregistrements
+        .order_by('year_month')  # Trier par année-mois
+    )
+    
+    # Calculer le nombre total d'enregistrements pour déterminer les pourcentages
+    total_records = Measurements.objects.count()
+    
+    # Convertir les résultats en une liste de dictionnaires pour le template
+    # Ajouter le pourcentage pour chaque mois
+    repartition = []
+    sum_percentage = 0  # Variable pour stocker la somme des pourcentages
+    
+    if total_records > 0:  # Éviter la division par zéro
+        for entry in monthly_data:
+            percentage = (entry['count'] / total_records) * 100
+            rounded_percentage = round(percentage, 2)  # Arrondir à 2 décimales
+            
+            repartition.append({
+                'month': entry['year_month'],
+                'count': entry['count'],
+                'percentage': rounded_percentage
+            })
+            
+            sum_percentage += rounded_percentage  # Ajouter à la somme
+    
+    # Arrondir la somme finale à 2 décimales
+    sum_percentage = round(sum_percentage, 2)
+    
+    # Détection si l'utilisateur est admin
     try:
-        is_admin=bool(False)  
-
-        if (str(request.user.groups.all()[0]))=="admin":
-            is_admin=bool(True)
-
-        context= { 'is_admin': is_admin,
-        "nbr_files":nbr_files,
-        "sum_size":sum_size,
-        "overview":True,
-
-         }
-
+        is_admin = str(request.user.groups.all()[0]) == "admin"
     except IndexError:
-        context={"not_admin": bool(True),
-        "nbr_files":nbr_files,
-        "sum_size":sum_size,
-        "nbr_users":nbr_users,
-        "overview":True,
-        }
+        is_admin = False
+    nb_tronques = get_table_count('ferry_plot_binary_truncated_files')
+    nb_corrects = get_table_count('ferry_plot_binary_email')
+    total_fichiers = nb_tronques + nb_corrects
 
-
-    path='C:/FerryBox/Indexed_files/Genova/'
-    PM='C:/FerryBox/Indexed_files/Marseille/'
-    # paths=[PG,PM]
-
-    df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once=list(set(list(df['Ref_trip'])))
-    df_once = list(map(int, df_once)) 
-
-    # for path in paths:
-        
-    files = glob.glob(path+"*.csv")
-
-    for file in files:
-        # print(file.split('\\'))
-        
-        ref=int(file.split('\\')[1].split('_')[0])
-
-        if ref not in df_once:
-
-            # print("already in")
-            with open(file) as csvfile:
-
-                reader = csv.DictReader(csvfile)
-
-                for row in reader:
-
-                    # The header row values become your keys
-                    ref_trip = row['Ref_trip']
-                    date = row['Date']
-                    time=row['Time']
-                    nbr_minutes= row['Nbr_minutes']
-                    latitude= row['Latitude']
-                    longitude= row['Longitude']
-                    distance= row['Distance']
-                    cumul_Distance= row['Cumul_Distance']
-                    area= row['Area']
-                    salinity_SBE45= row['Salinity_SBE45']
-                    qC_Salinity_SBE45= row['QC_Salinity_SBE45']
-                    variance_Salinity_SBE45= row['Variance_Salinity_SBE45']
-                    temp_in_SBE38= row['Temp_in_SBE38']
-                    qC_Temp_in_SBE38= row['QC_Temp_in_SBE38']
-                    variance_Temp_in_SBE38= row['Variance_Temp_in_SBE38']
-                    oxygen= row['Oxygen']
-                    qC_Oxygen= row['QC_Oxygen']
-                    variance_Oxygen= row['Variance_Oxygen']
-                    turbidity= row['Turbidity']
-                    qC_Turbidity= row['QC_Turbidity']
-                    variance_Turbidity= row['Variance_Turbidity']
-                    chl_a= row['Chl_a']
-                    qC_Chl_a= row['QC_Chl_a']
-                    variance_Chl_a= row['Variance_Chl_a']
-                    course= row['Course']
-                    variance_course=row['Variance_course']
-                    speed= row['Speed']
-                    variance_Speed= row['Variance_Speed']
-                    temp_SBE45= row['Temp_SBE45']
-                    variance_Temp_SBE45= row['Variance_Temp_SBE45']
-                    cond_SBE45= row['Cond_SBE45']
-                    variance_Cond_SBE45= row['Variance_Cond_SBE45']
-                    soundVel_SBE45= row['SoundVel_SBE45']
-                    variance_SoundVel_SBE45= row['Variance_SoundVel_SBE45']
-                    saturation= row['Saturation']
-                    variance_Saturation= row['Variance_Saturation']
-                    PH= row['pH']
-                    variance_pH= row['Variance_pH']
-                    PH_Satlantic= row['pH_Satlantic']
-                    variance_pH_Satlantic= row['Variance_pH_Satlantic']
-                    Pressure= row['pressure']
-                    variance_pressure= row['Variance_pressure']
-                    Flow_in= row['flow_in']
-                    variance_flow_in= row['Variance_flow_in']
-                    Flow_main= row['flow_main']
-                    variance_flow_main= row['Variance_flow_main']
-                    Flow_pH= row['flow_pH']
-                    variance_flow_pH= row['Variance_flow_pH']
-                    Flow_pCO2= row['flow_pCO2']
-                    variance_flow_pCO2= row['Variance_flow_pCO2']
-                    Halffull= row['halffull']
-                    variance_halffull= row['Variance_halffull']
-
-                    new_revo = Measurements(Ref_trip =ref_trip, Date=date,Time=time,Nbr_minutes=nbr_minutes,Latitude=latitude,          
-                       Longitude=longitude, Distance=distance, Cumul_Distance=cumul_Distance,
-                        Area=area, Salinity_SBE45=salinity_SBE45, QC_Salinity_SBE45=qC_Salinity_SBE45,
-                        Variance_Salinity_SBE45=variance_Salinity_SBE45,Temp_in_SBE38=temp_in_SBE38,
-                        QC_Temp_in_SBE38=qC_Temp_in_SBE38, Variance_Temp_in_SBE38=variance_Temp_in_SBE38,
-                        Oxygen=oxygen, QC_Oxygen=qC_Oxygen, Variance_Oxygen=variance_Oxygen,
-                        Turbidity=turbidity, QC_Turbidity=qC_Turbidity, Variance_Turbidity=variance_Turbidity,
-                        Chl_a=chl_a,  QC_Chl_a=qC_Chl_a, Variance_Chl_a=variance_Chl_a,Course=course,Variance_course=variance_course,
-                        Speed=speed,Variance_Speed=variance_Speed,Temp_SBE45=temp_SBE45,
-                        Variance_Temp_SBE45=variance_Temp_SBE45,Cond_SBE45=cond_SBE45,
-                        Variance_Cond_SBE45=variance_Cond_SBE45,SoundVel_SBE45=soundVel_SBE45,
-                        Variance_SoundVel_SBE45=variance_SoundVel_SBE45,Saturation=saturation,
-                        Variance_Saturation=variance_Saturation,pH=PH,Variance_pH=variance_pH,
-                        pH_Satlantic=PH_Satlantic,Variance_pH_Satlantic=variance_pH_Satlantic,
-                        pressure=Pressure,Variance_pressure=variance_pressure,flow_in=Flow_in,
-                        Variance_flow_in=variance_flow_in,flow_main=Flow_main,
-                        Variance_flow_main=variance_flow_main,flow_pH=Flow_pH,
-                        Variance_flow_pH=variance_flow_pH,flow_pCO2=Flow_pCO2,
-                        Variance_flow_pCO2=variance_flow_pCO2,halffull=Halffull,
-                        Variance_halffull=variance_halffull
-                         )
-                    new_revo.save()
-    # print("Injection process done")
-
-
-    # print(df_once)
-
-    return render(request, "index.html",context)
-
+    if total_fichiers > 0:
+        pourcentage_tronques = round((nb_tronques / total_fichiers) * 100, 2)
+    else:
+        pourcentage_tronques = 0
+    # Contexte à passer au template
+    context = {
+        'is_admin': is_admin,
+        'nbr_files': nbr_files,
+        'sum_size': sum_size,
+        'nbr_users': nbr_users,
+        'overview': True,
+        'repartition': repartition,
+        'sum_percentage': round((sum_percentage/nbr_files),2) if nbr_files > 0 else 0,
+        'total_records': total_records,
+        'pourcentage_tronques': pourcentage_tronques, 
+    }
+    
+    # Rendre la page avec le contexte
+    return render(request, "index.html", context)
 
 
 def data_description(request):
@@ -373,192 +335,234 @@ from .models import Download
 
 # @login_required(login_url="/login/")
 def ui_notifications_view(request, *args, **kwargs):
-
     qs = Measurements.objects.all()
-    qs_actual=Download.objects.all()
-    template_name="ui-notifications.html"
-
-    #total space
-    qs1=Metadata.objects.all()
+    # Cette ligne récupère déjà les téléchargements avec Status=False
+    qs_actual = Download.objects.filter(Status=False)
+    template_name = "ui-notifications.html"
+    
+    # Total space
+    qs1 = Metadata.objects.all()
     from django.db.models import Sum
-
-    sum_size=qs1.aggregate(Sum('Size_ko'))
-    sum_size=int(sum_size['Size_ko__sum']/1000000)
-
-    # nbr of files 
-
-    df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once=list(set(list(df['Ref_trip'])))
-    df_once = list(map(int, df_once)) 
-
-    # print(df_once)
-    nbr_files=int(df_once[-1])
-
-    # downloaded data
-    #not yet
-
-    # users
+    
+    sum_size = qs1.aggregate(Sum('Size_ko'))
+    sum_size = int(sum_size['Size_ko__sum'] / 1000000)
+    
+    # Nbr of files
+    unique_ref_trips = Measurements.objects.values_list('Ref_trip', flat=True).distinct()
+    nbr_files = len(unique_ref_trips)
+    
+    # Users
     from django.contrib.auth import get_user_model
     User = get_user_model()
-
-    nbr_users=User.objects.count()
-
-    # Measurements.objects.all().delete()
-
-    # people=Person.objects.all()
-
-
-    #this part is to select the available transects in the database
-    #it is here because it should still be visible with no nuttons selected
-
-    list_of_metadata_references=[]
-
-    for met in Metadata.objects.all():
-        list_of_metadata_references.append(met.Path_Reference)
-
-    list_available_transects=[]
-
-
-    #get the download requests list:
-    qs_down=Download.objects.all()
-
-
-
-    context={'queryset': qs,
+    
+    nbr_users = User.objects.count()
+    
+    # Liste des références de métadonnées
+    list_of_metadata_references = list(Metadata.objects.values_list('Path_Reference', flat=True))
+    
+    # Le problème est ici : list_available_transects est vide mais utilisé dans le contexte
+    list_available_transects = []
+    
+    # Get download requests list - uniquement avec Status=False
+    qs_down = Download.objects.filter(Status=False)
+    
+    context = {
+        'queryset': qs,
         "metadata": Metadata.objects.all(),
-        "Measurements" : Measurements.objects.all(),
+        "Measurements": Measurements.objects.all(),
         "parameter": Parameters.objects.all(),
-        "av_transects":list_available_transects,
-        # "people":permission_requiredple,
-        "download": qs_actual, 
-        'is_admin':bool(True),
-        "nbr_files":nbr_files,
-        "sum_size":sum_size,
-        "nbr_users":nbr_users,
-        "interface":True,
-        "qs_down":qs_down
-            }
+        "av_transects": list_of_metadata_references, 
+        "download": qs_actual,
+        'is_admin': True, 
+        "nbr_files": nbr_files,
+        "sum_size": sum_size,
+        "nbr_users": nbr_users,
+        "interface": True,
+        "qs_down": qs_down
+    }
+    
+    return render(request, template_name, context)
 
-    return render(request, template_name,context)
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
+@method_decorator(csrf_exempt, name='dispatch')
+def update_request(request, id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
 
+            # Récupérer la requête par ID utilisateur
+            request_obj = Download.objects.get(id=id)
 
+            if action == 'accept':
+                # Mettre à jour le statut à True
+                request_obj.Status = True
+                request_obj.save()
+            elif action == 'reject':
+                # Supprimer la requête de la base de données
+             request_obj.delete()
 
+            return JsonResponse({'success': True})
+        except Download.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Request not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
     
 def download(request):
-
     qs = Measurements.objects.all()
-    template_name="download.html"
+    template_name = "download.html"
 
-    #total space
-    qs1=Metadata.objects.all()
+    # Total space
+    qs1 = Metadata.objects.all()
     from django.db.models import Sum
 
-    sum_size=qs1.aggregate(Sum('Size_ko'))
-    sum_size=int(sum_size['Size_ko__sum']/1000000)
+    sum_size = qs1.aggregate(Sum('Size_ko'))
+    sum_size = int(sum_size['Size_ko__sum']/1000000)
 
-
-    # nbr of files 
-
+    # Nbr of files 
     df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once=list(set(list(df['Ref_trip'])))
+    df_once = list(set(list(df['Ref_trip'])))
     df_once = list(map(int, df_once)) 
+    nbr_files = int(df_once[-1])
 
-    # print(df_once)
-    nbr_files=int(df_once[-1])
-
-    # downloaded data
-    #not yet
-
-    # users
-    # users
+    # Users
     from django.contrib.auth import get_user_model
     User = get_user_model()
+    nbr_users = User.objects.count()
 
-    nbr_users=User.objects.count()
-
-
-    #this part is to select the available transects in the database
-    #it is here because it should still be visible with no nuttons selected
-
-    list_of_metadata_references=[]
-
+    # This part is to select the available transects in the database
+    list_of_metadata_references = []
     for met in Metadata.objects.all():
         list_of_metadata_references.append(met.Path_Reference)
+    list_available_transects = []
 
-    # print(list_of_metadata_references)
-    list_available_transects=[]
-
-
-    #download part
-
-    response = HttpResponse(content_type="text/csv")
-
-    writer = csv.writer(response)
-    writer.writerow(['Ref_trip', 'Date', 'Time', 'Nbr_minutes', 'Latitude', 'Longitude',
-       'Distance', 'Cumul_Distance', 'Area', 'Salinity_SBE45',
-       'QC_Salinity_SBE45', 'Variance_Salinity_SBE45', 'Temp_in_SBE38',
-       'QC_Temp_in_SBE38', 'Variance_Temp_in_SBE38', 'Oxygen', 'QC_Oxygen',
-       'Variance_Oxygen', 'Turbidity', 'QC_Turbidity', 'Variance_Turbidity',
-       'Chl_a', 'QC_Chl_a', 'Variance_Chl_a', 'Course', 'Variance_course', 'Speed',
-       'Variance_Speed', 'Temp_SBE45', 'Variance_Temp_SBE45', 'Cond_SBE45',
-       'Variance_Cond_SBE45', 'SoundVel_SBE45', 'Variance_SoundVel_SBE45',
-       'Saturation', 'Variance_Saturation', 'pH', 'Variance_pH',
-       'pH_Satlantic', 'Variance_pH_Satlantic', 'pressure',
-       'Variance_pressure', 'flow_in', 'Variance_flow_in', 'flow_main',
-       'Variance_flow_main', 'flow_pH', 'Variance_flow_pH', 'flow_pCO2',
-       'Variance_flow_pCO2', 'halffull', 'Variance_halffull'])
-
-    #get the request
-    transect_query_download_query=request.GET.get('transect_select_download')
-
-    # parameter_query_download_query=request.GET.get('test')
-
+    # Check if we have POST data for downloading multiple transects
+    if request.method == 'POST' and 'transect_select_download' in request.POST:
+        selected_transects = request.POST.getlist('transect_select_download')
+        
+        if selected_transects:
+            import io
+            import zipfile
+            from django.http import HttpResponse
+            
+            # Create a zip file in memory
+            buffer = io.BytesIO()
+            zip_file = zipfile.ZipFile(buffer, 'w')
+            
+            # Add each selected transect as a CSV file to the zip
+            for transect in selected_transects:
+                # Create a CSV for this transect
+                csv_buffer = io.StringIO()
+                writer = csv.writer(csv_buffer)
+                writer.writerow(['Ref_trip', 'Date', 'Time', 'Nbr_minutes', 'Latitude', 'Longitude',
+                   'Distance', 'Cumul_Distance', 'Area', 'Salinity_SBE45',
+                   'QC_Salinity_SBE45', 'Variance_Salinity_SBE45', 'Temp_in_SBE38',
+                   'QC_Temp_in_SBE38', 'Variance_Temp_in_SBE38', 'Oxygen', 'QC_Oxygen',
+                   'Variance_Oxygen', 'Turbidity', 'QC_Turbidity', 'Variance_Turbidity',
+                   'Chl_a', 'QC_Chl_a', 'Variance_Chl_a', 'Course', 'Variance_course', 'Speed',
+                   'Variance_Speed', 'Temp_SBE45', 'Variance_Temp_SBE45', 'Cond_SBE45',
+                   'Variance_Cond_SBE45', 'SoundVel_SBE45', 'Variance_SoundVel_SBE45',
+                   'Saturation', 'Variance_Saturation', 'pH', 'Variance_pH',
+                   'pH_Satlantic', 'Variance_pH_Satlantic', 'pressure',
+                   'Variance_pressure', 'flow_in', 'Variance_flow_in', 'flow_main',
+                   'Variance_flow_main', 'flow_pH', 'Variance_flow_pH', 'flow_pCO2',
+                   'Variance_flow_pCO2', 'halffull', 'Variance_halffull'])
+                
+                # Filter records for this transect
+                ref_trip = transect.split('_')[0]
+                chosen_transect = qs.filter(Ref_trip=ref_trip)
+                
+                for element in chosen_transect.values_list('Ref_trip', 'Date', 'Time', 'Nbr_minutes', 'Latitude', 'Longitude',
+                   'Distance', 'Cumul_Distance', 'Area', 'Salinity_SBE45',
+                   'QC_Salinity_SBE45', 'Variance_Salinity_SBE45', 'Temp_in_SBE38',
+                   'QC_Temp_in_SBE38', 'Variance_Temp_in_SBE38', 'Oxygen', 'QC_Oxygen',
+                   'Variance_Oxygen', 'Turbidity', 'QC_Turbidity', 'Variance_Turbidity',
+                   'Chl_a', 'QC_Chl_a', 'Variance_Chl_a', 'Course', 'Variance_course', 'Speed',
+                   'Variance_Speed', 'Temp_SBE45', 'Variance_Temp_SBE45', 'Cond_SBE45',
+                   'Variance_Cond_SBE45', 'SoundVel_SBE45', 'Variance_SoundVel_SBE45',
+                   'Saturation', 'Variance_Saturation', 'pH', 'Variance_pH',
+                   'pH_Satlantic', 'Variance_pH_Satlantic', 'pressure',
+                   'Variance_pressure', 'flow_in', 'Variance_flow_in', 'flow_main',
+                   'Variance_flow_main', 'flow_pH', 'Variance_flow_pH', 'flow_pCO2',
+                   'Variance_flow_pCO2', 'halffull', 'Variance_halffull'):
+                    writer.writerow(element)
+                
+                # Add this CSV to the zip file
+                filename = f"{transect}.csv"
+                zip_file.writestr(filename, csv_buffer.getvalue())
+                csv_buffer.close()
+            
+            # Close the zip file
+            zip_file.close()
+            
+            # Prepare response with the zip file
+            response = HttpResponse(buffer.getvalue(), content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename="ferrybox_data.zip"'
+            
+            # Important: seek to the beginning of the buffer
+            buffer.seek(0)
+            return response
     
-    # if is_valid_queryparam(parameter_query_download_query):
-    #     print(parameter_query_download_query)
-
+    # Handle the legacy GET parameter method (backward compatibility)
+    transect_query_download_query = request.GET.get('transect_select_download')
+    
     if is_valid_queryparam(transect_query_download_query):
+        response = HttpResponse(content_type="text/csv")
+        writer = csv.writer(response)
+        writer.writerow(['Ref_trip', 'Date', 'Time', 'Nbr_minutes', 'Latitude', 'Longitude',
+           'Distance', 'Cumul_Distance', 'Area', 'Salinity_SBE45',
+           'QC_Salinity_SBE45', 'Variance_Salinity_SBE45', 'Temp_in_SBE38',
+           'QC_Temp_in_SBE38', 'Variance_Temp_in_SBE38', 'Oxygen', 'QC_Oxygen',
+           'Variance_Oxygen', 'Turbidity', 'QC_Turbidity', 'Variance_Turbidity',
+           'Chl_a', 'QC_Chl_a', 'Variance_Chl_a', 'Course', 'Variance_course', 'Speed',
+           'Variance_Speed', 'Temp_SBE45', 'Variance_Temp_SBE45', 'Cond_SBE45',
+           'Variance_Cond_SBE45', 'SoundVel_SBE45', 'Variance_SoundVel_SBE45',
+           'Saturation', 'Variance_Saturation', 'pH', 'Variance_pH',
+           'pH_Satlantic', 'Variance_pH_Satlantic', 'pressure',
+           'Variance_pressure', 'flow_in', 'Variance_flow_in', 'flow_main',
+           'Variance_flow_main', 'flow_pH', 'Variance_flow_pH', 'flow_pCO2',
+           'Variance_flow_pCO2', 'halffull', 'Variance_halffull'])
 
-        chosen_transect= qs.filter(Ref_trip=(transect_query_download_query.split('_')[0]))
+        chosen_transect = qs.filter(Ref_trip=(transect_query_download_query.split('_')[0]))
 
         for element in chosen_transect.values_list('Ref_trip', 'Date', 'Time', 'Nbr_minutes', 'Latitude', 'Longitude',
-       'Distance', 'Cumul_Distance', 'Area', 'Salinity_SBE45',
-       'QC_Salinity_SBE45', 'Variance_Salinity_SBE45', 'Temp_in_SBE38',
-       'QC_Temp_in_SBE38', 'Variance_Temp_in_SBE38', 'Oxygen', 'QC_Oxygen',
-       'Variance_Oxygen', 'Turbidity', 'QC_Turbidity', 'Variance_Turbidity',
-       'Chl_a', 'QC_Chl_a', 'Variance_Chl_a', 'Course', 'Variance_course', 'Speed',
-       'Variance_Speed', 'Temp_SBE45', 'Variance_Temp_SBE45', 'Cond_SBE45',
-       'Variance_Cond_SBE45', 'SoundVel_SBE45', 'Variance_SoundVel_SBE45',
-       'Saturation', 'Variance_Saturation', 'pH', 'Variance_pH',
-       'pH_Satlantic', 'Variance_pH_Satlantic', 'pressure',
-       'Variance_pressure', 'flow_in', 'Variance_flow_in', 'flow_main',
-       'Variance_flow_main', 'flow_pH', 'Variance_flow_pH', 'flow_pCO2',
-       'Variance_flow_pCO2', 'halffull', 'Variance_halffull'):
+           'Distance', 'Cumul_Distance', 'Area', 'Salinity_SBE45',
+           'QC_Salinity_SBE45', 'Variance_Salinity_SBE45', 'Temp_in_SBE38',
+           'QC_Temp_in_SBE38', 'Variance_Temp_in_SBE38', 'Oxygen', 'QC_Oxygen',
+           'Variance_Oxygen', 'Turbidity', 'QC_Turbidity', 'Variance_Turbidity',
+           'Chl_a', 'QC_Chl_a', 'Variance_Chl_a', 'Course', 'Variance_course', 'Speed',
+           'Variance_Speed', 'Temp_SBE45', 'Variance_Temp_SBE45', 'Cond_SBE45',
+           'Variance_Cond_SBE45', 'SoundVel_SBE45', 'Variance_SoundVel_SBE45',
+           'Saturation', 'Variance_Saturation', 'pH', 'Variance_pH',
+           'pH_Satlantic', 'Variance_pH_Satlantic', 'pressure',
+           'Variance_pressure', 'flow_in', 'Variance_flow_in', 'flow_main',
+           'Variance_flow_main', 'flow_pH', 'Variance_flow_pH', 'flow_pCO2',
+           'Variance_flow_pCO2', 'halffull', 'Variance_halffull'):
             writer.writerow(element)
 
-# response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
-
-        filename=str(transect_query_download_query)+".csv"
-
-        response['Content-Disposition']='attachment;filename="{}"'.format(filename)
-
+        filename = str(transect_query_download_query) + ".csv"
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
         return response
 
-    context={'queryset': qs,
+    context = {
+        'queryset': qs,
         "metadata": Metadata.objects.all(),
-        "Measurements" : Measurements.objects.all(),
+        "Measurements": Measurements.objects.all(),
         "parameter": Parameters.objects.all(),
-        "av_transects":list_available_transects,
-        'is_admin':bool(True),
-        "nbr_files":nbr_files,
-        "sum_size":sum_size,
-        "nbr_users":nbr_users,
-        "interface":True
-        
-            }
+        "av_transects": list_available_transects,
+        'is_admin': bool(True),
+        "nbr_files": nbr_files,
+        "sum_size": sum_size,
+        "nbr_users": nbr_users,
+        "interface": True
+    }
 
-    return render(request, template_name,context)
+    return render(request, template_name, context)
 
 
 from django.http import HttpResponseRedirect
@@ -577,140 +581,49 @@ import os.path
 from os import path
 from django.db.models import Sum
 
+from django.shortcuts import render
+from django.core.files.base import ContentFile
+
+from django.db import connection
+
+from django.shortcuts import render
+from django.db import connection
+import os
+
 def upload(request):
-    #total space
-    qs1 = Metadata.objects.all()
-    
-    sum_size = qs1.aggregate(Sum('Size_ko'))
-    
-    if sum_size['Size_ko__sum'] is not None:
-        sum_size = int(sum_size['Size_ko__sum'] / 1000000)
-    else:
-        sum_size = 0
+    if request.method == 'POST':
+        myfile = request.FILES.get('myfile')
 
-    # nbr of files 
+        if not myfile:
+            return render(request, 'upload.html', {'error': "No file selected."})
 
-    df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once=list(set(list(df['Ref_trip'])))
-    df_once = list(map(int, df_once)) 
+        # Vérifie le type MIME ou l'extension
+        if myfile.content_type != 'text/plain' and not myfile.name.endswith('.txt'):
+            return render(request, 'upload.html', {'error': "Only .txt files are allowed."})
 
-    # print(df_once)
-    nbr_files=int(df_once[-1])
+        try:
+            # Lecture du contenu en binaire
+            file_data = myfile.read()  # Ceci est déjà du type bytes
 
-    # downloaded data
-    #not yet
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO ferry_plot_binary_email (file_name, file_data) VALUES (%s, %s)",
+                    [myfile.name, file_data]
+                )
 
-    # users
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
+            return render(request, 'upload.html', {
+                'message': f"File '{myfile.name}' uploaded successfully!"
+            })
 
-    nbr_users=User.objects.count()
+        except Exception as e:
+            return render(request, 'upload.html', {
+                'error': f"An error occurred while saving the file: {str(e)}"
+            })
 
-    file_query_result=request.GET.get('myfile')
-
-    path_1="C:/FerryBox/Indexed_files/Marseille/"
-    path_2="C:/FerryBox/Indexed_files/Genova/"
-
-    if is_valid_queryparam(file_query_result):
-
-        if path.exists(path_1+file_query_result):
-            file=path_1+file_query_result
-        else:
-            file=path_2+file_query_result
-
-        with open(file) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                # The header row values become your keys
-                ref_trip = row['Ref_trip']
-                date = row['Date']
-                time=row['Time']
-                nbr_minutes= row['Nbr_minutes']
-                latitude= row['Latitude']
-                longitude= row['Longitude']
-                distance= row['Distance']
-                cumul_Distance= row['Cumul_Distance']
-                area= row['Area']
-                salinity_SBE45= row['Salinity_SBE45']
-                qC_Salinity_SBE45= row['QC_Salinity_SBE45']
-                variance_Salinity_SBE45= row['Variance_Salinity_SBE45']
-                temp_in_SBE38= row['Temp_in_SBE38']
-                qC_Temp_in_SBE38= row['QC_Temp_in_SBE38']
-                variance_Temp_in_SBE38= row['Variance_Temp_in_SBE38']
-                oxygen= row['Oxygen']
-                qC_Oxygen= row['QC_Oxygen']
-                variance_Oxygen= row['Variance_Oxygen']
-                turbidity= row['Turbidity']
-                qC_Turbidity= row['QC_Turbidity']
-                variance_Turbidity= row['Variance_Turbidity']
-                chl_a= row['Chl_a']
-                qC_Chl_a= row['QC_Chl_a']
-                variance_Chl_a= row['Variance_Chl_a']
-                course= row['Course']
-                variance_course=row['Variance_course']
-                speed= row['Speed']
-                variance_Speed= row['Variance_Speed']
-                temp_SBE45= row['Temp_SBE45']
-                variance_Temp_SBE45= row['Variance_Temp_SBE45']
-                cond_SBE45= row['Cond_SBE45']
-                variance_Cond_SBE45= row['Variance_Cond_SBE45']
-                soundVel_SBE45= row['SoundVel_SBE45']
-                variance_SoundVel_SBE45= row['Variance_SoundVel_SBE45']
-                saturation= row['Saturation']
-                variance_Saturation= row['Variance_Saturation']
-                PH= row['pH']
-                variance_pH= row['Variance_pH']
-                PH_Satlantic= row['pH_Satlantic']
-                variance_pH_Satlantic= row['Variance_pH_Satlantic']
-                Pressure= row['pressure']
-                variance_pressure= row['Variance_pressure']
-                Flow_in= row['flow_in']
-                variance_flow_in= row['Variance_flow_in']
-                Flow_main= row['flow_main']
-                variance_flow_main= row['Variance_flow_main']
-                Flow_pH= row['flow_pH']
-                variance_flow_pH= row['Variance_flow_pH']
-                Flow_pCO2= row['flow_pCO2']
-                variance_flow_pCO2= row['Variance_flow_pCO2']
-                Halffull= row['halffull']
-                variance_halffull= row['Variance_halffull']
-
-                new_revo = Measurements(Ref_trip =ref_trip, Date=date,Time=time,Nbr_minutes=nbr_minutes,Latitude=latitude,          
-                 Longitude=longitude, Distance=distance, Cumul_Distance=cumul_Distance,
-                  Area=area, Salinity_SBE45=salinity_SBE45, QC_Salinity_SBE45=qC_Salinity_SBE45,
-                  Variance_Salinity_SBE45=variance_Salinity_SBE45,Temp_in_SBE38=temp_in_SBE38,
-                  QC_Temp_in_SBE38=qC_Temp_in_SBE38, Variance_Temp_in_SBE38=variance_Temp_in_SBE38,
-                  Oxygen=oxygen, QC_Oxygen=qC_Oxygen, Variance_Oxygen=variance_Oxygen,
-                  Turbidity=turbidity, QC_Turbidity=qC_Turbidity, Variance_Turbidity=variance_Turbidity,
-                  Chl_a=chl_a,  QC_Chl_a=qC_Chl_a, Variance_Chl_a=variance_Chl_a,Course=course,Variance_course=variance_course,
-                  Speed=speed,Variance_Speed=variance_Speed,Temp_SBE45=temp_SBE45,
-                  Variance_Temp_SBE45=variance_Temp_SBE45,Cond_SBE45=cond_SBE45,
-                  Variance_Cond_SBE45=variance_Cond_SBE45,SoundVel_SBE45=soundVel_SBE45,
-                  Variance_SoundVel_SBE45=variance_SoundVel_SBE45,Saturation=saturation,
-                  Variance_Saturation=variance_Saturation,pH=PH,Variance_pH=variance_pH,
-                  pH_Satlantic=PH_Satlantic,Variance_pH_Satlantic=variance_pH_Satlantic,
-                  pressure=Pressure,Variance_pressure=variance_pressure,flow_in=Flow_in,
-                  Variance_flow_in=variance_flow_in,flow_main=Flow_main,
-                  Variance_flow_main=variance_flow_main,flow_pH=Flow_pH,
-                  Variance_flow_pH=variance_flow_pH,flow_pCO2=Flow_pCO2,
-                  Variance_flow_pCO2=variance_flow_pCO2,halffull=Halffull,
-                  Variance_halffull=variance_halffull
-                   )
-                new_revo.save()
-    
-
-    template_name="upload.html"
-
-    # print(request.POST)
-    context={ 'is_admin':bool(True),
-    "nbr_files":nbr_files,
-    "sum_size":sum_size,
-    "nbr_users":nbr_users,
-    "interface":True
-    }
+    # GET request : afficher la page vide
+    return render(request, 'upload.html')
 
 
-    return render(request, template_name,context)
 
 
   
@@ -2131,6 +2044,108 @@ def map_view(request):
     
 
     return render(request, template_name,context)
+
+
+
+from django.shortcuts import render
+from .models import Metadata, Measurements, Parameters
+
+def heat_view(request):
+    template_name = "heat.html"
+
+    # Liste des noms uniques des métadonnées (transects disponibles)
+    list_of_metadata_references = list(Metadata.objects.values_list('id_meta', 'Name','Path_Reference'))
+    
+    # Vérifie si l'utilisateur est admin
+    is_admin = request.user.groups.filter(name="admin").exists()
+
+    # Récupération des paramètres du formulaire avec valeurs par défaut
+    ref_trip = request.GET.get("transect_selection_heat")
+    parameter = request.GET.get("parameter_selection_heat", "Oxygen")  # Valeur par défaut
+    qc_value = request.GET.get("qc_param_heat", "1 - Good")  # Valeur par défaut
+
+    # Initialisation du contexte
+    context = {
+        'is_admin': is_admin,
+        'av_transects': list_of_metadata_references,
+        'metadata': Metadata.objects.all(),
+        'parameters': Parameters.objects.all(),
+        'down': "true" if is_admin else "false",
+        'selected_transect': ref_trip,
+        'selected_param': parameter,
+        'selected_qc': qc_value,
+        'filtered_data': []
+    }
+
+    # Traitement des données si tous les paramètres requis sont présents
+    if ref_trip and parameter and qc_value:
+        try:
+            # Convertir ref_trip en entier
+            try:
+                ref_trip_int = int(ref_trip)
+            except ValueError:
+                context["error"] = f"ID Ref_trip invalide: {ref_trip}"
+                return render(request, template_name, context)
+
+            # Extraire la valeur numérique QC
+            try:
+                qc_value_numeric = int(qc_value.split('-')[0].strip())
+            except (ValueError, IndexError):
+                context["error"] = f"Format de valeur QC invalide: {qc_value}"
+                return render(request, template_name, context)
+
+            # Création des noms de colonnes pour le paramètre et QC
+            param_column = parameter
+            qc_column = f"QC_{parameter}"
+
+            # Filtrer les données en fonction du ref_trip
+            filters = {
+                "Ref_trip": ref_trip_int,
+            }
+
+            # Ajouter le filtre QC seulement si différent de 0 (None)
+            if qc_value_numeric > 0:
+                filters[qc_column] = qc_value_numeric
+
+            # Récupérer les données
+            data_query = Measurements.objects.filter(**filters).exclude(**{param_column: None}).order_by("Date")
+
+            # Debug: afficher le nombre de résultats
+            data_count = data_query.count()
+            context["debug_data_count"] = data_count
+
+            # Récupérer les couples (Latitude, Longitude, valeur du paramètre)
+            filtered_data = []
+            for item in data_query:
+                lat = getattr(item, "Latitude", None)
+                lon = getattr(item, "Longitude", None)
+                value = getattr(item, param_column, None)
+
+                if lat is not None and lon is not None and value is not None:
+                    filtered_data.append([lat, lon, value])
+
+            # Mise à jour du contexte avec les données filtrées
+            context.update({
+                "filtered_data": filtered_data,
+                "selected_transect": str(ref_trip),
+                "selected_param": parameter,
+                "selected_qc": qc_value,
+                "data_count": len(filtered_data),
+                "debug_filtered_count": len(filtered_data)
+            })
+
+        except Exception as e:
+            import traceback
+            context["error"] = f"Une erreur s'est produite: {str(e)}"
+            context["traceback"] = traceback.format_exc()
+    else:
+        if request.method == "GET" and any([ref_trip, parameter, qc_value]):
+            context["error"] = "Veuillez sélectionner un transect, un paramètre et une valeur QC."
+
+    return render(request, template_name, context)
+
+
+
 
 
 def popup_map(request):

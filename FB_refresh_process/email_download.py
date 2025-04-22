@@ -8,11 +8,13 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import zipfile
 import io
-
+import logging
 # Configuration IMAP Gmail
 EMAIL_USER = settings.EMAIL_HOST_USER
 EMAIL_PASS = settings.EMAIL_HOST_PASSWORD
-SENDER_EMAIL = "ferryboxinstm@gmail.com"
+SENDER_EMAIL = "dhouhabelakhel2001@gmail.com"
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Connexion à la base de données PostgreSQL
 def connect_db():
@@ -43,7 +45,7 @@ def save_file_to_db(file_name, file_data):
         cursor = connection.cursor()
         cursor.execute("SELECT 1 FROM ferry_plot_binary_email WHERE file_name = %s", (file_name,))
         if cursor.fetchone():
-            print(f"Le fichier {file_name} existe déjà dans la base de données. Ignorer l'insertion.")
+            logger.error(f"The file {file_name} already exists in the database. Ignore the insert.")
             return
 
         query = """
@@ -52,7 +54,7 @@ def save_file_to_db(file_name, file_data):
         """
         cursor.execute(query, (file_name, psycopg2.Binary(file_data), datetime.now()))
         connection.commit()
-        print(f"Fichier {file_name} enregistré dans PostgreSQL.")
+        logger.info(f"File {file_name} saved in Data Base.")
 
         # Envoi de notification en temps réel via Django Channels
         channel_layer = get_channel_layer()
@@ -60,11 +62,11 @@ def save_file_to_db(file_name, file_data):
             "notifications",  # nom du groupe
             {
                 "type": "send_notification",  # nom du handler dans consumer.py
-                "message": f"Nouveau fichier reçu : {file_name}",
+                "message": f"New file received: {file_name}",
             },
         )
     except psycopg2.Error as err:
-        print(f"Erreur PostgreSQL : {err}")
+        logger.error(f"Database error: {err}")
     finally:
         if cursor:
             cursor.close()
@@ -73,20 +75,20 @@ def save_file_to_db(file_name, file_data):
 
 # Traitement des nouveaux emails
 def process_new_emails():
-    print("Exécution de process_new_emails...")
+    logger.info("Running process_new_emails...")
     try:
         mail = imaplib.IMAP4_SSL("imap.gmail.com", 993)
         mail.login(EMAIL_USER, EMAIL_PASS)
         mailboxes = ["INBOX", "[Gmail]/Spam"]
 
         for mailbox in mailboxes:
-            print(f"Vérification dans {mailbox}...")
+            logger.debug(f"Checking in {mailbox}...")
             mail.select(mailbox)
             result, data = mail.search(None, f'(UNSEEN FROM "{SENDER_EMAIL}")')
             email_ids = data[0].split() if data[0] else []
 
             if not email_ids:
-                print(f"Aucun nouvel e-mail de {SENDER_EMAIL} dans {mailbox}")
+                logger.info(f"No new emails from {SENDER_EMAIL} in {mailbox}")
                 continue
 
             for email_id in email_ids:
@@ -112,20 +114,20 @@ def process_new_emails():
                             else:
                                 save_file_to_db(file_name, file_data)
                 except Exception as e:
-                    print(f"Erreur lors du traitement d'un e-mail : {e}")
+                    logger.error(f"Error processing an email: {e}")
 
         mail.logout()
-        print("Traitement des e-mails terminé.")
+        logger.info("Email processing completed.")
     except Exception as e:
-        print(f"Erreur : {e}")
+        logger.error(f"Erreur : {e}")
 
 # Extraction des fichiers ZIP et traitement
 def handle_zip_file(zip_file_name, zip_file_data):
     try:
         with zipfile.ZipFile(io.BytesIO(zip_file_data), 'r') as zip_ref:
-            print(f"Fichier ZIP {zip_file_name} extrait.")
+            logger.debug(f"ZIP file {zip_file_name} extract.")
             for file_name in zip_ref.namelist():
                 file_data = zip_ref.read(file_name)
                 save_file_to_db(file_name, file_data)
     except Exception as e:
-        print(f"Erreur lors de la gestion du ZIP : {e}")
+        logger.error(f"Error handling ZIP: {e}")

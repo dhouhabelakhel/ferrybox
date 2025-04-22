@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('L_name', models.CharField(max_length=100)),
                 ('Subject', models.CharField(max_length=100)),
                 ('Transects', django_mysql.models.ListCharField(models.CharField(max_length=100), max_length=1100, size=6)),
-                ('Status', models.BooleanField(default=True)),
+                ('Status', models.BooleanField(default=False)),
             ],
             options={
                 'ordering': ['Name', 'Transects'],

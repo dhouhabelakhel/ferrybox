@@ -23,42 +23,42 @@ def insert_indexed_file_into_db(table_name, file_name, file_data, db_conn):
             insert_query = f"""INSERT INTO "{table_name}" (libelle, fichier) VALUES (%s, %s);"""
             cur.execute(insert_query, (file_name, psycopg2.Binary(file_data)))
             db_conn.commit()
-            logger.info(f"Fichier {file_name} inséré dans la table {table_name}.")
+            logger.info(f"File {file_name} inserted into table {table_name}.")
     except Exception as e:
-        logger.error(f"Erreur lors de l'insertion dans {table_name}: {e}")
+        logger.error(f"Error inserting into {table_name}: {e}")
         db_conn.rollback()
 
 def listen_for_notifications():
     """Écoute les notifications PostgreSQL et récupère les fichiers classifiés."""
     conn = connect_db()
     if conn is None:
-        logger.error("Impossible de se connecter à la base de données.")
+        logger.error("Unable to connect to the database.")
         return
     conn.set_session(autocommit=True)
     cur = conn.cursor()
     try:
         cur.execute("LISTEN classificated_files;")
-        logger.info("En attente de notifications sur le canal 'classificated_files'...")
+        logger.info("Waiting for notifications on the 'classified_files' channel...")
         while True:
             if select.select([conn], [], [], 60) == ([], [], []):
-                logger.info("Aucun fichier classifié reçu... Attente...")
+                logger.info("No classified files received... Waiting...")
                 continue
             conn.poll()
             while conn.notifies:
                 notify = conn.notifies.pop(0)
                 if notify.channel != "classificated_files":
-                    logger.warning(f"Notification reçue d'un autre canal : {notify.channel}")
+                    logger.warning(f"Notification received from another channel: {notify.channel}")
                     continue
                 try:
                     payload_data = json.loads(notify.payload)
                     new_file_id = payload_data.get("id")
                     new_file_libelle = payload_data.get("libelle")
                 except json.JSONDecodeError as e:
-                    logger.error(f"Erreur de parsing JSON : {e}")
+                    logger.error(f"JSON parsing error: {e}")
                     continue
-                logger.info(f"Notification reçue ! Nouveau fichier classifié ID : {new_file_id}")
+                logger.info(f"Notification received! New classified file ID: {new_file_id}")
                 if not new_file_id:
-                    logger.warning("ID du fichier non valide ou manquant.")
+                    logger.warning("Invalid or missing file ID.")
                     continue
                 # Déterminer la table en fonction du libellé
                 table_name = None
@@ -72,7 +72,7 @@ def listen_for_notifications():
                     insert_table = "ferry_plot_binary_indexedmarseille"
                     destination = "Marseille"
                 if not table_name:
-                    logger.warning("Aucune table correspondante trouvée pour ce fichier.")
+                    logger.warning("No matching table found for this file.")
                     continue
                 # Récupération du fichier depuis la base de données
                 query = f"SELECT libelle, fichier FROM {table_name} WHERE id = %s"
@@ -80,15 +80,13 @@ def listen_for_notifications():
                 result = cur.fetchone()
                 if result:
                     libelle, file_binary = result
-                    logger.info(f"Fichier classifié récupéré avec succès : {libelle}")
+                    logger.info(f"Classified file successfully retrieved:{libelle}")
                     try:
                         # Lecture du fichier CSV en forçant le bon séparateur
                         file_content = io.BytesIO(file_binary).read().decode("utf-8", errors="replace")
                         df = pd.read_csv(io.StringIO(file_content), sep=None, engine="python", header=1)
                         if df.shape[1] == 1:
-                            logger.warning("Toutes les données sont dans une seule colonne, tentative avec ',' comme séparateur.")
                             df = pd.read_csv(io.StringIO(file_content), sep=',', engine="python", header=1)
-                        logger.info(f"Colonnes détectées : {df.columns.tolist()}")
                         # Renommage des colonnes pH
                         df.rename(columns={'pH_Meinsberg': 'pH', 'pH_SeaFET': 'pH_Satlantic'}, inplace=True)
                         # Extraction des informations du fichier pour le Ref_trip
@@ -99,13 +97,13 @@ def listen_for_notifications():
                             df['Ref_trip'] = int(libelle.split('_')[0])
                         except (IndexError, ValueError):
                             df['Ref_trip'] = 0
-                            logger.warning("Impossible de déterminer Ref_trip à partir du libellé, valeur par défaut 0 utilisée.")
+                            logger.warning("Unable to determine Ref_trip from label, default value 0 used.")
                         if 'Date' in df.columns and 'Time' in df.columns:
                             # Conversion de la colonne Date Time
                             try:
                                 df['Date Time'] = pd.to_datetime(df['Date'].astype(str) + ' ' + df['Time'].astype(str), errors='coerce')
                             except Exception as e:
-                                logger.warning(f"Erreur lors de la conversion de Date Time: {e}. Tentative avec format par défaut.")
+                                logger.warning(f"Error converting Date Time: {e}. Attempting with default format.")
                                 df['Date Time'] = pd.to_datetime(df['Date Time'], errors='coerce')
                             # Calcul du delta T en minutes
                             df["Nbr_minutes"] = df["Date Time"].diff().dt.total_seconds().div(60).fillna(0)
@@ -115,7 +113,6 @@ def listen_for_notifications():
                             # Suppression de la colonne Date Time originale
                             df = df.drop('Date Time', axis=1)
                         else:
-                            logger.warning("Colonne 'Date Time' non trouvée dans le DataFrame")
                             df['Date'] = pd.to_datetime('today').date()
                             df['Time'] = pd.to_datetime('now').time()
                             df['Nbr_minutes'] = 0
@@ -161,7 +158,6 @@ def listen_for_notifications():
                                         return "Unknown"
                             df['Area'] = df['Latitude'].apply(lambda x: determine_area(x, destination))
                         else:
-                            logger.warning("Colonnes 'Latitude' ou 'Longitude' non trouvées dans le DataFrame")
                             df['Distance'] = 0
                             df['Cumul_Distance'] = 0
                             df['Area'] = "Unknown"
@@ -240,7 +236,7 @@ def listen_for_notifications():
                                             qc_values.append(0 if param == 'Chl_a' else 1)
                                 df[f"QC_{param}"] = qc_values
                             else:
-                                logger.warning(f"Colonne {param} ou {variance_col} non trouvée dans le DataFrame")
+                                print(f"Colonne {param} ou {variance_col} non trouvée dans le DataFrame")
                         # Conversion de l'oxygène si nécessaire (micromol/l à ml/l)
                         if 'Oxygen' in df.columns:
                             df['Oxygen'] = df['Oxygen'].apply(lambda x: x * 0.022391 if pd.notnull(x) else x)
@@ -323,22 +319,22 @@ def listen_for_notifications():
                         df.to_csv(buffer, index=False, encoding="utf-8-sig")
                         file_data = buffer.getvalue().encode("utf-8")  # Convertir en binaire
                         insert_indexed_file_into_db(insert_table, new_file_libelle, file_data, conn)
-                        logger.info(f"Fichier traité inséré dans la base de données sous le libellé : {new_file_libelle}")
+                        logger.info(f"Processed file inserted into the database under the label: {new_file_libelle}")
                         # Insérer dans Measurements
                         insert_into_measurements(df)
                     except Exception as e:
-                        logger.error(f"Erreur lors du traitement du fichier : {e}", exc_info=True)
+                        logger.error(f"Error processing file: {e}", exc_info=True)
                 else:
-                    logger.warning(f"Aucun fichier classifié trouvé pour l'ID : {new_file_id}")
+                    logger.warning(f"No classified files found for ID: {new_file_id}")
     except KeyboardInterrupt:
-        logger.info("Arrêt de l'écoute des notifications.")
+        logger.info("Stop listening for notifications.")
     except Exception as e:
-        logger.error(f"Erreur inattendue : {e}", exc_info=True)
+        logger.error(f"Unexpected error: {e}", exc_info=True)
         time.sleep(5)
     finally:
         cur.close()
         conn.close()
-        logger.info("Connexion PostgreSQL fermée.")
+        logger.info("PostgreSQL connection closed.")
 
 def insert_into_measurements(df):
     """Insère les lignes du DataFrame dans le modèle Measurements."""
@@ -403,10 +399,10 @@ def insert_into_measurements(df):
             )
             measurements.append(measurement)
         except Exception as e:
-            logger.warning(f"Erreur lors de la préparation d'une ligne pour Measurements : {e}")
+            logger.warning(f"Error preparing a line for Measurements: {e}")
     if measurements:
         try:
             Measurements.objects.bulk_create(measurements, batch_size=1000)
-            logger.info(f"{len(measurements)} lignes insérées dans Measurements.")
+            logger.info(f"{len(measurements)} lines inserted in Measurements.")
         except Exception as e:
-            logger.error(f"Erreur lors de l'insertion dans Measurements : {e}", exc_info=True)
+            logger.error(f"Error inserting into Measurements: {e}", exc_info=True)

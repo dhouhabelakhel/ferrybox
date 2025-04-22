@@ -4,29 +4,32 @@ import importlib.util
 import sys
 import time
 import os
+import logging
 
+logger = logging.getLogger('Ferry_app')
 class FerryAppConfig(AppConfig):
     name = 'Ferry_app'  
-    
+    default_auto_field = 'django.db.models.BigAutoField'
+    path = os.path.dirname(os.path.abspath(__file__)) 
     # Dictionnaire statique pour stocker les threads en cours
     running_threads = {}
-    
     # Variable pour suivre si ready() a déjà été exécuté
     is_ready_executed = False
 
     def ready(self):
+
         # Évite l'exécution multiple de ready() en utilisant une variable de classe
         if FerryAppConfig.is_ready_executed:
             return
         
         # Vérifier si nous sommes dans le processus principal 
         # (évite l'exécution en double lors de l'utilisation de runserver avec autoreload)
-        if os.environ.get('RUN_MAIN') != 'true':
+        if os.environ.get('RUN_MAIN') == 'true':
             FerryAppConfig.is_ready_executed = True
-            print("=============================  AppConfig FerryAppConfig chargé ======================================")  
+            logger.info("=============================  AppConfig FerryAppConfig chargé ======================================")  
 
             # Vérification et démarrage du script d'import des emails
-            self.start_email_check(r'.\FB_refresh_process\2_E-mail_download.py', "email_download", 60)
+            self.start_email_check(r'.\FB_refresh_process\email_download.py', "email_download", 60)
             
             # Vérification et démarrage du script de classification
             self.start_script(r'.\FB_refresh_process\classification.py', "classification")
@@ -47,15 +50,15 @@ class FerryAppConfig(AppConfig):
         if thread_key in FerryAppConfig.running_threads:
             existing_thread = FerryAppConfig.running_threads[thread_key]
             if existing_thread.is_alive():
-                print(f"Le thread pour '{module_name}' est déjà en cours d'exécution.")
+                logger.error(f"Le thread pour '{module_name}' est déjà en cours d'exécution.")
                 return
             else:
-                print(f"Le thread pour '{module_name}' a été arrêté. Démarrage d'un nouveau thread.")
+                logger.debug(f"Le thread pour '{module_name}' a été arrêté. Démarrage d'un nouveau thread.")
 
         try:
             spec = importlib.util.spec_from_file_location(module_name, module_path)
             module = importlib.util.module_from_spec(spec)
-            print(f"----------------- Chargement du module {module_name} -----------------")
+            logger.info(f"----------------- Chargement du module {module_name} -----------------")
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
 
@@ -63,9 +66,9 @@ class FerryAppConfig(AppConfig):
             thread.start()
         
             FerryAppConfig.running_threads[thread_key] = thread
-            print(f"Script '{module_name}' chargé avec succès et en cours d'exécution.")
+            logger.info(f"Script '{module_name}' chargé avec succès et en cours d'exécution.")
         except Exception as e:
-            print(f"Erreur lors du chargement de '{module_name}' : {e}")
+            logger.error(f"Erreur lors du chargement de '{module_name}' : {e}")
 
     def start_email_check(self, module_path, module_name, interval):
         """Démarre un script qui s'exécute périodiquement pour vérifier les emails."""
@@ -74,12 +77,12 @@ class FerryAppConfig(AppConfig):
         if thread_key in FerryAppConfig.running_threads:
             existing_thread = FerryAppConfig.running_threads[thread_key]
             if existing_thread.is_alive():
-                print(f"Le thread pour la vérification des emails est déjà en cours d'exécution.")
+                logger.debug(f"Le thread pour la vérification des emails est déjà en cours d'exécution.")
                 return
             else:
-                print(f"Le thread pour la vérification des emails a été arrêté. Démarrage d'un nouveau thread.")
+                logger.error(f"Le thread pour la vérification des emails a été arrêté. Démarrage d'un nouveau thread.")
         
-        print(" ---------------------- Démarrage du script de vérification des emails ---------------------")
+        logger.info(" ---------------------- Démarrage du script de vérification des emails ---------------------")
         
         def email_checker():
             while True:
@@ -92,10 +95,10 @@ class FerryAppConfig(AppConfig):
                     if hasattr(module, "process_new_emails"):
                         module.process_new_emails()
                     else:
-                        print(f"Le module '{module_name}' ne contient pas de fonction 'process_new_emails'.")
+                        logger.error(f"Le module '{module_name}' ne contient pas de fonction 'process_new_emails'.")
 
                 except Exception as e:
-                    print(f"Erreur lors de l'exécution du script '{module_name}' : {e}")
+                    logger.error(f"Erreur lors de l'exécution du script '{module_name}' : {e}")
                 
                 time.sleep(interval)  
 
@@ -103,4 +106,4 @@ class FerryAppConfig(AppConfig):
         thread.start()
         
         FerryAppConfig.running_threads[thread_key] = thread
-        print(f"Script de vérification des emails '{module_name}' lancé avec succès.")
+        logger.info(f"Script de vérification des emails '{module_name}' lancé avec succès.")

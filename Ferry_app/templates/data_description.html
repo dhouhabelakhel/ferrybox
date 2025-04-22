@@ -6,75 +6,11 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-    <div class="row">
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-warning card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Total Space</p>
-            <h3 class="card-title">{{ sum_size }}
-              <small>MO</small>
-            </h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons text-danger"></i>
-              <a>Estimation before pre-treatments</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-success card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Nbr of files</p>
-            <h3 class="card-title">{{ nbr_files }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Last 24 Hours
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-danger card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Downloaded data</p>
-            <h3 class="card-title">-</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Tracked from Web app
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-info card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="fa fa-twitter"></i> -->
-            </div>
-            <p class="card-category">Users</p>
-            <h3 class="card-title">+{{ nbr_users }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Just Updated
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- Statistiques -->
+<div class="row">
+  {% include "layouts/stats_cards.html" %}
+</div>
+
 
 
     <div class="row">
@@ -85,28 +21,27 @@
               <div class="nav-tabs-wrapper">
                 <span class="nav-tabs-title">Options:</span>
                 <ul class="nav nav-tabs" data-tabs="tabs">
+             
                   <li class="nav-item">
                     <a class="nav-link  " href="ui-notifications.html">
-                      <i class="material-icons"></i> Requests
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="download.html">
-                      <i class="material-icons"></i> Download
-                      <!-- <div class="ripple-container"></div> -->
+                      <i class="material-icons">inbox</i> Requests
                     </a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link " href="upload.html">
-                      <i class="material-icons"></i> Upload
+                      <i class="material-icons">file_upload</i> Upload
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
+                 
                   <li class="nav-item">
-                    <a class="nav-link active" href="#description" data-toggle="tab">
-                      <i class="material-icons"></i> Data description
-                      <!-- <div class="ripple-container"></div> -->
+                    <a class="nav-link " href="download.html">
+                      <i class="material-icons">file_download</i> Download
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#data_description">
+                      <i class="material-icons">info</i> Data description
                     </a>
                   </li>
                 </ul>
@@ -182,7 +117,7 @@
     </div>
 
                         <!-- <button class="btn btn-primary btn-block" onclick="md.showNotification('top','right')">Top Right</button> -->
-<!--                       </div>
+<                      </div>
                     </div>
                   </div>
                 </div>

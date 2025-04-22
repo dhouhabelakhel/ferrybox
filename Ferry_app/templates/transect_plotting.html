@@ -19,7 +19,7 @@
     <div class="row">
       <div class="col-lg-12 col-md-12" >
         <div class="card" >
-          <div class="card-header card-header-tabs card-header-primary" >
+          <div class="card-header card-header-tabs "  style="background-color: #003f5c !important;">
             <div class="nav-tabs-navigation">
               <div class="nav-tabs-wrapper">
                 <span class="nav-tabs-title">Graphs:</span>
@@ -37,7 +37,7 @@
                     </a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="time_series">
+                    <a class="nav-link" href="time_series/">
                       <i class="material-icons"></i> Time series
                       <!-- <div class="ripple-container"></div> -->
                     </a>
@@ -48,9 +48,9 @@
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
-<!--                   <li class="nav-item">
-                    <a class="nav-link" href="heat.html">
-                      <i class="material-icons"></i> Heat -->
+          <li class="nav-item">
+                    <a class="nav-link" href="heat">
+                      <i class="material-icons"></i> Heat 
                       <!-- <div class="ripple-container"></div> -->
                     </a>
                   </li>
@@ -74,55 +74,74 @@
 
               <div class="row">
 
-           <!-- Dans votre template -->
-<select id="path_selection" class="custom-select" name="metadata" required>
-  {% if answered %}
-    <option selected>{{ save_transect }}</option>
-  {% endif %}
-  {% for trans in metadata %}
-    <option {% if trans.Name == save_transect %}selected{% endif %}>{{ trans.Name }}</option>
-  {% endfor %}
-</select>
+                <div class="col-md-5">
+                  <label for="metadata">Transect reference</label>
+                  
+                  <!-- Champ de recherche -->
+                  <input type="text" id="transectSearch" class="form-control mb-2" placeholder="Filter transects..." onkeyup="filterTransects()">
+                
+                  <select id="path_selection" class="custom-select" name="metadata" size="10" required>
+                    {% if answered %}
+                      <option>{{ save_transect }}</option>
+                    {% endif %}
+                    {% for trans in metadata %}
+                      <option>{{ trans.Name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                
 
-<select id="path_selection" class="custom-select" name="parameter_selection" required>
-  {% if answered %}
-    <option selected>{{ save_parameter }}</option>
-  {% endif %}
-  <option {% if save_parameter == "Salinity_SBE45" %}selected{% endif %}>Salinity_SBE45</option>
-  <option {% if save_parameter == "Temp_in_SBE38" %}selected{% endif %}>Temp_in_SBE38</option>
-  <option {% if save_parameter == "Oxygen" %}selected{% endif %}>Oxygen</option>
-  <option {% if save_parameter == "Turbidity" %}selected{% endif %}>Turbidity</option>  
-  <option {% if save_parameter == "Chl_a" %}selected{% endif %}>Chl_a</option>
-</select>
+            <div class="col-md-3">
+            <label for="parameter">Parameter</label>
+            <select id="path_selection"  class="custom-select" name="parameter_selection">
+              {% if  answered  %}
+              <option>{{ save_parameter }}</option>
+              {% endif %}
+                <option>Salinity_SBE45</option>
+                <option>Temp_in_SBE38</option>
+                <option>Oxygen</option>
+                <option>Turbidity</option>  
+                <option>Chl_a</option>
+            </select>
 
-<select class="custom-select" name="xaxis_label" required>
-  {% if answered %}
-    <option selected>{{ save_xaxis }}</option>
-  {% endif %}
-  <option {% if save_xaxis == "Distance" %}selected{% endif %}>Distance</option>
-  <option {% if save_xaxis == "Longitude" %}selected{% endif %}>Longitude</option>
-  <option {% if save_xaxis == "Latitude" %}selected{% endif %}>Latitude</option>  
-</select>
+                </div>
+   
+  
+             <div class="col-md-2">
 
-<select class="custom-select" name="qc_param" required>
-  {% if answered and save_qc %}
-    <option selected>{{ save_qc }}</option>
-  {% else %}
-    <option selected>1 - Good</option>
-  {% endif %}
-  <option {% if save_qc == "0 - None" %}selected{% endif %}>0 - None</option>
-  <option {% if save_qc == "1 - Good" %}selected{% endif %}>1 - Good</option>
-  <option {% if save_qc == "2 - Probably good" %}selected{% endif %}>2 - Probably good</option>  
-  <option {% if save_qc == "3 - Probably bad" %}selected{% endif %}>3 - Probably bad</option> 
-  <option {% if save_qc == "4 - Bad" %}selected{% endif %}>4 - Bad</option> 
-</select>
+            <label for="metadata">Xaxis Label</label>
+              <select class="custom-select" name="xaxis_label">
+              {% if  answered  %}
+              <option>{{ save_xaxis }}</option>
+              {% endif %}
+                <option>Distance</option>
+                <option>Longitude</option>
+                <option>Latitude</option>  
+            </select>
+          </div>
+
+            <div class="col-md-2">
+             <label for="metadata">Quality Control</label>
+              <select class="custom-select" name="qc_param">
+              {% if  answered  %}
+              <option>{{ save_qc }}</option>
+              {% endif %}
+                <option>0 - None</option>
+                <option>1 - Good</option>
+                <option>2 - Probably good</option>  
+                <option>3 - Probably bad</option> 
+                <option>4 - Bad</option> 
+            </select>
+          </div> 
+
+
 
                 </div>
             </div>   
            <hr> 
            <div class="container"> 
 <div class="col-md-48">
-        <button type="submit" class="btn btn-primary float-right" style="width: 150px">Plot</button>
+        <button type="submit" class="btn btn-primary float-right" style="width: 150px;background-color:#003f5c">Plot</button>
       </div>
     </div>
 
@@ -368,6 +387,20 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script>
+  function filterTransects() {
+    const input = document.getElementById("transectSearch").value.toLowerCase();
+    const select = document.getElementById("path_selection");
+    const options = select.getElementsByTagName("option");
+
+    for (let i = 0; i < options.length; i++) {
+      const txt = options[i].textContent.toLowerCase();
+      options[i].style.display = txt.includes(input) ? "" : "none";
+    }
+  }
+</script>
+
+{% endblock javascripts %}
 
 

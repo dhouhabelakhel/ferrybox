@@ -2,7 +2,7 @@ import os
 from decouple import config
 from unipath import Path
 import dj_database_url
-
+from Ferry_plot.log_handler import WebLogHandler
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,6 +18,8 @@ APPEND_SLASH = False
 # load production server from .env
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.78'),'*']
 ASGI_APPLICATION = "Ferry_app.asgi.application"
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Application definition
 
@@ -160,7 +162,73 @@ LEAFLET_CONFIG={
     # 'SCALE':'both',
     'ATTRIBUTION_PREFIX':'Created by Tunisian FerryBox Team'
 }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'ferry_app.log'),
+            'formatter': 'default',
+        },
+        'web': {
+            'level': 'DEBUG',
+            'class': 'Ferry_plot.log_handler.WebLogHandler',
+            'formatter': 'default',
+        },
+    },
+    'loggers': {
+        'Ferry_app': {
+            'handlers': ['console', 'file', 'web'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+          'classification': {  
+            'handlers': ['console', 'file', 'web'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+          'email_download': { 
+            'handlers': ['console', 'file', 'web'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+          'metadata': { 
+            'handlers': ['console', 'file', 'web'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+          'pretreatement': { 
+            'handlers': ['console', 'file', 'web'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+          'timeSeries': { 
+            'handlers': ['console', 'file', 'web'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}
 
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # emails settings
 

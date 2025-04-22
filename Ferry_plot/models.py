@@ -81,32 +81,32 @@ from django_mysql.models import ListCharField
 
 #done and fixed (this part is good)
 class Download(models.Model):
-
     Subjects_CHOICES = (
-        ('Get a full user account','Get a full user account'),
-        ('Discuss partnership opportunities','Discuss partnership opportunities'),
-        ('Get data samples','Get data samples'),
-        ('Other','Other'),
+        ('Get a full user account', 'Get a full user account'),
+        ('Discuss partnership opportunities', 'Discuss partnership opportunities'),
+        ('Get data samples', 'Get data samples'),
+        ('Other', 'Other'),
     )
-    """Model representing an Transect."""
+
+    """Model representing a Download request."""
     ID_user = models.CharField(max_length=100)
     Email = models.CharField(max_length=100)
     Name = models.CharField(max_length=100)
     L_name = models.CharField(max_length=100)
-    Subject = models.CharField(max_length=100)
+    Subject = models.CharField(max_length=100, choices=Subjects_CHOICES)  # Ajout des choix pour le sujet
     Transects = ListCharField(
         base_field=CharField(max_length=100),
         size=6,
         max_length=(10 * 110)  # 6 * 10 character nominals, plus commas
     )   
-    # Status = models.BooleanField(default=True)
+    Status = models.BooleanField(default=False)  # Nouveau champ status avec valeur par défaut False
 
     class Meta:
         ordering = ['Name', 'Transects']
 
     def __str__(self):
         """String for representing the Model object."""
-        return f'{self.Name}, {self.Subject}'    
+        return f'{self.Name}, {self.Subject}' 
 
 
 

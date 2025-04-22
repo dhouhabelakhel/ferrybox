@@ -19,7 +19,7 @@ def fetch_binary_file(file_data):
         # Retourne directement les données binaires sans écrire sur le disque
         return file_data
     except Exception as e:
-        logger.error(f"Erreur lors de la récupération des données binaires : {e}")
+        logger.error(f"Error retrieving binary data: {e}")
         return None
 
 def insert_classified_file_into_db(table_name, file_name, file_data, db_conn):
@@ -28,9 +28,9 @@ def insert_classified_file_into_db(table_name, file_name, file_data, db_conn):
             insert_query = f"""INSERT INTO "{table_name}" (libelle, fichier) VALUES (%s, %s);"""
             cur.execute(insert_query, (file_name, psycopg2.Binary(file_data)))
             db_conn.commit()
-            logger.info(f"Fichier {file_name} inséré dans la table {table_name}.")
+            logger.info(f"File {file_name} inserted into the table {table_name}.")
     except Exception as e:
-        logger.error(f"Erreur lors de l'insertion dans {table_name}: {e}")
+        logger.error(f"Error inserting into {table_name}: {e}")
         db_conn.rollback()
 
 def convert_txt_to_csv_in_memory(file_name, file_data):
@@ -61,10 +61,10 @@ def convert_txt_to_csv_in_memory(file_name, file_data):
 
         # Conversion du contenu CSV en données binaires
         csv_data = output_csv.getvalue().encode('utf-8')
-        logger.info(f"Fichier {file_name} converti en CSV en mémoire.")
+        logger.info(f"File {file_name} convert to CSV.")
         return csv_data
     except Exception as e:
-        logger.error(f"Erreur lors de la conversion en CSV pour {file_name}: {e}")
+        logger.error(f"Error converting to CSV for {file_name}: {e}")
         return None
 
 def classify_binary_file_and_store(file_name, file_data, db_conn):
@@ -77,7 +77,7 @@ def classify_binary_file_and_store(file_name, file_data, db_conn):
         if file_name.endswith(".txt"):
             file_data = convert_txt_to_csv_in_memory(file_name, file_data)
             if not file_data:
-                raise Exception(f"Conversion de {file_name} en CSV échouée.")
+                raise Exception(f"Conversion of {file_name} to CSV failed.")
             file_name = file_name.replace(".txt", ".csv")
 
         # Classification en fonction de la taille ou du nom
@@ -97,7 +97,7 @@ def classify_binary_file_and_store(file_name, file_data, db_conn):
         insert_classified_file_into_db(table_name, file_name, file_data, db_conn)
 
     except Exception as e:
-        logger.error(f"Erreur lors de la classification et du stockage pour {file_name}: {e}")
+        logger.error(f"Error in classification and storage for {file_name}: {e}")
 
         # Gestion des erreurs en mémoire
         error_csv_data = io.StringIO()
@@ -112,7 +112,7 @@ def classify_binary_file_and_store(file_name, file_data, db_conn):
 def listen_for_notifications():
     conn = connect_db()
     if conn is None:
-        logger.error("Impossible de se connecter à la base de données.")
+        logger.error("Unable to connect to the database.")
         return
 
     conn.set_session(autocommit=True)
@@ -120,11 +120,11 @@ def listen_for_notifications():
 
     try:
         cur.execute("LISTEN new_file;")
-        logger.info("En attente de notifications sur le canal 'new_file'...")
+        logger.info("Waiting for notifications on the 'new_file' channel...")
 
         while True:
             if select.select([conn], [], [], 60) == ([], [], []):
-                logger.info("Aucun événement reçu... Attente...")
+                logger.info("No events received... Waiting...")
                 continue
 
             conn.poll()
@@ -133,11 +133,11 @@ def listen_for_notifications():
                 notify = conn.notifies.pop(0)
 
                 if notify.channel != 'new_file':
-                    logger.warning(f"Notification reçue d'un autre canal : {notify.channel}")
+                    logger.warning(f"Notification received from another channel: {notify.channel}")
                     continue
 
                 new_file_id = notify.payload
-                logger.info(f"Notification reçue sur le canal 'new_file'. Nouveau fichier ID : {new_file_id}")
+                logger.info(f"Notification received on channel 'new_file'. New file ID: {new_file_id}")
                 
                 cur.execute("SELECT file_name, file_data FROM ferry_plot_binary_email WHERE id = %s;", (new_file_id,))
                 result = cur.fetchone()
@@ -147,7 +147,7 @@ def listen_for_notifications():
                     logger.info(f"Email récupéré : {file_name}")
                     classify_binary_file_and_store(file_name, file_data, conn)
                 else:
-                    logger.warning(f"Aucun email trouvé pour l'ID : {new_file_id}")
+                    logger.warning(f"No email found for ID: {new_file_id}")
 
     except Exception as e:
         logger.error(f"Erreur : {e}")

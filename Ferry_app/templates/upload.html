@@ -1,199 +1,81 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} UI Notifications {% endblock %} 
+{% block title %} Upload Data {% endblock %}
 
-<!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
+<!-- Statistiques -->
+<div class="row">
+  {% include "layouts/stats_cards.html" %}
+</div>
 
-    <div class="row">
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-warning card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Total Space</p>
-            <h3 class="card-title">{{ sum_size }}
-              <small>MO</small>
-            </h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons text-danger"></i>
-              <a>Estimation before pre-treatments</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-success card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Nbr of files</p>
-            <h3 class="card-title">{{ nbr_files }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Last 24 Hours
-            </div>
+<!-- Upload Section -->
+<div class="row">
+  <div class="col-lg-12 col-md-12">
+    <div class="card">
+      <div class="card-header card-header-tabs card-header-info">
+        <div class="nav-tabs-navigation">
+          <div class="nav-tabs-wrapper">
+            <span class="nav-tabs-title">Options:</span>
+            <ul class="nav nav-tabs" data-tabs="tabs">
+              <li class="nav-item">
+                <a class="nav-link" href="ui-notifications.html">
+                  <i class="material-icons">inbox</i> Requests
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="#upload" data-toggle="tab">
+                  <i class="material-icons">file_upload</i> Upload
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="download.html">
+                  <i class="material-icons">file_download</i> Download
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="data_description.html">
+                  <i class="material-icons">info</i> Data description
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-danger card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="material-icons"></i> -->
-            </div>
-            <p class="card-category">Downloaded data</p>
-            <h3 class="card-title">-</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Tracked from Web app
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="card card-stats">
-          <div class="card-header card-header-info card-header-icon">
-            <div class="card-icon">
-              <!-- <i class="fa fa-twitter"></i> -->
-            </div>
-            <p class="card-category">Users</p>
-            <h3 class="card-title">+{{ nbr_users }}</h3>
-          </div>
-          <div class="card-footer">
-            <div class="stats">
-              <i class="material-icons"></i> Just Updated
-            </div>
+
+      <div class="card-body">
+        <div class="tab-content">
+          <div class="tab-pane active" id="upload">
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <p>Upload FerryBox data to the database</p>
+              <hr>
+              <div class="form-group">
+                <label for="myfile">Select a file:</label>
+                <input type="file" class="form-control-file" name="myfile" id="myfile" required>
+              </div>
+              <button type="submit" class="btn btn-info btn-round">Upload</button>
+            </form>
+
+            {% if message %}
+              <div class="alert alert-success mt-3">{{ message }}</div>
+            {% endif %}
+            {% if error %}
+              <div class="alert alert-danger mt-3">{{ error }}</div>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
-
-
-    <div class="row">
-      <div class="col-lg-12 col-md-12">
-        <div class="card">
-          <div class="card-header card-header-tabs card-header-info">
-            <div class="nav-tabs-navigation">
-              <div class="nav-tabs-wrapper">
-                <span class="nav-tabs-title">Options:</span>
-                <ul class="nav nav-tabs" data-tabs="tabs">
-                  <li class="nav-item">
-                    <a class="nav-link " href="ui-notifications.html">
-                      <i class="material-icons"></i> Requests
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link " href="download.html" >
-                      <i class="material-icons"></i> Download
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#upload" data-toggle="tab">
-                      <i class="material-icons"></i> Upload
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link " href="data_description.html">
-                      <i class="material-icons"></i> Data description
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="tab-content">
-
-<!-- second option starts here -->
-
-              <div class="tab-pane active" id="upload">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="form-check">
-<!-- option content starts here -->
-
-                <div class="card-body">
-                  <form>
-                    <div class="row">
-                      <div class="col-md-5">
-
-
-                      <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <p> Upload FerryBox data to database </p>
-                        <hr>
-
-                        <input type="file" name="myfile">
-                        <hr>
-                        
-                        <button type="submit" class="btn btn-info btn-round">Upload</button>
-                        </form>
-                          {% if uploaded_file_url %}
-                        <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
-                      {% endif %}
-                  
-
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-
-
-                          </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-                        <!-- <button class="btn btn-primary btn-block" onclick="md.showNotification('top','right')">Top Right</button> -->
-<!--                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-
-                  </div>
-                </div>
-              </div>
-            </div>
-        </div> -->
-
+  </div>
+</div>
 {% endblock content %}
 
-<!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-
-  <script>
-    $(document).ready(function() {
-      //init DateTimePickers
-      md.initFormExtendedDatetimepickers();
-    });
-  </script>
-  
+<script>
+  $(document).ready(function() {
+    // You can enhance file selection, loading indicator, etc. here
+  });
+</script>
 {% endblock javascripts %}
-
-
-

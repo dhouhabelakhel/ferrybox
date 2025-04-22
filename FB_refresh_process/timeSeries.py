@@ -23,7 +23,7 @@ CELL_SIZE = 5
 def listen_for_notifications():
     conn = connect_db()
     if conn is None:
-        logger.error("Connexion à la base de données échouée.")
+        logger.error("Database connection failed.")
         return
 
     conn.set_session(autocommit=True)
@@ -31,18 +31,18 @@ def listen_for_notifications():
     with conn.cursor() as cur:
         try:
             cur.execute("LISTEN indexed_file;")
-            logger.info("En attente de notifications sur 'indexed_file'...")
+            logger.info("Waiting for notifications on 'indexed_file'...")
 
             while True:
                 if select.select([conn], [], [], 60) == ([], [], []):
-                    logger.info("Aucune indexed file reçue... Attente...")
+                    logger.info("No indexed file received... Waiting...")
                     continue
 
                 conn.poll()
                 while conn.notifies:
                     notify = conn.notifies.pop(0)
                     if notify.channel != 'indexed_file':
-                        logger.warning(f"indexed file reçue d’un autre canal : {notify.channel}")
+                        logger.warning(f"indexed file received from another channel: {notify.channel}")
                         continue
 
                     try:
@@ -50,27 +50,27 @@ def listen_for_notifications():
                         file_id = payload.get("id")
                         libelle = payload.get("libelle", "")
                     except Exception as e:
-                        logger.error(f"Erreur parsing JSON : {e}")
+                        logger.error(f"JSON parsing error: {e}")
                         continue
 
                     name, table_name = detect_transect_table(libelle)
                     if not table_name:
-                        logger.warning(f"Transect inconnu pour le fichier : {libelle}")
+                        logger.warning(f"Unknown transect for file: {libelle}")
                         continue
 
-                    logger.info(f"indexed file reçue : {libelle} (table : {table_name})")
+                    logger.info(f"indexed file received: {libelle} (table : {table_name})")
                     cur.execute(f"SELECT libelle, fichier FROM {table_name} WHERE id = %s", (file_id,))
                     result = cur.fetchone()
 
                     if not result:
-                        logger.warning(f"Aucun fichier indexée trouvé pour ID {file_id}")
+                        logger.warning(f"No indexed files found for ID {file_id}")
                         continue
 
                     file_libelle, file_binary = result
                     process_binary_file(file_binary, file_libelle, name)
 
         except Exception as e:
-            logger.error(f"Erreur pendant l’écoute : {e}", exc_info=True)
+            logger.error(f"Error while listening: {e}", exc_info=True)
             time.sleep(5)
 
 def detect_transect_table(libelle):
@@ -89,7 +89,6 @@ def process_binary_file(file_binary, file_name, transect_name):
 
         df = try_read_binary_to_df(file_binary, file_name)
         if df is None or "Cumul_Distance" not in df.columns:
-            logger.error(f"Fichier invalide ou 'Cumul_Distance' manquant : {file_name}")
             return
 
         total_distance = df["Cumul_Distance"].iloc[-1]
@@ -98,7 +97,6 @@ def process_binary_file(file_binary, file_name, transect_name):
 
         for param in PARAMETERS:
             if param not in df.columns:
-                logger.warning(f"{param} manquant dans {file_name}")
                 continue
 
             series = compute_parameter_series(df, param, total_distance, depart)
@@ -116,13 +114,13 @@ def process_binary_file(file_binary, file_name, transect_name):
             save_time_series_in_memory(df_series, transect_name, param, file_date)
 
     except Exception as e:
-        logger.error(f"Erreur dans process_binary_file : {e}", exc_info=True)
+        logger.error(f"Error in process_binary_file:{e}", exc_info=True)
 
 def try_read_binary_to_df(file_binary, file_name):
     try:
         return pd.read_csv(StringIO(file_binary.decode('utf-8')), delimiter=',', encoding='unicode_escape')
     except Exception as e:
-        logger.error(f"Erreur lors de la lecture du fichier binaire : {e}")
+        logger.error(f"Error reading binary file: {e}")
         return None
 
 def extract_date(file_name):
@@ -130,7 +128,7 @@ def extract_date(file_name):
         parts = file_name.split('_')
         return parts[1] if len(parts) > 1 else time.strftime("%Y%m%d")
     except Exception:
-        logger.warning("Date non extraite, fallback sur aujourd'hui")
+        logger.warning("Date not extracted, fallback to today")
         return time.strftime("%Y%m%d")
 
 def extract_depart(file_name):
@@ -140,7 +138,7 @@ def extract_depart(file_name):
         for part in file_name.split('_'):
             if part.lower() in DEPART_REFERENCES:
                 return part
-        logger.warning(f"Départ non trouvé dans {file_name}")
+        logger.warning(f"Departure not found in{file_name}")
     except Exception:
         pass
     return "unknown"
@@ -158,7 +156,7 @@ def compute_parameter_series(df, param, total_distance, depart):
                 data = df[(df["Cumul_Distance"] > x) & (df["Cumul_Distance"] < x + CELL_SIZE)][param]
             series.append(data.mean() if not data.empty else float('nan'))
     except Exception as e:
-        logger.error(f"Erreur dans compute_parameter_series pour {param} : {e}")
+        logger.error(f"Error in compute_parameter_series for {param} : {e}")
     return series
 
 def save_time_series_in_memory(new_data, transect, parameter, date):
@@ -173,7 +171,7 @@ def save_time_series_in_memory(new_data, transect, parameter, date):
                 result = pd.concat([df_existing, new_data], ignore_index=True)
                 result.sort_values("Date", inplace=True)
             else:
-                logger.info(f"Date déjà existante pour {parameter} : {date}")
+                logger.info(f"Date already exists for {parameter} : {date}")
                 return
         else:
             result = new_data
@@ -187,12 +185,12 @@ def save_time_series_in_memory(new_data, transect, parameter, date):
         insert_or_update_csv_in_db(table_name, f"{transect}_{parameter}.csv", csv_content)
 
     except Exception as e:
-        logger.error(f"Erreur lors de la sauvegarde de la série temporelle : {e}")
+        logger.error(f"Error saving time series: {e}")
 
 def get_existing_time_series_from_db(table_name):
     conn = connect_db()
     if conn is None:
-        logger.error("Impossible de se connecter à la base de données.")
+        logger.error("Unable to connect to the database.")
         return []
 
     try:
@@ -208,7 +206,7 @@ def get_existing_time_series_from_db(table_name):
             return []
 
     except Exception as e:
-        logger.error(f"Erreur lors de la récupération des données existantes : {e}")
+        logger.error(f"Error retrieving existing data: {e}")
         return []
 
 def insert_or_update_csv_in_db(table_name, libelle, csv_content):
@@ -236,17 +234,17 @@ def insert_or_update_csv_in_db(table_name, libelle, csv_content):
                     SET fichier = %s
                     WHERE libelle = %s;
                 ''', (psycopg2.Binary(csv_content), libelle))
-                logger.info(f"Fichier '{libelle}' mis à jour dans la table {table_name}.")
+                logger.info(f"File '{libelle}' updated in table {table_name}.")
             else:
                 cur.execute(f'''
                     INSERT INTO "{table_name}" (libelle, fichier)
                     VALUES (%s, %s);
                 ''', (libelle, psycopg2.Binary(csv_content)))
-                logger.info(f"Fichier '{libelle}' inséré dans la table {table_name}.")
+                logger.info(f"File '{libelle}' inserted into the table {table_name}.")
 
             conn.commit()
 
     except Exception as e:
-        logger.error(f"Erreur lors de l'insertion ou mise à jour de {libelle} dans {table_name} : {e}")
+        logger.error(f"Error inserting or updating {libelle} in {table_name} : {e}")
     finally:
         conn.close()

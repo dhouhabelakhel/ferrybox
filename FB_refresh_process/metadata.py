@@ -25,18 +25,18 @@ logger = logging.getLogger(__name__)
 def listen_for_notifications():
     conn = connect_db()
     if conn is None:
-        logger.error("Connexion à la base de données échouée.")
+        logger.error("Database connection failed.")
         return
     conn.set_session(autocommit=True)
     cur = conn.cursor()
     
     try:
         cur.execute("LISTEN classificated_files;")
-        logger.info("En attente de notifications sur 'classificated_files'...")
+        logger.info("Waiting for notifications on 'classified_files'...")
 
         while True:
             if select.select([conn], [], [], 60) == ([], [], []):
-                logger.info("Aucune notification reçue. Attente...")
+                logger.info("No notifications received. Waiting...")
                 continue
 
             conn.poll()
@@ -45,7 +45,7 @@ def listen_for_notifications():
                 payload = json.loads(notify.payload)
                 file_id = payload.get("id")
                 libelle = payload.get("libelle")
-                logger.info(f"Notification reçue : {libelle} (ID: {file_id})")
+                logger.info(f"Notification received: {libelle} (ID: {file_id})")
 
                 table_name = None
                 if "genova" in libelle.lower():
@@ -56,7 +56,7 @@ def listen_for_notifications():
                 process_classified_file(file_id, libelle, cur, table_name)
 
     except Exception as e:
-        logger.error(f"Erreur pendant l’écoute : {e}", exc_info=True)
+        logger.error(f"Error while listening: {e}", exc_info=True)
         time.sleep(5)
 
 # --- TRAITEMENT DES FICHIERS CLASSIFIÉS ---
@@ -65,7 +65,7 @@ def process_classified_file(file_id, libelle, cur, table_name):
         cur.execute(f"SELECT fichier FROM {table_name} WHERE id = %s", (file_id,))
         result = cur.fetchone()
         if not result:
-            logger.warning(f"Fichier ID {file_id} introuvable.")
+            logger.warning(f"File ID {file_id} not found.")
             return
 
         binary_data = result[0]
@@ -79,7 +79,6 @@ def process_classified_file(file_id, libelle, cur, table_name):
         df = pd.read_csv(StringIO(csv_content), encoding='ISO-8859-1', skiprows=1)
 
         if not {'Date', 'Time', 'Latitude', 'Longitude'}.issubset(df.columns):
-            logger.warning(f"Colonnes nécessaires manquantes dans {libelle}")
             return
 
         metadata = extract_metadata(df, libelle, binary_data)  # Passer binary_data ici
@@ -88,7 +87,7 @@ def process_classified_file(file_id, libelle, cur, table_name):
             save_metadata_to_db(metadata)
 
     except Exception as e:
-        logger.error(f"Erreur de traitement fichier classifié : {e}", exc_info=True)
+        logger.error(f"Classified file processing error: {e}", exc_info=True)
 
 # --- EXTRACTION DES MÉTADONNÉES ---
 def extract_metadata(df, file_name, binary_data):
@@ -134,7 +133,7 @@ def extract_metadata(df, file_name, binary_data):
         }
 
     except Exception as e:
-        logger.error(f"Erreur extraction métadonnées : {e}", exc_info=True)
+        logger.error(f"Metadata extraction error: {e}", exc_info=True)
         return None
 
 # --- SAUVEGARDE EN FICHIER CSV LOCAL ---
@@ -160,10 +159,10 @@ def append_metadata_to_csv_in_memory(data):
         # Sauvegarder dans la base de données
         save_metadata_csv_to_db(csv_content)
 
-        logger.info("Métadonnées ajoutées en mémoire et sauvegardées dans la base de données.")
+        logger.info("Metadata added in memory and saved in the database.")
 
     except Exception as e:
-        logger.error(f"Erreur lors de l'ajout aux métadonnées locales : {e}", exc_info=True)
+        logger.error(f"Error adding to local metadata: {e}", exc_info=True)
 
 # --- RECUPERATION DES METADONNÉES EXISTANTES DEPUIS LA BASE DE DONNEES ---
 def get_existing_metadata_from_db():
@@ -183,7 +182,7 @@ def get_existing_metadata_from_db():
         return []
 
     except Exception as e:
-        logger.error(f"Erreur lors de la récupération des métadonnées existantes : {e}", exc_info=True)
+        logger.error(f"Error retrieving existing metadata: {e}", exc_info=True)
         return []
 
 # --- SAUVEGARDE DU FICHIER CSV EN BASE DE DONNEES ---
@@ -204,20 +203,20 @@ def save_metadata_csv_to_db(csv_content):
                 SET fichier = %s
                 WHERE libelle = %s
             """, (psycopg2.Binary(csv_content.encode('utf-8')), "Metadata.csv"))
-            logger.info("Fichier Metadata.csv mis à jour dans Ferry_plot_binary_metadata.")
+            logger.info("Metadata.csv file updated in Ferry_plot_binary_metadata.")
         else:
             cur.execute("""
                 INSERT INTO "Ferry_plot_binary_metadata" (libelle, fichier)
                 VALUES (%s, %s)
             """, ("Metadata.csv", psycopg2.Binary(csv_content.encode('utf-8'))))
-            logger.info("Fichier Metadata.csv inséré dans Ferry_plot_binary_metadata.")
+            logger.info("Metadata.csv file inserted into Ferry_plot_binary_metadata.")
 
         conn.commit()
         cur.close()
         conn.close()
 
     except Exception as e:
-        logger.error(f"Erreur lors de la sauvegarde du fichier CSV en base de données : {e}", exc_info=True)
+        logger.error(f"Error saving CSV file to database: {e}", exc_info=True)
 
 # --- SAUVEGARDE EN BASE DJANGO ---
 def save_metadata_to_db(data):
@@ -225,7 +224,7 @@ def save_metadata_to_db(data):
         # Sauvegarde via Django ORM
         meta = Metadata(**data)
         meta.save()
-        logger.info(f"Métadonnées insérées en base : {data['Name']}")
+        logger.info(f"Metadata inserted into the database:{data['Name']}")
 
     except Exception as e:
-        logger.error(f"Erreur d’insertion en base Django : {e}", exc_info=True)
+        logger.error(f"Insertion error in Django database: {e}", exc_info=True)
