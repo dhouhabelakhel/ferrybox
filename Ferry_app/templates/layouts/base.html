@@ -118,6 +118,8 @@
           <li class="nav-item {% if downed %} active {% endif %}"><a class="nav-link" href="/page-user"><p>Data Download</p></a></li>
           <li class="nav-item {% if interface %} active {% endif %}"><a class="nav-link" href="/ui-notifications.html"><p>Admin Interface</p></a></li>
           <li class="nav-item {% if process %} active {% endif %}"><a class="nav-link" href="/process"><p>Process</p></a></li>
+          <li class="nav-item {% if notifications %} active {% endif %}"><a class="nav-link" href="/notifications"><p>Notifications</p></a></li>
+
           <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}"><p>Logout</p></a></li>
           {% else %}
           <li class="nav-item {% if inpage %} active {% endif %}"><a class="nav-link" href="/login/"><p>Login</p></a></li>

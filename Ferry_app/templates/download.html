@@ -1,248 +1,337 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} UI Notifications {% endblock %} 
+{% block title %} UI Notifications {% endblock %}
 
-<!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
+{% block stylesheets %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<style>
+  .pagination { display: flex; list-style: none; padding-left: 0; }
+  .pagination li { margin: 0 5px; }
+  .pagination .active a { font-weight: bold; color: #007bff; }
+  .nav-center {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+
+  .nav-pills .nav-link {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border-radius: 50px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-pills .nav-link i.material-icons {
+    font-size: 20px;
+  }
+  .custom-alert {
+    background-color: #0073B7;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-radius: 8px;
+  }
+
+  .custom-alert i.material-icons {
+    margin-right: 10px;
+    font-size: 22px;
+  }
+  /* Espacement entre les lignes */
+.table tbody tr {
+  height: 60px; /* ajuste selon ton besoin */
+  vertical-align: middle;
+}
+
+/* Bordures plus épaisses entre les lignes */
+.table tbody tr td {
+  border-top: 2px solid #dee2e6 !important; /* plus visible que la valeur par défaut */
+}
+
+/* Optionnel : pour que la première ligne ait aussi une bordure nette */
+.table thead th {
+  border-bottom: 3px solid #003f5c; /* couleur personnalisée pour démarquer l’en-tête */
+}
+
+</style>
+{% endblock stylesheets %}
 
 {% block content %}
+<div class="row">
+  {% include "layouts/stats_cards.html" %}
+</div>
 
 <div class="row">
-  <div class="col-lg-3 col-md-6 col-sm-6">
-    <div class="card card-stats">
-      <div class="card-header card-header-warning card-header-icon">
-        <div class="card-icon">
-          <i class="material-icons">storage</i>
+  <div class="col-lg-12 col-md-12">
+    <div class="card">
+      <div class="card-header card-header-tabs" style="background-color: #003f5c">
+        <div class="nav-tabs-navigation">
+          <div class="nav-tabs-wrapper">
+            <span class="nav-tabs-title">Options:</span>
+            <ul class="nav nav-tabs" data-tabs="tabs">
+              <li class="nav-item">
+                <a class="nav-link" href="ui-notifications.html"><i class="material-icons">inbox</i> Requests</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="upload.html"><i class="material-icons">file_upload</i> Upload</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="#download"><i class="material-icons">file_download</i> Download</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="data_description.html"><i class="material-icons">info</i> Data description</a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <p class="card-category">Total Space</p>
-        <h3 class="card-title">{{ sum_size }}
-          <small>MO</small>
-        </h3>
       </div>
-      <div class="card-footer">
-        <div class="stats">
-          <i class="material-icons text-danger">warning</i>
-          <a>Estimation before pre-treatments</a>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="col-lg-3 col-md-6 col-sm-6">
-    <div class="card card-stats">
-      <div class="card-header card-header-success card-header-icon">
-        <div class="card-icon">
-          <i class="material-icons">description</i>
-        </div>
-        <p class="card-category">Nbr of files</p>
-        <h3 class="card-title">{{ nbr_files }}</h3>
-      </div>
-      <div class="card-footer">
-        <div class="stats">
-          <i class="material-icons">update</i> Last 24 Hours
-        </div>
-      </div>
-    </div>
-  </div>
+      <div class="card-body">
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-pills nav-pills-info nav-center" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#email_files_tab" role="tablist">
+              <i class="material-icons">cloud_download</i> Email Files
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#truncated_files_tab" role="tablist">
+              <i class="material-icons">storage</i> FerryBox Truncated Files
+            </a>
+          </li>
+        </ul>
 
-  <div class="col-lg-3 col-md-6 col-sm-6">
-    <div class="card card-stats">
-      <div class="card-header card-header-danger card-header-icon">
-        <div class="card-icon">
-          <i class="material-icons">cloud_download</i>
-        </div>
-        <p class="card-category">Downloaded data</p>
-        <h3 class="card-title">-</h3>
-      </div>
-      <div class="card-footer">
-        <div class="stats">
-          <i class="material-icons">track_changes</i> Tracked from Web app
-        </div>
-      </div>
-    </div>
-  </div>
+        <!-- Tab Content -->
+        <div class="tab-content">
+          <!-- Email Files Section -->
+          <div class="tab-pane active" id="email_files_tab">
+            <!-- Selector -->
+            <ul class="nav nav-pills nav-pills-rose" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" id="show-genova" data-toggle="tab" href="#" role="tab">Genova</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="show-marseille" data-toggle="tab" href="#" role="tab">Marseille</a>
+              </li>
+            </ul>
+          
+            <!-- Genova Files -->
+            <div id="genova-table" style="margin-top: 15px;">
+              <h4>Genova Files</h4>
+              <div style="border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
+                <table id="genova-datatable" class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Initial file</th>
+                      <th>Classified file</th>
+                      <th>Indexed file</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for file in email_files_genova %}
+                    <tr >
+                      <td><a href="{% url 'Ferry_plot:download_initial_file' file.file_name %}">{{ file.file_name }}<a></td>
+                      <td><a href="{% url 'Ferry_plot:download_classified_file' file.classified_libelle %}">{{ file.classified_libelle }}</a></td>
+                      <td><a href="{% url 'Ferry_plot:download_indexed_file' file.indexed_libelle %}">{{ file.indexed_libelle }}</a></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          
+            <!-- Marseille Files -->
+            <div id="marseille-table" style="display: none; margin-top: 15px;">
+              <h4>Marseille Files</h4>
+              <div style="border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
+                <table id="marseille-datatable" class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Initial file</th>
+                      <th>Classified file</th>
+                      <th>Indexed file</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for file in email_files_marseille %}
+                    <tr>
+                      <td><a href="{% url 'Ferry_plot:download_initial_file' file.file_name %}">{{ file.file_name }}<a></td>
+                        <td><a href="{% url 'Ferry_plot:download_classified_file' file.classified_libelle %}">{{ file.classified_libelle }}</a></td>
+                        <td><a href="{% url 'Ferry_plot:download_indexed_file' file.indexed_libelle %}">{{ file.indexed_libelle }}</a></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+        
 
-  <div class="col-lg-3 col-md-6 col-sm-6">
-    <div class="card card-stats">
-      <div class="card-header card-header-info card-header-icon">
-        <div class="card-icon">
-          <i class="material-icons">people</i>
-        </div>
-        <p class="card-category">Users</p>
-        <h3 class="card-title">+{{ nbr_users }}</h3>
-      </div>
-      <div class="card-footer">
-        <div class="stats">
-          <i class="material-icons">person_add</i> Just Updated
+          <!-- Truncated Files Section -->
+          <div class="tab-pane" id="truncated_files_tab">
+            <div class="alert custom-alert" role="alert">
+              <i class="material-icons">warning</i> These files are automatically trimmed to match valid time series!
+            </div>
+            <table class="table table-striped">
+              <thead class="text-warning">
+                <tr>
+                  <th>File Name</th>
+                  <th>Size
+                    <a href="#" id="sortSizeAsc">↑</a>
+                    <a href="#" id="sortSizeDesc">↓</a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for file in truncated_files %}
+                <tr>
+                  <td><a href="{% url 'Ferry_plot:download_truncated_file' file.libelle %}">{{ file.libelle }}</a></td>
+                  <td>{{ file.size }} MB</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <ul class="pagination" id="truncatedPagination"></ul>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-
-
-
-
-
-
-<div class="row">
-      <div class="col-lg-12 col-md-12">
-        <div class="card">
-          <div class="card-header card-header-tabs card-header-info">
-            <div class="nav-tabs-navigation">
-              <div class="nav-tabs-wrapper">
-                <span class="nav-tabs-title">Options:</span>
-                <ul class="nav nav-tabs" data-tabs="tabs">
-             
-                  <li class="nav-item">
-                    <a class="nav-link  " href="ui-notifications.html">
-                      <i class="material-icons">inbox</i> Requests
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link " href="upload.html">
-                      <i class="material-icons">file_upload</i> Upload
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                 
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#download">
-                      <i class="material-icons">file_download</i> Download
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="data_description.html">
-                      <i class="material-icons">info</i> Data description
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="tab-content">
-
-<!-- second option starts here -->
-
-              <div class="tab-pane active" id="download">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="form-check">
-<!-- option content starts here -->
-                <div class="card-body">
-           <!-- Fix the form to properly handle multiple checkbox selections -->
-<!-- Fix the form to use standard submission without relying on named URL -->
-<form method="post">
-  {% csrf_token %}
-  
-  <label for="metadata">Download FerryBox data</label>
-  <hr> 
-  <div class="row">
-    <div class="col-md-8">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead class="text-info">
-            <tr>
-              <th>Select</th>
-              <th>Transect Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for trans in metadata %}
-            <tr>
-              <td>
-                <div class="form-check">
-                  <label class="form-check-label">
-                    <!-- Use name that works with Django's request.POST.getlist() -->
-                    <input class="form-check-input" type="checkbox" name="transect_select_download" value="{{ trans.Name }}">
-                    <span class="form-check-sign">
-                      <span class="check"></span>
-                    </span>
-                  </label>
-                </div>
-              </td>
-              <td>{{ trans.Name }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  
-  <hr>
-  <!-- Add select all button -->
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <button type="button" id="select-all" class="btn btn-primary btn-sm">Select All</button>
-      <button type="button" id="deselect-all" class="btn btn-default btn-sm">Deselect All</button>
-    </div>
-  </div>
-  
-  <button type="submit" class="btn btn-info btn-round">Download</button>
-</form>
-                        </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-<!-- third option starts here -->
-
-
-
-
-
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-                        <!-- <button class="btn btn-primary btn-block" onclick="md.showNotification('top','right')">Top Right</button> -->
-<!--                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-
-                  </div>
-                </div>
-              </div>
-            </div>
-        </div> -->
-
-
-<!-- Specific Page JS goes HERE  -->
-
-
 {% endblock content %}
 
-<!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-  <script>
- 
-    $(document).ready(function() {
-      // Select all checkboxes
-      md.initFormExtendedDatetimepickers();
-
-      $("#select-all").click(function(){
-        $('input[name="transect_select_download"]').prop('checked', true);
-      });
-      
-      // Deselect all checkboxes
-      $("#deselect-all").click(function(){
-        $('input[name="transect_select_download"]').prop('checked', false);
-      });
+<script>
+  $(document).ready(function () {
+    $('#genova-datatable').DataTable({
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
+      ordering: true
     });
-  </script>
   
+    $('#marseille-datatable').DataTable({
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
+      ordering: true
+    });
+    // Email Files Filtering + Pagination
+    const emailRowsPerPage = 10;
+    const allEmailRows = $('#emailFilesTable tbody tr');
+    let filteredEmailRows = allEmailRows;
+    let emailCurrentPage = 1;
+
+    function showEmailPage(page) {
+      filteredEmailRows.hide();
+      filteredEmailRows.slice((page - 1) * emailRowsPerPage, page * emailRowsPerPage).show();
+      $('#emailPagination li').removeClass('active');
+      $('#emailPagination li').eq(page - 1).addClass('active');
+    }
+
+    function createEmailPagination() {
+      const pageCount = Math.ceil(filteredEmailRows.length / emailRowsPerPage);
+      $('#emailPagination').empty();
+      for (let i = 1; i <= pageCount; i++) {
+        $('#emailPagination').append(`<li class="page-item"><a class="page-link" href="#">${i}</a></li>`);
+      }
+      $('#emailPagination li:first').addClass('active');
+    }
+
+    function refreshEmailTable() {
+      createEmailPagination();
+      showEmailPage(emailCurrentPage);
+    }
+
+    refreshEmailTable();
+
+    $('#emailPagination').on('click', 'li', function () {
+      emailCurrentPage = $(this).text();
+      showEmailPage(emailCurrentPage);
+    });
+
+    $('#emailFilterInput').on('keyup', function () {
+      let value = $(this).val().trim().toLowerCase();
+      filteredEmailRows = value === ""
+        ? allEmailRows
+        : allEmailRows.filter(function () {
+            return $(this).text().toLowerCase().includes(value);
+          });
+      emailCurrentPage = 1;
+      refreshEmailTable();
+    });
+
+    // Truncated Files Pagination + Sorting
+    const truncatedRowsPerPage = 10;
+    let truncatedRows = $('#truncated_files_tab tbody tr');
+    let truncatedCurrentPage = 1;
+
+    function showTruncatedPage(page) {
+      truncatedRows.hide();
+      truncatedRows.slice((page - 1) * truncatedRowsPerPage, page * truncatedRowsPerPage).show();
+      $('#truncatedPagination li').removeClass('active');
+      $('#truncatedPagination li').eq(page - 1).addClass('active');
+    }
+
+    function createTruncatedPagination() {
+      const pageCount = Math.ceil(truncatedRows.length / truncatedRowsPerPage);
+      $('#truncatedPagination').empty();
+      for (let i = 1; i <= pageCount; i++) {
+        $('#truncatedPagination').append(`<li class="page-item"><a class="page-link" href="#">${i}</a></li>`);
+      }
+      $('#truncatedPagination li:first').addClass('active');
+    }
+
+    createTruncatedPagination();
+    showTruncatedPage(truncatedCurrentPage);
+
+    $('#truncatedPagination').on('click', 'li', function () {
+      truncatedCurrentPage = $(this).text();
+      showTruncatedPage(truncatedCurrentPage);
+    });
+
+    $('#sortSizeAsc, #sortSizeDesc').on('click', function (e) {
+      e.preventDefault();
+      const ascending = $(this).attr('id') === 'sortSizeAsc';
+      let rows = $('#truncated_files_tab tbody tr').get();
+
+      rows.sort((a, b) => {
+        let sizeA = parseFloat($(a).find('td:eq(1)').text()) || 0;
+        let sizeB = parseFloat($(b).find('td:eq(1)').text()) || 0;
+        return ascending ? sizeA - sizeB : sizeB - sizeA;
+      });
+
+      $.each(rows, (_, row) => $('#truncated_files_tab tbody').append(row));
+      truncatedRows = $('#truncated_files_tab tbody tr:visible');
+      createTruncatedPagination();
+      showTruncatedPage(1);
+    });
+    $('#show-genova').on('click', function (e) {
+      e.preventDefault();
+      $('#genova-table').show();
+      $('#marseille-table').hide();
+      $(this).addClass('active');
+      $('#show-marseille').removeClass('active');
+    });
+    
+    $('#show-marseille').on('click', function (e) {
+      e.preventDefault();
+      $('#genova-table').hide();
+      $('#marseille-table').show();
+      $(this).addClass('active');
+      $('#show-genova').removeClass('active');
+    });
+    
+  });
+</script>
 {% endblock javascripts %}
-
-
-
-
-

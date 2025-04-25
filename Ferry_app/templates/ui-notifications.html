@@ -26,7 +26,7 @@
     <div class="row">
       <div class="col-lg-12 col-md-12">
         <div class="card">
-          <div class="card-header card-header-tabs card-header-info">
+          <div class="card-header card-header-tabs " style="background-color: #003f5c">
             <div class="nav-tabs-navigation">
               <div class="nav-tabs-wrapper">
                 <span class="nav-tabs-title">Options:</span>
@@ -333,23 +333,41 @@
 function handleAction(id, action) {
   const url = `/update_request/${id}/`; 
   const data = { action: action };
+  
+  // Get CSRF token from cookie (Django's recommended approach)
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
 
   fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': '{{ csrf_token }}' 
+      'X-CSRFToken': csrftoken
     },
     body: JSON.stringify(data)
   })
   .then(response => response.json())
   .then(result => {
-    console.log(result)
+    console.log(result);
     if (result.success) {
-      // Supprimer la ligne de la page après succès
+      // Remove row from the page after success
       $(`tr[data-id="${id}"]`).remove();
+      alert('Request processed successfully!');
     } else {
-      alert('An error occurred. Please try again.');
+      alert('Error: ' + (result.error || 'Unknown error'));
     }
   })
   .catch(error => {

@@ -1,346 +1,303 @@
-
 {% extends "layouts/base.html" %}
 {% load static %}
 {% block title %} Page Blank {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
-
+{% block stylesheets %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+  /* Enhanced styles for Select2 */
+  .select2-container {
+    width: 100% !important;
+    display: block;
+  }
+  
+  /* Consistent height and appearance */
+  .select2-container--default .select2-selection--single {
+    height: 38px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 24px;
+    padding-left: 0;
+    color: #495057;
+  }
+  
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+    right: 5px;
+  }
+  
+  /* Dropdown styling */
+  .select2-dropdown {
+    border-color: #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .select2-container--open .select2-selection--single {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  }
+  
+  /* Fix for mobile */
+  @media (max-width: 768px) {
+    .select2-container--default .select2-selection--single {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+  }
+</style>
+{% endblock stylesheets %}
 
 {% block content %}
+  <!-- Choose the type of graph -->
+  <div class="row">
+    <div class="col-lg-12 col-md-12">
+      <div class="card">
+        <div class="card-header card-header-tabs" style="background-color: #003f5c !important;">
+          <div class="nav-tabs-navigation">
+            <div class="nav-tabs-wrapper">
+              <span class="nav-tabs-title">Graphs:</span>
+              <ul class="nav nav-tabs" data-tabs="tabs">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#transect" data-toggle="tab">
+                    <i class="material-icons">timeline</i> Transect
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="map">
+                    <i class="material-icons">map</i> Map
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="time_series/">
+                    <i class="material-icons">query_stats</i> Time series
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="scatter">
+                    <i class="material-icons">scatter_plot</i> Scatter
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="heat">
+                    <i class="material-icons">whatshot</i> Heat 
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
+        <div class="card-body">
+          <div class="tab-content">
+            <div class="tab-pane active" id="transect">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <td>
+                      <form method="GET" action="{% url 'Ferry_plot:transect_plotting' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                          <div class="col-md-5">   
+                            <!-- Select2 for transect selection with label -->
+                            <label for="transect_select">Transect</label>
+                            <select id="transect_select" class="form-control select2" name="metadata" required>
+                              {% if answered %}
+                                <option value="{{ save_transect }}" selected>{{ save_transect }}</option>
+                              {% endif %}
+                              {% for trans in metadata %}
+                                <option value="{{ trans.Name }}">{{ trans.Name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
 
+                          <div class="col-md-3">
+                            <label for="parameter_selection">Parameter</label>
+                            <select id="parameter_selection" class="custom-select" name="parameter_selection">
+                              {% if answered %}
+                                <option>{{ save_parameter }}</option>
+                              {% endif %}
+                              <option>Salinity_SBE45</option>
+                              <option>Temp_in_SBE38</option>
+                              <option>Oxygen</option>
+                              <option>Turbidity</option>  
+                              <option>Chl_a</option>
+                            </select>
+                          </div>
+                          
+                          <div class="col-md-2">
+                            <label for="xaxis_label">Xaxis Label</label>
+                            <select id="xaxis_label" class="custom-select" name="xaxis_label">
+                              {% if answered %}
+                                <option>{{ save_xaxis }}</option>
+                              {% endif %}
+                              <option>Distance</option>
+                              <option>Longitude</option>
+                              <option>Latitude</option>  
+                            </select>
+                          </div>
 
+                          <div class="col-md-2">
+                            <label for="qc_param">Quality Control</label>
+                            <select id="qc_param" class="custom-select" name="qc_param">
+                              {% if answered %}
+                                <option>{{ save_qc }}</option>
+                              {% endif %}
+                              <option>0 - None</option>
+                              <option>1 - Good</option>
+                              <option>2 - Probably good</option>  
+                              <option>3 - Probably bad</option> 
+                              <option>4 - Bad</option> 
+                            </select>
+                          </div>
+                        </div>
+                        <hr> 
+                        <div class="container"> 
+                          <div class="col-md-48">
+                            <button type="submit" class="btn btn-primary float-right" style="width: 150px;background-color:#003f5c">Plot</button>
+                          </div>
+                        </div>
+                      </form>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-  
-                               <!-- Choose the type of graph -->
+            <div class="border" id="container8" style="height:500px;">
+              <div class="col-md-48">
+                <script src="https://code.highcharts.com/highcharts.js"></script>
+                <script src="https://code.highcharts.com/modules/exporting.js"></script>
+                <script src="https://code.highcharts.com/modules/export-data.js"></script>
+                
+                <script>
+                  _categories = {{categories|safe}};
+                  _values = {{values|safe}};
 
-<!-- This is the new navbar ( pretty one) , it's calling other sections using the href items, save the names and try this new architechture.. -->
-    <div class="row">
-      <div class="col-lg-12 col-md-12" >
-        <div class="card" >
-          <div class="card-header card-header-tabs "  style="background-color: #003f5c !important;">
-            <div class="nav-tabs-navigation">
-              <div class="nav-tabs-wrapper">
-                <span class="nav-tabs-title">Graphs:</span>
-                <ul class="nav nav-tabs" data-tabs="tabs">
-                  <li class="nav-item">
-                    <a class="nav-link active" href="#transect" data-toggle="tab">
-                      <i class="material-icons"></i> Transect
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="map">
-                      <i class="material-icons"></i> Map
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="time_series/">
-                      <i class="material-icons"></i> Time series
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="scatter">
-                      <i class="material-icons"></i> Scatter
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-              <li class="nav-item">
-                    <a class="nav-link" href="heat">
-                      <i class="material-icons"></i> Heat 
-                      <!-- <div class="ripple-container"></div> -->
-                    </a>
-                  </li>
-                </ul>
+                  Highcharts.chart('container8', {    
+                    xAxis: {
+                      categories: _categories
+                    },
+                    yAxis: {
+                      title: {
+                        text: '{{ axe_title }}'
+                      }
+                    },
+                    exporting: {
+                      enabled: {{ down }}
+                    },
+                    title: {
+                      text: ' '
+                    },
+                    subtitle: {
+                      text: '{{ title }}'
+                    },
+                    tooltip: {
+                      pointFormat: '<tr><td style="color:{series.color};padding:0">{{ axe_title }}: </td>' +
+                        '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
+                    },
+
+                    series: [{
+                      data: _values,
+                      name: "Gulf of Tunis",
+                      zoneAxis: 'x',
+                      zones: [ {
+                        name:'Gulf of Tunis',
+                        value:{{ limit_1 }},
+                        dashStyle: 'solid',
+                        color:'#07B1C5',
+                      },
+                      {
+                        name:'Southern Sardinia',
+                        value:{{ limit_2 }},
+                        dashStyle: 'solid',
+                        color:'#9A33B1',
+                      },{
+                        value: {{ limit_3 }},  
+                        name:'Eastern Sardinia',    
+                        dashStyle: 'solid',
+                        color:'#4FA953'
+                      }, {
+                        value:{{ limit_4 }},
+                        name:'East of Corsica',
+                        dashStyle: 'solid',
+                        color:'#FD9F1B',
+                      },
+                      {
+                        value:{{ limit_5 }},
+                        name:'Gulf of Genoa',
+                        dashStyle: 'solid',
+                        color:'#C11B0B',
+                      }]
+                    },
+                    {
+                      data:[],
+                      name:'Southern Sardinia',
+                      color:'#9A33B1',
+                    },
+                    {
+                      data:[],
+                      name:'Eastern Sardinia',
+                      color:'#4FA953',
+                    },
+                    {
+                      data:[],
+                      name:'East of Corsica',
+                      color:'#FD9F1B',
+                    },
+                    {
+                      data:[],
+                      name:'Gulf of Genoa',
+                      color:'#C11B0B',
+                    }],
+                  });
+                </script>
               </div>
             </div>
           </div>
-<!-- These are the navbars called items ( the different graphs forms ) -->
-
-          <div class="card-body">
-            <div class="tab-content">
-              <!-- this div is just replacing the tab pane part -->
-              <div class="tab-pane active" id="transect">
-                <table class="table">
-                  <tbody>
-                    <tr>
-                      <td>
-
-            <form method="GET" action="{% url 'Ferry_plot:transect_plotting' %}">
-              {% csrf_token %}
-
-              <div class="row">
-
-                <div class="col-md-5">   
-        <!-- the buttons group starts here-->        
-            <label for="metadata">Transect reference</label>
-            <select id="path_selection" class="custom-select" name="metadata">
-              {% if  answered  %}
-              <option>{{ save_transect }}</option>
-              {% endif %}
-              {% for trans in metadata %}
-              <option >{{ trans.Name }}</option>
-              {% endfor %}
-            </select>
-                </div>
-
-
-            <div class="col-md-3">
-            <label for="parameter">Parameter</label>
-            <select id="path_selection"  class="custom-select" name="parameter_selection">
-              {% if  answered  %}
-              <option>{{ save_parameter }}</option>
-              {% endif %}
-                <option>Salinity_SBE45</option>
-                <option>Temp_in_SBE38</option>
-                <option>Oxygen</option>
-                <option>Turbidity</option>  
-                <option>Chl_a</option>
-            </select>
-
-                </div>
-   
-  
-             <div class="col-md-2">
-
-            <label for="metadata">Xaxis Label</label>
-              <select class="custom-select" name="xaxis_label">
-              {% if  answered  %}
-              <option>{{ save_xaxis }}</option>
-              {% endif %}
-                <option>Distance</option>
-                <option>Longitude</option>
-                <option>Latitude</option>  
-            </select>
-          </div>
-
-            <div class="col-md-2">
-             <label for="metadata">Quality Control</label>
-              <select class="custom-select" name="qc_param">
-              {% if  answered  %}
-              <option>{{ save_qc }}</option>
-              {% endif %}
-                <option>0 - None</option>
-                <option>1 - Good</option>
-                <option>2 - Probably good</option>  
-                <option>3 - Probably bad</option> 
-                <option>4 - Bad</option> 
-            </select>
-          </div> 
-
-
-
-                </div>
-            </div>   
-           <hr> 
-           <div class="container"> 
-<div class="col-md-48">
-        <button type="submit" class="btn btn-primary float-right" style="width: 150px">Plot</button>
+        </div>
       </div>
     </div>
-
-          </div>
-        </div>
-            </form>
-                  </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-</div>
-
-
-
-<div class="border" id="container8" style="height:500px;" >
-  <div class="col-md-48">
-                <!-- looks like u solved ur problem !! pu a chart here.. -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    
-    <script>
-      _categories = {{categories|safe}};
-      _values = {{values|safe}};
-  //      //Add Condition related to user auth type to activate/disactivate the ...
-  //     if (true) {}
-  //     Highcharts.chart('container', {
-  //   chart: {
-  //             type: 'line'
-  //   },
-  //    exporting: {
-  //   enabled: {{ down }}
-  // },
-  //   title: {
-  //             text: ' '
-  //   },
-  //   subtitle: {
-  //             text: '{{ title }}'
-  //   },
-  //   xAxis: {
-  //             categories:_categories,
-  //             crosshair: true,
-
-  //   },
-  //   yAxis: {
-  //             title: {
-  //     text: '{{ axe_title }}'
-  //             }
-  //   },
-  //   tooltip: {
-  //             headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-  //             pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-  //     '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
-  //             footerFormat: '</table>',
-  //             shared: true,
-  //             useHTML: true
-  //   },
-  //   plotOptions: {
-  //             column: {
-  //     pointPadding: 0.2,
-  //     borderWidth: 0
-  //       }
-  //   },
-  //   series: [{
-  //             name: '{{ param_name }}',
-  //             data: _values
-        
-  //   },
-  //   {
-  //             name: '{{ param_name }}',
-  //             data: _values
-        
-  //   },
-
-
-  //   ]
-  //     });
-
-    Highcharts.chart('container8', {    
-    xAxis: {
-        categories: _categories
-    },
-      yAxis: {
-              title: {
-      text: '{{ axe_title }}'
-              }
-    },
-       exporting: {
-    enabled: {{ down }}
-  },
-    title: {
-              text: ' '
-    },
-    subtitle: {
-              text: '{{ title }}'
-    },
-    tooltip: {
-              // headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-              pointFormat: '<tr><td style="color:{series.color};padding:0">{{ axe_title }}: </td>' +
-      '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
-
-    },
-
-    // if ( {{ direction }} ) {
-
-      // Marseille
-        series: [{
-        data: _values,
-        name: "Gulf of Tunis",
-
-        zoneAxis: 'x',
-        zones: [ {
-            name:'Gulf of Tunis',
-            value:{{ limit_1 }},
-            dashStyle: 'solid',
-            color:'#07B1C5',
-         },
-        {
-            name:'Southern Sardinia',
-            value:{{ limit_2 }},
-            dashStyle: 'solid',
-            color:'#9A33B1',
-        },{
-            value: {{ limit_3 }},  
-            name:'Eastern Sardinia',    
-            dashStyle: 'solid',
-            color:'#4FA953'
-        }, {
-            value:{{ limit_4 }},
-            name:'East of Corsica',
-            dashStyle: 'solid',
-            color:'#FD9F1B',
-        },
-        {
-            value:{{ limit_5 }},
-            name:'Gulf of Genoa',
-            dashStyle: 'solid',
-            color:'#C11B0B',
-        }]
-        // end of zones
-    },
-    // end of first data
-    {
-          data:[],
-          name:'Southern Sardinia',
-          color:'#9A33B1',
-        },
-    {
-          data:[],
-          name:'Eastern Sardinia',
-          color:'#4FA953',
-        },
-    {
-          data:[],
-          name:'East of Corsica',
-          color:'#FD9F1B',
-        },
-      {
-          data:[],
-          name:'Gulf of Genoa',
-          color:'#C11B0B',
-        }],
-
-});
-      </script>
-
-
-</div>
-</div> 
-<!-- closing the div replacing the tab pane -->
-<!-- the first graph ends here           -->
-
-
-</div>
-            </div></div>
-
-<br>
-
-<!-- main content -->
-
- 
-
-   <!-- end of page content section -->
-                    
-
-    
+  </div>
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-  function filterTransects() {
-    const input = document.getElementById("transectSearch").value.toLowerCase();
-    const select = document.getElementById("path_selection");
-    const options = select.getElementsByTagName("option");
+  $(document).ready(function() {
+    // Initialize Select2
+    $('.select2').select2({
+      placeholder: "Select a transect",
+      allowClear: true,
+      width: '100%'
+    });
+    
+    // Fix for Select2 in Bootstrap modal
+    $.fn.modal.Constructor.prototype._enforceFocus = function() {};
+    
+    // Handle transect filtering if needed
+    function filterTransects() {
+      const input = document.getElementById("transectSearch").value.toLowerCase();
+      const select = document.getElementById("parameter_selection");
+      const options = select.getElementsByTagName("option");
 
-    for (let i = 0; i < options.length; i++) {
-      const txt = options[i].textContent.toLowerCase();
-      options[i].style.display = txt.includes(input) ? "" : "none";
+      for (let i = 0; i < options.length; i++) {
+        const txt = options[i].textContent.toLowerCase();
+        options[i].style.display = txt.includes(input) ? "" : "none";
+      }
     }
-  }
-</script>{% endblock javascripts %}
-
-
+    
+    // If you have a search box
+    if(document.getElementById("transectSearch")) {
+      document.getElementById("transectSearch").addEventListener("keyup", filterTransects);
+    }
+  });
+</script>
+{% endblock javascripts %}

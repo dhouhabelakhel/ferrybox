@@ -1,259 +1,304 @@
 {% extends "layouts/base.html" %}
+{% block title %} process {% endblock %} 
+
 {% block stylesheets %}
   <style>
-    /* Reset body styling only for specific elements */
-    .terminal-container {
-      font-family: 'Courier New', Courier, monospace;
-      color: #d4d4d4;
-    }
+   /* Reset body styling only for specific elements */
+.terminal-container {
+  font-family: 'Courier New', Courier, monospace;
+  color: #d4d4d4;
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    .terminal-window {
-      position: fixed; /* Fixer le terminal à l'écran */
-      bottom: 60px; /* Espace pour footer */
-      right: 20px; /* Position à droite */
-      width: 80%; /* Largeur par défaut */
-      max-width: 900px;
-      height: 400px;
-      display: flex;
-      flex-direction: column;
-      border: 2px solid #444;
-      border-radius: 8px;
-      overflow: hidden;
-      background-color: #000;
-      box-shadow: 0 0 20px rgba(0,0,0,0.7);
-      z-index: 1000;
-      transition: all 0.3s ease; /* Animation fluide */
-    }
+.terminal-window {
+  position: fixed; /* Keep terminal fixed on screen */
+  bottom: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, 50%); /* Center properly */
+  width: 80%;
+  max-width: 900px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #444;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #000;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7);
+  z-index: 1000;
+  transition: all 0.3s ease; /* Smooth animation */
+}
 
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .terminal-window {
-        width: 95%;
-        right: 2.5%;
-        bottom: 50px;
-      }
-    }
+/* Responsive design */
+@media (max-width: 768px) {
+  .terminal-window {
+    width: 95%;
+    height: 350px;
+  }
+}
 
-    .terminal-header {
-      background-color: #2d2d2d !important;
-      color: #ccc;
-      padding: 8px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #444;
-    }
+@media (max-width: 480px) {
+  .terminal-window {
+    width: 98%;
+    height: 300px;
+  }
+}
 
-    .terminal-header .title {
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+.terminal-header {
+  background-color: #1e3a8a !important; /* INSTM blue color */
+  color: #ffffff;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+}
 
-    .terminal-header .title i {
-      color: #00ff00;
-    }
+.terminal-header .title {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-    .terminal-controls {
-      display: flex;
-      gap: 8px;
-    }
+.terminal-header .title i {
+  color: #ffffff; /* White icon for better contrast */
+}
 
-    .control-btn {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s;
-    }
+/* Add INSTM logo */
+.terminal-header .title::before {
+  content: '';
+  background-image: url('path/to/instm-logo.png'); /* Add your logo path here */
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  margin-right: 8px;
+}
 
-    .control-btn:hover {
-      transform: scale(1.1);
-    }
+.terminal-controls {
+  display: flex;
+  gap: 8px;
+}
 
-    .control-btn::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 10px;
-      color: #333;
-    }
+.control-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
 
-    .minimize-btn {
-      background-color: #FFC107;
-    }
-    .minimize-btn::after {
-      content: '−';
-    }
+.control-btn:hover {
+  transform: scale(1.1);
+}
 
-    .maximize-btn {
-      background-color: #4CAF50;
-    }
-    .maximize-btn::after {
-      content: '□';
-    }
+.control-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  color: #333;
+}
 
-    .close-btn {
-      background-color: #F44336;
-      color: #333;
-      width: 16px;
-      height: 16px;
-      text-align: center;
-      line-height: 14px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .close-btn::after {
-      content: '×';
-    }
+.minimize-btn {
+  background-color: #FFC107;
+}
+.minimize-btn::after {
+  content: '−';
+}
 
-    #terminal {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      height: calc(100% - 37px);
-      font-size: 14px;
-      line-height: 1.4;
-      scrollbar-width: thin;
-      scrollbar-color: #444 #222;
-    }
+.maximize-btn {
+  background-color: #4CAF50;
+}
+.maximize-btn::after {
+  content: '□';
+}
 
-    #terminal::-webkit-scrollbar {
-      width: 8px;
-    }
+.close-btn {
+  background-color: #F44336;
+  color: #333;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+  line-height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.close-btn::after {
+  content: '×';
+}
 
-    #terminal::-webkit-scrollbar-track {
-      background: #222;
-    }
+#terminal {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  height: calc(100% - 37px);
+  font-size: 14px;
+  line-height: 1.4;
+  scrollbar-width: thin;
+  scrollbar-color: #444 #222;
+}
 
-    #terminal::-webkit-scrollbar-thumb {
-      background-color: #444;
-      border-radius: 6px;
-    }
+#terminal::-webkit-scrollbar {
+  width: 8px;
+}
 
-    .log-entry {
-      margin-bottom: 6px;
-      font-size: 14px;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
+#terminal::-webkit-scrollbar-track {
+  background: #222;
+}
 
-    .log-entry i {
-      margin-top: 2px;
-    }
+#terminal::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 6px;
+}
 
-    .timestamp {
-      color: #888;
-      font-size: 12px;
-      margin-right: 6px;
-    }
+.log-entry {
+  margin-bottom: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
 
-    .info { 
-      color: lightgreen; 
-    }
-    .info i {
-      color: lightgreen;
-    }
+.log-entry i {
+  margin-top: 2px;
+}
 
-    .warning { 
-      color: #FFC107; 
-    }
-    .warning i {
-      color: #FFC107;
-    }
+.timestamp {
+  color: #888;
+  font-size: 12px;
+  margin-right: 6px;
+}
 
-    .error { 
-      color: #F44336; 
-    }
-    .error i {
-      color: #F44336;
-    }
-    
-    /* Blinking cursor effect */
-    .cursor {
-      display: inline-block;
-      width: 8px;
-      height: 16px;
-      background-color: #d4d4d4;
-      animation: blink 1s step-start infinite;
-      margin-left: 2px;
-    }
+.info { 
+  color: lightgreen; 
+}
+.info i {
+  color: lightgreen;
+}
 
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
+.warning { 
+  color: #FFC107; 
+}
+.warning i {
+  color: #FFC107;
+}
 
-    /* Bouton pour afficher le terminal */
-    .toggle-terminal {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #2d2d2d;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      cursor: pointer;
-      z-index: 1001;
-      display: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
+.error { 
+  color: #F44336; 
+}
+.error i {
+  color: #F44336;
+}
 
-    .toggle-terminal:hover {
-      background-color: #444;
-      transform: translateY(-2px);
-    }
+/* Blinking cursor effect */
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background-color: #d4d4d4;
+  animation: blink 1s step-start infinite;
+  margin-left: 2px;
+}
 
-    /* État minimisé */
-    .minimized {
-      height: 37px !important;
-    }
-    .minimized #terminal {
-      display: none;
-    }
+@keyframes blink {
+  50% { opacity: 0; }
+}
 
-    /* Animation d'entrée */
-    .terminal-enter {
-      animation: slideIn 0.3s forwards;
-    }
+/* Button to show terminal */
+.toggle-terminal {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #1e3a8a; /* INSTM blue color */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  z-index: 1001;
+  display: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
 
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+.toggle-terminal:hover {
+  background-color: #2563eb; /* Lighter blue on hover */
+  transform: translateY(-2px);
+}
 
-    /* Badge de notification */
-    .log-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background-color: #F44336;
-      color: white;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+/* Minimized state */
+.minimized {
+  height: 37px !important;
+}
+.minimized #terminal {
+  display: none;
+}
+
+/* Entry animation */
+.terminal-enter {
+  animation: slideIn 0.3s forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 50%);
+  }
+}
+
+/* Notification badge */
+.log-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #F44336;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center modal for maximize state */
+.maximized {
+  width: 90% !important;
+  height: 80% !important;
+  max-width: 1200px;
+  top: 50% !important;
+  left: 50% !important;
+  bottom: auto !important;
+  right: auto !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+@media (max-width: 768px) {
+  .maximized {
+    width: 95% !important;
+    height: 70% !important;
+  }
+}
   </style>
   <!-- Icônes FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -369,7 +414,7 @@
     });
     
     maximizeTerminalBtn.addEventListener('click', function() {
-      // S'assurer que le terminal est visible
+      // Make sure terminal is visible
       if (isMinimized) {
         terminalWindow.classList.remove('minimized');
         terminal.style.display = 'block';
@@ -377,41 +422,36 @@
       }
       
       if (!isMaximized) {
-        // Sauvegarder les dimensions originales
+        // Save original dimensions
         if (terminalWindow.style.height && terminalWindow.style.height !== '37px') {
           originalHeight = terminalWindow.style.height;
         }
         if (terminalWindow.style.width) {
           originalWidth = terminalWindow.style.width;
         }
-        if (terminalWindow.style.bottom) {
-          originalPosition.bottom = terminalWindow.style.bottom;
-        }
-        if (terminalWindow.style.right) {
-          originalPosition.right = terminalWindow.style.right;
-        }
         
-        // Maximiser
-        terminalWindow.style.width = '90%';
-        terminalWindow.style.height = '80%';
-        terminalWindow.style.bottom = '10%';
-        terminalWindow.style.right = '5%';
+        // Save original position - now we're using transform for centering
+        originalTransform = terminalWindow.style.transform || 'translate(-50%, 50%)';
+        originalPosition = {
+          bottom: terminalWindow.style.bottom || '50%',
+          left: terminalWindow.style.left || '50%',
+          top: terminalWindow.style.top || 'auto',
+          right: terminalWindow.style.right || 'auto'
+        };
         
-        // Adapter pour mobile
-        if (window.innerWidth <= 768) {
-          terminalWindow.style.width = '95%';
-          terminalWindow.style.height = '70%';
-          terminalWindow.style.bottom = '15%';
-          terminalWindow.style.right = '2.5%';
-        }
-        
+        // Maximize by adding class
+        terminalWindow.classList.add('maximized');
         isMaximized = true;
       } else {
-        // Restaurer
+        // Restore original position and dimensions
+        terminalWindow.classList.remove('maximized');
         terminalWindow.style.height = originalHeight;
         terminalWindow.style.width = originalWidth;
         terminalWindow.style.bottom = originalPosition.bottom;
+        terminalWindow.style.left = originalPosition.left;
+        terminalWindow.style.top = originalPosition.top;
         terminalWindow.style.right = originalPosition.right;
+        terminalWindow.style.transform = originalTransform;
         
         isMaximized = false;
       }

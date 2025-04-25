@@ -6,7 +6,27 @@
 {% block stylesheets %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <style>
+    /* Custom styles for Select2 */
+    .select2-container {
+      width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+      height: 38px;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 38px;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px;
+    }
   .info-legend {
     background: white;
     padding: 10px;
@@ -39,11 +59,21 @@
           <div class="nav-tabs-wrapper">
             <span class="nav-tabs-title">Graphs:</span>
             <ul class="nav nav-tabs" data-tabs="tabs">
-              <li class="nav-item"><a class="nav-link" href="transect_plotting">Transect</a></li>
-              <li class="nav-item"><a class="nav-link" href="map">Map</a></li>
-              <li class="nav-item"><a class="nav-link" href="time_series/">Time series</a></li>
-              <li class="nav-item"><a class="nav-link" href="scatter">Scatter</a></li>
-              <li class="nav-item"><a class="nav-link active" href="#heat" data-toggle="tab">Heat</a></li>
+              <li class="nav-item"><a class="nav-link" href="transect_plotting">  <i class="material-icons">timeline</i> Transect</a></li>
+              <li class="nav-item"><a class="nav-link" href="map">                       <i class="material-icons">map</i> 
+                Map</a></li>
+              <li class="nav-item"><a class="nav-link" href="time_series/">
+                <i class="material-icons">query_stats</i> 
+
+                Time series</a></li>
+              <li class="nav-item"><a class="nav-link" href="scatter">
+                <i class="material-icons">scatter_plot</i> 
+
+                Scatter</a></li>
+              <li class="nav-item"><a class="nav-link active" href="#heat" data-toggle="tab">
+                <i class="material-icons">whatshot</i> 
+
+                Heat</a></li>
             </ul>
           </div>
         </div>
@@ -66,6 +96,7 @@
                     {% endfor %}
                   </select>
                 </div>
+             
                 <div class="col-md-3">
                   <label for="parameter_selection_heat">Parameter</label>
                   <select id="parameter_selection_heat" class="custom-select" name="parameter_selection_heat">
@@ -92,15 +123,11 @@
               <hr>
 
               <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">Plot</button>
+                <button type="submit" class="btn btn-primary" style="width: 150px;background-color:#003f5c">Plot</button>
               </div>
             </form>
 
-            {% if error %}
-            <div class="alert alert-danger" role="alert">
-              {{ error }}
-            </div>
-            {% endif %}
+           
 
             <!-- Map Container -->
             <div id="heatmap" style="height: 500px; margin-top: 20px;"></div>
@@ -113,10 +140,35 @@
 {% endblock content %}
 
 {% block javascripts %}
+<!-- jQuery must be loaded first -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Then Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Leaflet and heatmap plugin -->
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+     // Initialize Select2 components
+     $('#transect_selection_heat').select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Sélectionnez un transect',
+      allowClear: true
+    });
+    
+    $('#parameter_selection_heat').select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Sélectionnez un paramètre',
+      allowClear: true
+    });
+    
+    $('#qc_param_heat').select2({
+      theme: 'bootstrap-5',
+      placeholder: 'Sélectionnez un contrôle qualité',
+      allowClear: true
+    });
+    
+    // Initialize the heatmap
     const filteredData = {{ filtered_data|safe }};
     const selectedParam = "{{ selected_param }}";
 
@@ -187,11 +239,11 @@
         }).addTo(map);
       } else {
         map.setView(defaultCenter, defaultZoom);
-        showNoDataMessage("Données invalides pour le paramètre sélectionné");
+        showNoDataMessage("Invalid data for the selected parameter");
       }
     } else {
       map.setView(defaultCenter, defaultZoom);
-      showNoDataMessage("Aucune donnée disponible pour les paramètres sélectionnés");
+      showNoDataMessage("No data available for the selected parameterss");
     }
 
     function showNoDataMessage(message) {

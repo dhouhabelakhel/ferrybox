@@ -58,7 +58,6 @@ import io
 import sys
 from contextlib import redirect_stdout
 from django.http import HttpResponse
-from django.shortcuts import render
 import logging
 
 from django.shortcuts import render
@@ -68,7 +67,38 @@ from django.http import JsonResponse
 from Ferry_plot.log_handler import WebLogHandler
 
 
+def get_latest_notifications(request):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT file_name, received_at, date FROM ferry_plot_notifications ORDER BY received_at DESC LIMIT 5")
+        rows = cursor.fetchall()
+    
+    notifications = [
+        {
+            "file_name": row[0],
+            "received_at": row[1].strftime('%Y-%m-%d %H:%M:%S'),
+            "date": row[2].strftime('%Y-%m-%d %H:%M:%S') if row[2] else "N/A"
+        }
+        for row in rows
+    ]
 
+    return JsonResponse({"notifications": notifications})
+
+def notifications_view(request):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT file_name, received_at, date FROM ferry_plot_notifications ORDER BY received_at DESC")
+        rows = cursor.fetchall()
+    
+    # Structure the data into a list of dictionaries for the template
+    notifications = [
+        {
+            "file_name": row[0],
+            "received_at": row[1].strftime('%Y-%m-%d %H:%M:%S'),  # Format received_at for display
+            "date": row[2].strftime('%Y-%m-%d %H:%M:%S') if row[2] else "N/A"  # Format date or fallback to "N/A"
+        }
+        for row in rows
+    ]
+
+    return render(request, "notifications.html", {"notifications": notifications})
 def terminal_view(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Requête AJAX
         logs = WebLogHandler.get_logs()
@@ -76,8 +106,7 @@ def terminal_view(request):
 
     # Cas du premier chargement de la page (non-AJAX)
     logs = WebLogHandler.get_logs()
-    return render(request, "terminal.html", {"logs": logs})
-
+    return render(request, "terminal.html", {"logs": logs, "process": True})
 def first_page(request):
     return render(request,"index.html")
 
@@ -236,16 +265,14 @@ def data_description(request):
     from django.db.models import Sum
 
     sum_size=qs1.aggregate(Sum('Size_ko'))
-    sum_size=int(sum_size['Size_ko__sum']/1000000)
+    sum_size = int(sum_size['Size_ko__sum'] / 1024)
 
     # nbr of files 
 
-    df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once=list(set(list(df['Ref_trip'])))
-    df_once = list(map(int, df_once)) 
+    unique_ref_trips = Measurements.objects.values_list('Ref_trip', flat=True).distinct()
+    nbr_files = len(unique_ref_trips)
 
-    # print(df_once)
-    nbr_files=int(df_once[-1])
+    
 
     # downloaded data
     #not yet
@@ -345,7 +372,7 @@ def ui_notifications_view(request, *args, **kwargs):
     from django.db.models import Sum
     
     sum_size = qs1.aggregate(Sum('Size_ko'))
-    sum_size = int(sum_size['Size_ko__sum'] / 1000000)
+    sum_size = int(sum_size['Size_ko__sum'] / 1024)
     
     # Nbr of files
     unique_ref_trips = Measurements.objects.values_list('Ref_trip', flat=True).distinct()
@@ -388,30 +415,346 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 
-@method_decorator(csrf_exempt, name='dispatch')
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.core.mail import EmailMessage
+from django.db import connection
+import json
+import io
+
+from .models import Download
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.core.mail import EmailMessage
+from django.db import connection
+import json
+
+@csrf_exempt
 def update_request(request, id):
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        data = json.loads(request.body)
+        action = data.get('action')
+
         try:
-            data = json.loads(request.body)
-            action = data.get('action')
-
-            # Récupérer la requête par ID utilisateur
             request_obj = Download.objects.get(id=id)
-
-            if action == 'accept':
-                # Mettre à jour le statut à True
-                request_obj.Status = True
-                request_obj.save()
-            elif action == 'reject':
-                # Supprimer la requête de la base de données
-             request_obj.delete()
-
-            return JsonResponse({'success': True})
         except Download.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Request not found'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+        if action == 'accept':
+            return handle_accept_action(request_obj)
+        elif action == 'reject':
+            request_obj.delete()
+            reject_request_email(request_obj.Email)
+            return JsonResponse({'success': True, 'message': 'Request rejected'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid action'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+def handle_accept_action(request_obj):
+    # Update the status of the request object
+    request_obj.Status = True
+    request_obj.save()
+
+    # Get the transect value and convert it to lowercase
+    transect_value = get_transect_value(request_obj)
+    transect = str(transect_value).lower()
+
+    # Determine the table name based on the transect value
+    table_name = determine_table_name(transect)
+
+    try:
+        # Append ".csv" to the transect_value for querying
+        libelle_with_csv = f"{transect_value}.csv"
+
+        # Execute the query
+        with connection.cursor() as cursor:
+            query = f"SELECT fichier FROM {table_name} WHERE libelle = %s"
+            cursor.execute(query, [libelle_with_csv])
+            row = cursor.fetchone()
+
+        # Check if a row was returned
+        if not row:
+            return JsonResponse({'success': False, 'error': 'Transect not found in the table'})
+
+        # Extract binary data
+        binary_data = row[0]
+        if not binary_data:
+            return JsonResponse({'success': False, 'error': 'No file content found'})
+
+        # Convert memoryview to bytes and decode binary data into CSV content
+        try:
+            binary_data_bytes = bytes(binary_data)  # Convert memoryview to bytes
+            csv_content = binary_data_bytes.decode('utf-8')  # Decode to string
+        except UnicodeDecodeError:
+            try:
+                csv_content = binary_data_bytes.decode('latin-1')  # Try another encoding
+            except Exception:
+                return JsonResponse({'success': False, 'error': 'Unable to decode file content'})
+
+        # Send email with the CSV attachment
+        send_email_with_attachment(request_obj.Email, transect_value, csv_content)
+
+        return JsonResponse({'success': True, 'message': 'File sent successfully'})
+
+    except Exception as db_error:
+        print(f"Database or email error: {str(db_error)}")
+        return JsonResponse({'success': False, 'error': str(db_error)})
+
+
+def get_transect_value(request_obj):
+    transect_value = ""
+    if isinstance(request_obj.Transects, list):
+        transect_value = request_obj.Transects[0] if request_obj.Transects else ""
+    elif isinstance(request_obj.Transects, str):
+        transect_value = request_obj.Transects
+    else:
+        raise ValueError("Invalid Transects field")
+    return transect_value
+
+
+def determine_table_name(transect):
+    if "genova" in transect:
+        return "ferry_plot_binary_indexedgenova"
+    elif "marseille" in transect:
+        return "ferry_plot_binary_indexedmarseille"
+    else:
+        raise ValueError("Transect must contain 'genova' or 'marseille'")
+
+
+def decode_binary_data(binary_data):
+    try:
+        return binary_data.decode('utf-8')
+    except UnicodeDecodeError:
+        try:
+            return binary_data.decode('latin-1')
+        except Exception:
+            raise ValueError("Unable to decode file content")
+
+
+from django.core.mail import EmailMultiAlternatives
+from email.mime.image import MIMEImage
+
+def reject_request_email(email, logo_path="./Ferry_app/static/assets/img/instmLogo.jpg"):
+    subject = 'Request Rejected - INSTM'
+    from_email = 'ferryboxinstm@gmail.com'
+    to = [email]
+
+    html_content = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="text-align: center;">
+                    <img src="cid:instm_logo" alt="INSTM Logo" style="max-width: 120px; margin-bottom: 20px;">
+                </div>
+                <h2 style="color: #2E5C6E; text-align: center;">Rejection Notice</h2>
+                <p style="font-size: 16px; color: #333;">
+                    Dear Sir/Madam,
+                </p>
+                <p style="font-size: 16px; color: #333;">
+                    We regret to inform you that your request has been <strong>rejected</strong> 
+                </p>
+            
+                <p style="font-size: 16px; color: #333;">
+                    Please feel free to contact us for more information or to submit a new request.
+                </p>
+                <p style="font-size: 16px; color: #333;">
+                    Best regards,<br>The INSTM Team.
+                </p>
+            </div>
+        </body>
+    </html>
+    """
+
+    msg = EmailMultiAlternatives(subject, '', from_email, to)
+    msg.attach_alternative(html_content, "text/html")
+
+    # Attach INSTM logo inline
+    with open(logo_path, 'rb') as img:
+        logo = MIMEImage(img.read())
+        logo.add_header('Content-ID', '<instm_logo>')
+        logo.add_header('Content-Disposition', 'inline', filename='instm_logo.png')
+        msg.attach(logo)
+
+    msg.send()
+
+def send_email_with_attachment(email, transect_value, csv_content):
+    subject = 'Your CSV file from INSTM'
+    from_email = 'ferryboxinstm@gmail.com'
+    to = [email]
+
+    html_content = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background: #ffffff; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                <div style="text-align: center;">
+                    <img src="cid:instm_logo" alt="INSTM Logo" style="max-width: 150px; margin-bottom: 20px;">
+                </div>
+                <h2 style="color: #2E5C6E; text-align: center;">INSTM - Institut National des Sciences et Technologies de la Mer</h2>
+                <p style="font-size: 16px; color: #333;">Please find attached the requested CSV file regarding the transect <strong>{transect_value}</strong>.</p>
+                <p style="font-size: 16px; color: #333;">Thank you for your trust,<br>The INSTM team.</p>
+            </div>
+        </body>
+    </html>
+    """
+
+    # Email setup
+    msg = EmailMultiAlternatives(subject, '', from_email, to)
+    msg.attach_alternative(html_content, "text/html")
+
+    # Attaching the CSV file
+    msg.attach(f"{transect_value}.csv", csv_content, 'text/csv')
+
+    # Attaching the logo image inline
+    logo_path = "./Ferry_app/static/assets/img/instmLogo.jpg"
+    with open(logo_path, 'rb') as img:
+        logo = MIMEImage(img.read())
+        logo.add_header('Content-ID', '<instm_logo>')
+        logo.add_header('Content-Disposition', 'inline', filename='instm_logo.png')
+        msg.attach(logo)
+
+    msg.send()
+from django.http import HttpResponse
+from django.db import connection
+import csv
+import io
+import zipfile
+def download_initial_file(request, file_name):
+    import io
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT file_data FROM ferry_plot_binary_email WHERE file_name = %s", [file_name])
+        result = cursor.fetchone()
+
+    if not result:
+        return HttpResponse("Fichier introuvable", status=404)
+
+    binary_data = result[0]
+    binary_stream = io.BytesIO(binary_data)
+
+    # Essai multi-encodage
+    for encoding in ['utf-8', 'latin-1', 'iso-8859-1']:
+        try:
+            decoded = binary_stream.getvalue().decode(encoding)
+            response = HttpResponse(decoded, content_type='text/plain')
+            response['Content-Disposition'] = f'attachment; filename="{file_name}.txt"'
+            return response
+        except UnicodeDecodeError:
+            continue
+
+    return HttpResponse("Erreur : impossible de décoder le fichier avec les encodages connus.", status=500)
+def download_indexed_file(request, indexed_libelle):
+    # Déterminer le nom de la table selon le libellé
+    if 'genova' in indexed_libelle.lower():
+        table_name = 'ferry_plot_binary_indexedgenova'
+    elif 'marseille' in indexed_libelle.lower():
+        table_name = 'ferry_plot_binary_indexedmarseille'
+    else:
+        return HttpResponse("Erreur : libellé non reconnu (genova ou marseille attendu).", status=400)
+
+    # Récupérer le fichier binaire depuis la table
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT fichier FROM {table_name} WHERE libelle = %s", [indexed_libelle])
+        result = cursor.fetchone()
+
+    if not result:
+        return HttpResponse("Fichier introuvable", status=404)
+
+    binary_data = result[0]
+
+    # Convertir memoryview en bytes si nécessaire et tenter plusieurs encodages
+    raw_bytes = bytes(binary_data)
+
+    for encoding in ['utf-8', 'latin-1', 'iso-8859-1']:
+        try:
+            decoded = raw_bytes.decode(encoding)
+            response = HttpResponse(decoded, content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="{indexed_libelle}.csv"'
+            return response
+        except UnicodeDecodeError:
+            continue
+
+    return HttpResponse("Erreur : impossible de décoder le fichier avec les encodages connus.", status=500)  
+def download_classified_file(request,classified_libelle):
+     # Déterminer le nom de la table selon le libellé
+    if 'genova' in classified_libelle.lower():
+        table_name = '"Ferry_plot_binary_classifiedgenova"'
+    elif 'marseille' in classified_libelle.lower():
+        table_name = '"Ferry_plot_binary_classifiedmarseille"'
+    else:
+        return HttpResponse("Erreur : libellé non reconnu (genova ou marseille attendu).", status=400)
+
+    # Récupérer le fichier binaire depuis la table
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT fichier FROM {table_name} WHERE libelle = %s", [classified_libelle])
+        result = cursor.fetchone()
+
+    if not result:
+        return HttpResponse("Fichier introuvable", status=404)
+
+    binary_data = result[0]
+
+    # Convertir memoryview en bytes si nécessaire et tenter plusieurs encodages
+    raw_bytes = bytes(binary_data)
+
+    for encoding in ['utf-8', 'latin-1', 'iso-8859-1']:
+        try:
+            decoded = raw_bytes.decode(encoding)
+            response = HttpResponse(decoded, content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="{classified_libelle}.csv"'
+            return response
+        except UnicodeDecodeError:
+            continue
+
+    return HttpResponse("Erreur : impossible de décoder le fichier avec les encodages connus.", status=500)  
+def download_truncated_file(request, libelle):
+    # Récupération du champ binaire
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT fichier FROM ferry_plot_binary_truncated_files WHERE libelle = %s", [libelle])
+        result = cursor.fetchone()
+
+    if not result:
+        return HttpResponse("Fichier introuvable", status=404)
+
+    binary_data = result[0]  # c'est du BYTEA
+
+    # On lit les données binaire dans un buffer
+    binary_stream = io.BytesIO(binary_data)
+
+    # Si c'est déjà un CSV : pas besoin de transformer
+    try:
+        # On tente de décoder comme CSV directement
+        decoded = binary_stream.read().decode('utf-8')
+        response = HttpResponse(decoded, content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{libelle}.csv"'
+        return response
+    except UnicodeDecodeError:
+        return HttpResponse("Erreur : le fichier n'est pas un CSV encodé en UTF-8.", status=500)
+
+
+def fetch_truncated_files():
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                libelle, 
+                ROUND(OCTET_LENGTH(fichier) / 1024.0, 2) AS size 
+            FROM 
+                ferry_plot_binary_truncated_files
+        """)
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
+
     
 def download(request):
     qs = Measurements.objects.all()
@@ -422,13 +765,12 @@ def download(request):
     from django.db.models import Sum
 
     sum_size = qs1.aggregate(Sum('Size_ko'))
-    sum_size = int(sum_size['Size_ko__sum']/1000000)
+    sum_size = int(sum_size['Size_ko__sum'] / 1024)
 
     # Nbr of files 
-    df = pd.DataFrame(list(Measurements.objects.all().values('Ref_trip'))) 
-    df_once = list(set(list(df['Ref_trip'])))
-    df_once = list(map(int, df_once)) 
-    nbr_files = int(df_once[-1])
+    unique_ref_trips = Measurements.objects.values_list('Ref_trip', flat=True).distinct()
+    nbr_files = len(unique_ref_trips)
+
 
     # Users
     from django.contrib.auth import get_user_model
@@ -548,19 +890,97 @@ def download(request):
         filename = str(transect_query_download_query) + ".csv"
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
         return response
+    truncated_files=fetch_truncated_files()
+  # Alternative approach using raw SQL if you don't have a model
+    # Alternative approach using raw SQL if you don't have a model
+    email_files_genova = []
+    email_files_marseille = []
 
+    try:
+      with connection.cursor() as cursor:
+        cursor.execute("SELECT id, file_name, file_data FROM ferry_plot_binary_email")
+        for row in cursor.fetchall():
+            print("Processing email file...")
+            file_info = {
+                'id': row[0],
+                'file_name': row[1],
+                'file_data': row[2],
+                'classified_libelle': '',
+                'indexed_libelle': ''
+            }
+
+            libelle_lower = file_info['file_name'].lower() if file_info['file_name'] else ""
+            file_name_csv = file_info['file_name'].replace('.txt', '.csv') if file_info['file_name'] else ""
+
+            # GENOVA
+            if "genova" in libelle_lower:
+                try:
+                    with connection.cursor() as class_cursor:
+                        class_cursor.execute(
+                            'SELECT libelle FROM "Ferry_plot_binary_classifiedgenova" WHERE libelle = %s',
+                            [file_name_csv]
+                        )
+                        row_class = class_cursor.fetchone()
+                        file_info['classified_libelle'] = row_class[0] if row_class else "Not found"
+                except Exception as e:
+                    file_info['classified_libelle'] = f"Error: {e}"
+
+                try:
+                    with connection.cursor() as index_cursor:
+                        index_cursor.execute(
+                            "SELECT libelle FROM ferry_plot_binary_indexedgenova WHERE libelle = %s",
+                            [file_name_csv]
+                        )
+                        row_index = index_cursor.fetchone()
+                        file_info['indexed_libelle'] = row_index[0] if row_index else "Not found"
+                except Exception as e:
+                    file_info['indexed_libelle'] = f"Error: {e}"
+
+                email_files_genova.append(file_info)
+
+            # MARSEILLE
+            elif "marseille" in libelle_lower:
+                try:
+                    with connection.cursor() as class_cursor:
+                        class_cursor.execute(
+                            'SELECT libelle FROM "Ferry_plot_binary_classifiedmarseille" WHERE libelle = %s',
+                            [file_name_csv]
+                        )
+                        row_class = class_cursor.fetchone()
+                        file_info['classified_libelle'] = row_class[0] if row_class else "Not found"
+                except Exception as e:
+                    file_info['classified_libelle'] = f"Error: {e}"
+
+                try:
+                    with connection.cursor() as index_cursor:
+                        index_cursor.execute(
+                            "SELECT libelle FROM ferry_plot_binary_indexedmarseille WHERE libelle = %s",
+                            [file_name_csv]
+                        )
+                        row_index = index_cursor.fetchone()
+                        file_info['indexed_libelle'] = row_index[0] if row_index else "Not found"
+                except Exception as e:
+                    file_info['indexed_libelle'] = f"Error: {e}"
+
+                email_files_marseille.append(file_info)
+
+    except Exception as e:
+      print(f"Error fetching email files: {e}")
     context = {
-        'queryset': qs,
-        "metadata": Metadata.objects.all(),
-        "Measurements": Measurements.objects.all(),
-        "parameter": Parameters.objects.all(),
-        "av_transects": list_available_transects,
-        'is_admin': bool(True),
-        "nbr_files": nbr_files,
-        "sum_size": sum_size,
-        "nbr_users": nbr_users,
-        "interface": True
-    }
+    'queryset': qs,
+    "metadata": Metadata.objects.all(),
+    "Measurements": Measurements.objects.all(),
+    "parameter": Parameters.objects.all(),
+    "av_transects": list_available_transects,
+    'is_admin': True,
+    "nbr_files": nbr_files,
+    "sum_size": sum_size,
+    "nbr_users": nbr_users,
+    "interface": True,
+    "truncated_files": truncated_files,
+    'email_files_genova': email_files_genova,
+    'email_files_marseille': email_files_marseille
+}
 
     return render(request, template_name, context)
 
@@ -591,6 +1011,22 @@ from django.db import connection
 import os
 
 def upload(request):
+    # Total space
+    qs1 = Metadata.objects.all()
+    from django.db.models import Sum
+
+    sum_size = qs1.aggregate(Sum('Size_ko'))
+    sum_size = int(sum_size['Size_ko__sum'] / 1024)
+
+    # Nbr of files 
+    unique_ref_trips = Measurements.objects.values_list('Ref_trip', flat=True).distinct()
+    nbr_files = len(unique_ref_trips)
+
+
+    # Users
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    nbr_users = User.objects.count()
     if request.method == 'POST':
         myfile = request.FILES.get('myfile')
 
@@ -619,9 +1055,17 @@ def upload(request):
             return render(request, 'upload.html', {
                 'error': f"An error occurred while saving the file: {str(e)}"
             })
-
+    context = {
+    
+    'is_admin': True,
+    "nbr_files": nbr_files,
+    "sum_size": sum_size,
+    "nbr_users": nbr_users,
+    "interface": True,
+   
+}
     # GET request : afficher la page vide
-    return render(request, 'upload.html')
+    return render(request, 'upload.html',context)
 
 
 
@@ -2071,6 +2515,7 @@ def heat_view(request):
         'metadata': Metadata.objects.all(),
         'parameters': Parameters.objects.all(),
         'down': "true" if is_admin else "false",
+        'acces':True,
         'selected_transect': ref_trip,
         'selected_param': parameter,
         'selected_qc': qc_value,

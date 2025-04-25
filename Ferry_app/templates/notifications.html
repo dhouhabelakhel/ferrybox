@@ -1,0 +1,201 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block stylesheets %}
+<style>
+  .fade-in {
+    animation: fadeIn 0.6s ease forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .notif-wrapper {
+    max-width: 700px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 51, 102, 0.05);
+  }
+  
+  .notif-title {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #003366;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .notif {
+    padding: 1rem;
+    border-left: 4px solid #003366;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background-color: #f9f9f9;
+    transition: transform 0.2s ease;
+  }
+  
+  .notif:hover {
+    transform: translateY(-3px);
+  }
+  
+  .notif-file {
+    font-weight: 500;
+    color: #003366;
+    font-size: 1rem;
+  }
+  
+  .notif-dates {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.3rem;
+  }
+  
+  .no-notifs {
+    text-align: center;
+    color: #999;
+    margin-top: 2rem;
+  }
+  
+  .new-notification {
+    animation: highlight 2s ease-out;
+  }
+  
+  @keyframes highlight {
+    0% { background-color: rgba(255, 253, 152, 0.8); }
+    100% { background-color: #f9f9f9; }
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class=" fade-in">
+  <div class="notif-title">📥 INSTM Notifications</div>
+  
+  <div id="notif-list">
+    {% if notifications %}
+      {% for notif in notifications %}
+        <div class="notif" data-id="{{ notif.id }}">
+          <div class="notif-file">{{ notif.file_name }}</div>
+          <div class="notif-dates">
+            📧 Received: {{ notif.received_at }}<br>
+            🕒 Notified: {{ notif.date }}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-notifs">No notifications received yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+  // Stockage persistant des IDs
+  let processedIds = new Set();
+  let isFirstLoad = true;
+  
+  // Initialisation
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("Initialisation du système de notifications");
+    
+    // Collecte des IDs existants
+    const notifElements = document.querySelectorAll('.notif');
+    notifElements.forEach(el => {
+      if (el.dataset.id) {
+        processedIds.add(el.dataset.id);
+        console.log("ID initial trouvé:", el.dataset.id);
+      }
+    });
+    
+    console.log("Nombre d'IDs initiaux:", processedIds.size);
+    
+    // Démarrer la vérification périodique
+    fetchNotifications();
+    setInterval(fetchNotifications, 10000);
+  });
+  
+  // Fonction principale de récupération des notifications
+  function fetchNotifications() {
+    console.log("Vérification des nouvelles notifications...");
+    
+    fetch("/api/notifications/")
+      .then(response => response.json())
+      .then(data => {
+        console.log("Données reçues:", data);
+        
+        if (data && data.notifications) {
+          handleNotifications(data.notifications);
+        }
+      })
+      .catch(error => {
+        console.error("Erreur de récupération:", error);
+      });
+  }
+  
+  // Traitement des notifications
+  function handleNotifications(notifications) {
+    const container = document.getElementById("notif-list");
+    
+    // Cas spécial pour le premier chargement
+    if (isFirstLoad) {
+      isFirstLoad = false;
+      console.log("Premier chargement terminé, aucune notification ajoutée");
+      return;
+    }
+    
+    // Cas où il n'y a pas de notifications
+    if (!notifications || notifications.length === 0) {
+      container.innerHTML = '<div class="no-notifs">No notifications received yet.</div>';
+      return;
+    }
+    
+    // Supprimer le message "pas de notifications" s'il existe
+    const noNotifsEl = container.querySelector('.no-notifs');
+    if (noNotifsEl) {
+      container.removeChild(noNotifsEl);
+    }
+    
+    // Identifier uniquement les NOUVELLES notifications
+    const newItems = [];
+    
+    notifications.forEach(notif => {
+      // Vérification robuste des identifiants
+      if (notif && notif.id && !processedIds.has(notif.id)) {
+        newItems.push(notif);
+        processedIds.add(notif.id);
+        console.log("Nouvelle notification identifiée:", notif.id);
+      }
+    });
+    
+    console.log("Nouvelles notifications à ajouter:", newItems.length);
+    
+    // Ajouter les nouvelles notifications en haut de la liste
+    if (newItems.length > 0) {
+      newItems.reverse().forEach(notif => {
+        const newNotifEl = document.createElement('div');
+        newNotifEl.className = 'notif new-notification';
+        newNotifEl.dataset.id = notif.id;
+        newNotifEl.innerHTML = `
+          <div class="notif-file">${notif.file_name}</div>
+          <div class="notif-dates">
+            📧 Received: ${notif.received_at}<br>
+            🕒 Notified: ${notif.date}
+          </div>
+        `;
+        
+        // Insérer au début de la liste
+        container.insertBefore(newNotifEl, container.firstChild);
+      });
+    }
+  }
+</script>
+{% endblock javascripts %}

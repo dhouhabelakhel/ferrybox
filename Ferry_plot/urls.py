@@ -29,6 +29,9 @@ urlpatterns = [
     # these are supporting the main filter functioning
     # path('data_access.html', views.data_access,  name='data_access'),
     path('map', views.map_view, name='map'),
+    path('notifications', views.notifications_view, name='notifications'),
+    path('api/notifications/', views.get_latest_notifications, name='get_latest_notifications'),
+
     path('time_series/', views.time_series, name='time_series'),
     path('scatter', views.scatter_view, name='scatter'),
     path('heat', views.heat_view, name='heat'),
@@ -42,7 +45,13 @@ urlpatterns = [
     #these are the general pages
 
     path('data.html', views.data, name='data3'),   
-  
+    path('download_truncated_file/<str:libelle>/', views.download_truncated_file, name='download_truncated_file'),
+    path('download_indexed_file/<str:indexed_libelle>/', views.download_indexed_file, name='download_indexed_file'),
+    path('download_classified_file/<str:classified_libelle>/', views.download_classified_file, name='download_classified_file'),
+    path('download_intial_file/<str:file_name>/', views.download_initial_file, name='download_initial_file'),
+
+
+
         #these are replacing pages funtion
     path('transect_plotting', views.transect_plotting, name='transect_plotting'),
     path('page-user', views.page_user_view, name='data'),
