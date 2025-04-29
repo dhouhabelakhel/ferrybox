@@ -2516,7 +2516,7 @@ def heat_view(request):
         'parameters': Parameters.objects.all(),
         'down': "true" if is_admin else "false",
         'acces':True,
-        'selected_transect': ref_trip,
+        'selected_transect': ref_trip,  # Stocke la valeur brute
         'selected_param': parameter,
         'selected_qc': qc_value,
         'filtered_data': []
@@ -2569,14 +2569,22 @@ def heat_view(request):
                 if lat is not None and lon is not None and value is not None:
                     filtered_data.append([lat, lon, value])
 
+            # Obtenir les statistiques descriptives pour le paramètre
+            param_stats = {
+                "min": min([item[2] for item in filtered_data]) if filtered_data else None,
+                "max": max([item[2] for item in filtered_data]) if filtered_data else None,
+                "parameter": parameter
+            }
+
             # Mise à jour du contexte avec les données filtrées
             context.update({
                 "filtered_data": filtered_data,
-                "selected_transect": str(ref_trip),
+                "selected_transect": ref_trip,  # Utiliser la valeur brute, pas convertie en string
                 "selected_param": parameter,
                 "selected_qc": qc_value,
                 "data_count": len(filtered_data),
-                "debug_filtered_count": len(filtered_data)
+                "debug_filtered_count": len(filtered_data),
+                "param_stats": param_stats
             })
 
         except Exception as e:

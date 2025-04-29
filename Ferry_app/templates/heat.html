@@ -47,6 +47,14 @@
     height: 18px;
     margin-right: 8px;
   }
+  /* Style pour afficher le paramètre sélectionné */
+  .param-title {
+    text-align: center;
+    margin: 15px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #003f5c;
+  }
 </style>
 {% endblock stylesheets %}
 
@@ -89,8 +97,8 @@
                   
                   <label for="transect_selection_heat">Transect reference</label>
                   <select name="transect_selection_heat" id="transect_selection_heat" class="custom-select">
-                    {% for id, name ,trip_ref in av_transects %}
-                      <option value="{{ trip_ref }}" {% if id|stringformat:"s" == selected_transect %}selected{% endif %}>
+                    {% for id, name, trip_ref in av_transects %}
+                      <option value="{{ trip_ref }}" {% if trip_ref|stringformat:"s" == selected_transect %}selected{% endif %}>
                         {{ name }}
                       </option>
                     {% endfor %}
@@ -127,7 +135,14 @@
               </div>
             </form>
 
-           
+            {% if filtered_data %}
+            <div class="param-title">
+              {{ selected_param }} - Transect #{{ selected_transect }}
+              {% if data_count %}
+                <span class="badge bg-info text-white">{{ data_count }} points</span>
+              {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Map Container -->
             <div id="heatmap" style="height: 500px; margin-top: 20px;"></div>
@@ -192,45 +207,78 @@
         }
       });
 
+      // Définir des couleurs et des échelles personnalisées par paramètre
+      let gradientColors = {};
+      
+      // Définir des paramètres de visualisation spécifiques en fonction du paramètre
+      switch(selectedParam) {
+        case 'Salinity_SBE45':
+          gradientColors = {0.4: '#d0e6f7', 0.5: '#89c2eb', 0.6: '#4a98d0', 0.7: '#1565c0', 1: '#0d47a1'};
+          break;
+        case 'Temp_in_SBE38':
+          gradientColors = {0.4: '#fce4ec', 0.5: '#f8bbd0', 0.6: '#f48fb1', 0.7: '#ec407a', 1: '#c2185b'};
+          break;
+        case 'Oxygen':
+          gradientColors = {0.4: '#e8f5e9', 0.5: '#c8e6c9', 0.6: '#81c784', 0.7: '#4caf50', 1: '#2e7d32'};
+          break;
+        case 'Turbidity':
+          gradientColors = {0.4: '#f3e5f5', 0.5: '#e1bee7', 0.6: '#ce93d8', 0.7: '#ab47bc', 1: '#7b1fa2'};
+          break;
+        case 'Chl_a':
+          gradientColors = {0.4: '#f1f8e9', 0.5: '#dcedc8', 0.6: '#aed581', 0.7: '#8bc34a', 1: '#558b2f'};
+          break;
+        default:
+          gradientColors = {0.4: 'blue', 0.5: 'cyan', 0.6: 'lime', 0.7: 'yellow', 1: 'red'};
+      }
+
       const heatData = filteredData.map(point => {
         return [parseFloat(point[0]), parseFloat(point[1]), parseFloat(point[2])];
       });
       
-      
-
       if (heatData.length > 0) {
         const bounds = L.latLngBounds(heatData.map(p => [p[0], p[1]]));
         map.fitBounds(bounds);
 
         const heatmapLayer = L.heatLayer(heatData, {
-          radius: 25,       // Augmenter le rayon pour mieux voir les points
+          radius: 25,
           blur: 15,
           maxZoom: 17,
           max: maxValue,
-          minOpacity: 0.4,  // Assurer une opacité minimale
-          gradient: {0.4: 'blue', 0.5: 'cyan', 0.6: 'lime', 0.7: 'yellow', 1: 'red'}
+          minOpacity: 0.4,
+          gradient: gradientColors
         }).addTo(map);
         
-        // Ajouter cette ligne pour vérification
         console.log("Nombre de points dans la heatmap:", heatData.length);
         console.log("Échantillon de données:", heatData.slice(0, 3));
+        console.log("Plage de valeurs:", minValue, "à", maxValue);
         
-
+        // Créer la légende avec les couleurs personnalisées
         const legend = L.control({position: 'bottomright'});
         legend.onAdd = function(map) {
           const div = L.DomUtil.create('div', 'info-legend');
-          div.innerHTML = `
-            <h4>${selectedParam}</h4>
-            <div class="legend-item"><div class="color-box" style="background: blue;"></div><span>${minValue.toFixed(2)}</span></div>
-            <div class="legend-item"><div class="color-box" style="background: cyan;"></div><span>${(minValue + (maxValue - minValue) * 0.25).toFixed(2)}</span></div>
-            <div class="legend-item"><div class="color-box" style="background: lime;"></div><span>${(minValue + (maxValue - minValue) * 0.5).toFixed(2)}</span></div>
-            <div class="legend-item"><div class="color-box" style="background: yellow;"></div><span>${(minValue + (maxValue - minValue) * 0.75).toFixed(2)}</span></div>
-            <div class="legend-item"><div class="color-box" style="background: red;"></div><span>${maxValue.toFixed(2)}</span></div>
-          `;
+          
+          // Récupérer les couleurs du gradient
+          const colorKeys = Object.keys(gradientColors).sort((a, b) => parseFloat(a) - parseFloat(b));
+          const colorValues = colorKeys.map(key => gradientColors[key]);
+          
+          // Titre de la légende
+          div.innerHTML = `<h4>${selectedParam}</h4>`;
+          
+          // Créer les entrées de légende
+          for (let i = 0; i < colorKeys.length; i++) {
+            const value = minValue + (maxValue - minValue) * parseFloat(colorKeys[i]);
+            div.innerHTML += `
+              <div class="legend-item">
+                <div class="color-box" style="background: ${colorValues[i]};"></div>
+                <span>${value.toFixed(2)}</span>
+              </div>`;
+          }
+          
           return div;
         };
         legend.addTo(map);
 
+        // Ajouter le tracé du parcours
         L.polyline(heatData.map(p => [p[0], p[1]]), {
           color: 'black',
           weight: 1,
@@ -243,7 +291,7 @@
       }
     } else {
       map.setView(defaultCenter, defaultZoom);
-      showNoDataMessage("No data available for the selected parameterss");
+      showNoDataMessage("No data available for the selected parameters");
     }
 
     function showNoDataMessage(message) {
