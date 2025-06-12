@@ -43,10 +43,14 @@ INSTALLED_APPS = [
     'djgeojson',
     'crispy_forms',    
     'import_export',
-    'django_send_email'
+    'django_send_email',
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
+        'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
+
 ]
 
 # TEMPLATE_DIR = [os.path.join(BASE_DIR, "Ferry_app/templates"),os.path.join(BASE_DIR, 'Ferry_plot/templates')]  # ROOT dir for templates
@@ -219,6 +225,16 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'authentication': {
+        'handlers': ['console', 'file', 'web'],
+        'level': 'DEBUG',
+        'propagate': False,
+    },
+    'authentication.views': {
+        'handlers': ['console', 'file', 'web'],
+        'level': 'DEBUG',
+        'propagate': False,
+    },
     },
     'root': {
         'handlers': ['console'],
@@ -246,3 +262,23 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'dhouhabelakhel2001@gmail.com'
 EMAIL_HOST_PASSWORD = 'pmtd xqqz rqbj xcdv'
 EMAIL_PORT = 587
+import base64
+
+JWT_SECRET_BASE64 = "TWFTdXBlckNsZVRyZXNMb25ndWVEZTMyQ2FyYWN0ZXJlcyEh"
+JWT_SECRET = base64.b64decode(JWT_SECRET_BASE64)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",  
+]
+CORS_ALLOW_CREDENTIALS = True
+
+
+
+SESSION_COOKIE_SAMESITE = None  
+SESSION_COOKIE_SECURE = False   
+SESSION_COOKIE_HTTPONLY = False 
+SESSION_COOKIE_DOMAIN = None   
+SESSION_COOKIE_AGE = 86400
+
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False

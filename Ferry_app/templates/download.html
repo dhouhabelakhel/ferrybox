@@ -43,22 +43,422 @@
     margin-right: 10px;
     font-size: 22px;
   }
-  /* Espacement entre les lignes */
+
+:root {
+  --instm-blue: #003f5c;
+  --instm-light-blue: #e6f2ff;
+  --instm-dark: #003f5c;
+  --instm-accent: #ff6b35;
+  --instm-success: #28a745;
+  --instm-warning: #ffc107;
+  --instm-gray: #6c757d;
+  --instm-light-gray: #f8f9fa;
+}
+
+
+
+
+
+
+
+
+
+
+
+.nav-pills .nav-link {
+  padding: 15px 25px;
+  margin: 0 10px;
+  border-radius: 25px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  color: var(--instm-blue);
+  border: 2px solid transparent;
+}
+
+.nav-pills .nav-link:hover {
+  background-color: white;
+  color: var(--instm-blue);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 20px rgba(0, 102, 204, 0.2);
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--instm-blue);
+  color: white;
+  border: 2px solid var(--instm-blue);
+  box-shadow: 0 6px 25px rgba(0, 102, 204, 0.3);
+}
+
+.nav-pills .nav-link i.material-icons {
+  font-size: 22px;
+}
+
+/* Navigation secondaire (Genova/Marseille) */
+.nav-pills-rose {
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  padding: 0.5rem;
+  margin: 2rem 0;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.nav-pills-rose .nav-link {
+  border: none;
+  border-radius: 15px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: var(--instm-gray);
+}
+
+.nav-pills-rose .nav-link:hover {
+  background-color: white;
+  color: var(--instm-blue);
+  transform: scale(1.05);
+}
+
+.nav-pills-rose .nav-link.active {
+  background-color: var(--instm-blue);
+  color: white;
+  box-shadow: 0 3px 15px rgba(0, 102, 204, 0.3);
+}
+
+/* Conteneurs de tableaux */
+#genova-table, #marseille-table {
+  margin-top: 25px;
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+}
+
+#genova-table h4, #marseille-table h4 {
+  color: var(--instm-dark);
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#genova-table h4:before, #marseille-table h4:before {
+  font-size: 1.2em;
+}
+
+/* Tableaux modernes */
+.table {
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table thead th {
+  background: linear-gradient(135deg, var(--instm-light-blue), #cce7ff);
+  color: var(--instm-dark);
+  font-weight: 700;
+  border: none;
+  padding: 18px 15px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 3px solid var(--instm-blue);
+}
+
 .table tbody tr {
-  height: 60px; /* ajuste selon ton besoin */
+  height: 65px;
+  vertical-align: middle;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.table tbody tr:hover {
+  background-color: var(--instm-light-blue);
+  transform: translateX(5px);
+  box-shadow: 0 3px 15px rgba(0, 102, 204, 0.1);
+}
+
+.table tbody tr td {
+  border-top: 2px solid #e9ecef;
+  padding: 18px 15px;
   vertical-align: middle;
 }
 
-/* Bordures plus épaisses entre les lignes */
-.table tbody tr td {
-  border-top: 2px solid #dee2e6 !important; /* plus visible que la valeur par défaut */
+/* Liens de téléchargement */
+.table tbody tr td a {
+  color: var(--instm-blue);
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  padding: 5px 10px;
+  border-radius: 8px;
 }
 
-/* Optionnel : pour que la première ligne ait aussi une bordure nette */
-.table thead th {
-  border-bottom: 3px solid #003f5c; /* couleur personnalisée pour démarquer l’en-tête */
+.table tbody tr td a:before {
+  content: "📄";
+  font-size: 1.1em;
 }
 
+.table tbody tr td a:hover {
+  color: var(--instm-accent);
+  background-color: rgba(255, 107, 53, 0.1);
+  transform: translateX(5px);
+  padding-left: 15px;
+}
+
+/* Alerte personnalisée */
+.custom-alert {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #8b6914;
+  border: none;
+  display: flex;
+  align-items: center;
+  padding: 20px 25px;
+  border-radius: 12px;
+  margin: 25px 0;
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  border-left: 5px solid #f39c12;
+}
+
+.custom-alert i.material-icons {
+  margin-right: 15px;
+  font-size: 28px;
+  color: #e67e22;
+}
+
+.custom-alert strong {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+/* Contrôles de tri */
+#sortSizeAsc, #sortSizeDesc {
+  background: none;
+  border: 2px solid var(--instm-blue);
+  color: var(--instm-blue);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 8px;
+  text-decoration: none;
+}
+
+#sortSizeAsc:hover, #sortSizeDesc:hover {
+  background-color: var(--instm-blue);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  list-style: none;
+  padding-left: 0;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.pagination li {
+  margin: 0 3px;
+}
+
+.pagination .page-item .page-link {
+  color: var(--instm-blue);
+  border: 2px solid var(--instm-blue);
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: var(--instm-blue);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.pagination .active .page-link {
+  background-color: var(--instm-blue);
+  border-color: var(--instm-blue);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+}
+
+/* DataTables personnalisées */
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+  border: 2px solid var(--instm-blue);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--instm-dark);
+}
+
+.dataTables_wrapper .dataTables_length select:focus,
+.dataTables_wrapper .dataTables_filter input:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(0, 102, 204, 0.3);
+}
+
+.dataTables_wrapper .dataTables_info {
+  color: var(--instm-gray);
+  font-weight: 500;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: var(--instm-blue) !important;
+  border: 1px solid var(--instm-blue);
+  border-radius: 6px;
+  margin: 0 2px;
+  padding: 8px 12px !important;
+  transition: all 0.3s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background-color: var(--instm-blue) !important;
+  color: white !important;
+  transform: translateY(-1px);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background-color: var(--instm-blue) !important;
+  color: white !important;
+  border-color: var(--instm-blue);
+}
+
+/* Animations d'entrée */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.tab-pane {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .nav-center {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .nav-pills .nav-link {
+    margin: 5px 0;
+    justify-content: center;
+  }
+  
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+  
+  #genova-table, #marseille-table {
+    padding: 15px;
+  }
+  
+  .nav-pills-rose {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .custom-alert {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .custom-alert i.material-icons {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .table thead th {
+    font-size: 0.75rem;
+    padding: 12px 8px;
+  }
+  
+  .table tbody tr td {
+    padding: 12px 8px;
+  }
+}
+
+/* Améliorations supplémentaires */
+.table tbody tr td a {
+  position: relative;
+  overflow: hidden;
+}
+
+.table tbody tr td a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--instm-accent);
+  transition: width 0.3s ease;
+}
+
+.table tbody tr td a:hover::after {
+  width: 100%;
+}
+
+/* État de chargement */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Indicateurs visuels */
+.nav-pills .nav-link.active::before {
+  content: "✓ ";
+  font-weight: bold;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--instm-blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--instm-dark);
+}
 </style>
 {% endblock stylesheets %}
 

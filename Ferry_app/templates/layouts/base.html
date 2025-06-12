@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <title>Tunisian FerryBox Dashboard - {% block title %}{% endblock %} | AppSeed</title>
+  <title>Tunisian FerryBox Dashboard - {% block title %}{% endblock %} | INSTM</title>
 
   <!-- Favicon & Touch Icons -->
   <link rel="apple-touch-icon" sizes="76x76" href="/static/assets/img/apple-icon.png">
@@ -78,9 +78,51 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .sidebar .logo img {
-      width: 10rem;
+    /* Styles spécifiques pour le logo INSTM */
+    .sidebar .logo {
+      padding: 20px 15px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-bottom: 2px solid #e9ecef;
+      margin-bottom: 20px;
+    }
+
+    .sidebar .logo .instm-logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar .logo .instm-logo {
+      width: 120px;
       height: auto;
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .sidebar .logo .instm-logo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar .logo .instm-title {
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #003f5c;
+      text-align: center;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .sidebar .logo .dashboard-subtitle {
+      margin-top: 5px;
+      font-size: 10px;
+      color: #6c757d;
+      text-align: center;
+      font-weight: 400;
     }
 
     .sidebar .nav-link {
@@ -93,11 +135,62 @@
       color: #fff;
     }
 
+    /* Style pour la navbar avec branding INSTM */
+    .navbar-brand .instm-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .navbar-brand .instm-mini-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+    }
+
+    .navbar-brand .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .navbar-brand .brand-primary {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff !important;
+    }
+
+    .navbar-brand .brand-secondary {
+      font-size: 11px;
+      color: #b3d9ff !important;
+      font-weight: 400;
+    }
+
     footer {
       background-color: #003f5c;
       color: #fff;
       text-align: center;
-      padding: 10px 0;
+      padding: 15px 0;
+    }
+
+    .footer-instm {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .sidebar .logo .instm-logo {
+        width: 80px;
+      }
+      
+      .sidebar .logo .instm-title {
+        font-size: 10px;
+      }
+      
+      .navbar-brand .brand-text {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -105,24 +198,28 @@
 <body>
   <div class="wrapper">
     <div class="sidebar" data-color="purple" data-background-color="white" data-image="/static/assets/img/sidebar_ferry.png">
-      <div class="logo text-center">
+      <div class="logo">
         <a href="/" class="logo-normal">
-          <img src="/static/assets/img/instmLogo.jpg" alt="INSTM Logo">
+          <div class="instm-logo-container">
+            <img src="/static/assets/img/instmLogo.jpg" alt="INSTM Logo" class="instm-logo">
+            <div class="instm-title">INSTM</div>
+            <div class="dashboard-subtitle">FerryBox Dashboard</div>
+          </div>
         </a>
       </div>
       <div class="sidebar-wrapper">
         <ul class="nav">
           <li class="nav-item {% if overview %} active {% endif %}"><a class="nav-link" href="/index.html"><p>Data Overview</p></a></li>
           <li class="nav-item {% if access %} active {% endif %}"><a class="nav-link" href="/transect_plotting"><p>Data Access</p></a></li>
+
           {% if user.is_authenticated %}
-          <li class="nav-item {% if downed %} active {% endif %}"><a class="nav-link" href="/page-user"><p>Data Download</p></a></li>
-          <li class="nav-item {% if interface %} active {% endif %}"><a class="nav-link" href="/ui-notifications.html"><p>Admin Interface</p></a></li>
+         <li class="nav-item {% if interface %} active {% endif %}"><a class="nav-link" href="/ui-notifications.html"><p>Admin Interface</p></a></li>
           <li class="nav-item {% if process %} active {% endif %}"><a class="nav-link" href="/process"><p>Process</p></a></li>
           <li class="nav-item {% if notifications %} active {% endif %}"><a class="nav-link" href="/notifications"><p>Notifications</p></a></li>
 
-          <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}"><p>Logout</p></a></li>
           {% else %}
-          <li class="nav-item {% if inpage %} active {% endif %}"><a class="nav-link" href="/login/"><p>Login</p></a></li>
+                     <li class="nav-item {% if downed %} active {% endif %}"><a class="nav-link" href="/page-user"><p>Data Download</p></a></li>
+
           {% endif %}
         </ul>
       </div>
@@ -134,7 +231,13 @@
         <div class="container-fluid">
           {% if user.is_authenticated %}
           <a class="navbar-brand d-flex align-items-center" href="/">
-            <span class="d-none d-md-inline text-white">Hello <b>{{ user.username }}</b></span>
+            <div class="instm-brand">
+              <img src="/static/assets/img/instmLogo.jpg" alt="INSTM" class="instm-mini-logo">
+              <div class="brand-text d-none d-md-inline">
+                <div class="brand-primary">Hello {{ user.username }}</div>
+                <div class="brand-secondary">INSTM Dashboard</div>
+              </div>
+            </div>
           </a>
 
           <div class="collapse navbar-collapse justify-content-end">
@@ -173,7 +276,11 @@
         </div>
       </div>
 
-      {% include 'includes/footer.html' %}
+      <footer>
+        <div class="footer-instm">
+          © 2025 Institut National des Sciences et Technologies de la Mer (INSTM) - Tunisian FerryBox Project
+        </div>
+      </footer>
     </div>
   </div>
 

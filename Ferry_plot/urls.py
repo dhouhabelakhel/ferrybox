@@ -13,7 +13,7 @@ try:
     from Ferry_plot.views import importExcel, transect_plotting, data_description, popup_map, mails, import_mails
 except ImportError:
     from Ferry_plot.views import importExcel, transect_plotting, data_description, popup_map
-    print("⚠️ ImportError ignoré : mails et import_mails non trouvés")
+    print(" ImportError ignoré : mails et import_mails non trouvés")
 
 app_name = "Ferry_plot"
 # from django.urls import include
@@ -21,7 +21,8 @@ app_name = "Ferry_plot"
 urlpatterns = [
 
     #the most important one
-    path('', transect_plotting, name='try'),
+path('', transect_plotting, name='try'),
+path('index.html', views.index, name='home'),
 
     # filters : this is the main filter
     

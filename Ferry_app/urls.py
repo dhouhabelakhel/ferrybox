@@ -17,12 +17,9 @@ app_name = "Ferry_plot"
 urlpatterns = [
     path('', include('Ferry_plot.urls')),
 	path('index.html', views.index, name='home'),
-    path('admin/', admin.site.urls),
-    path("", include("authentication.urls")),  # add this
-    path("", include("Ferry_plot.urls")),  # add this
-
-        #these are replacing pages funtion
-    path('', page_user_view, name='datatest'),
+      path('admin/', admin.site.urls),
+    path('login/', include('authentication.urls')),
+    path('', include('Ferry_plot.urls')),
 ]
 
 # #table download part

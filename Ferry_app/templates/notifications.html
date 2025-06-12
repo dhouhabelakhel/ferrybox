@@ -16,83 +16,371 @@
   }
   
   .notif-wrapper {
-    max-width: 700px;
-    margin: 3rem auto;
-    padding: 2rem;
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 51, 102, 0.05);
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0;
+    background: transparent;
   }
   
-  .notif-title {
-    font-size: 1.6rem;
-    font-weight: bold;
-    color: #003366;
-    margin-bottom: 1.5rem;
+  .instm-header {
+    background: linear-gradient(135deg, #003f5c 0%, #2c5aa0 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
     text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 63, 92, 0.15);
+  }
+  
+  .instm-header .header-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  }
+  
+  .instm-header .header-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .instm-header .header-subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 300;
+  }
+  
+  .notifications-container {
+    background: #ffffff;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 32px rgba(0, 63, 92, 0.1);
+    overflow: hidden;
+  }
+  
+  .notifications-stats {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #003f5c;
+    font-weight: 500;
+  }
+  
+  .stat-icon {
+    width: 24px;
+    height: 24px;
+    background: #003f5c;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+  }
+  
+  .notifications-list {
+    padding: 2rem;
+    min-height: 300px;
   }
   
   .notif {
-    padding: 1rem;
-    border-left: 4px solid #003366;
-    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
     margin-bottom: 1rem;
-    background-color: #f9f9f9;
-    transition: transform 0.2s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .notif::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #003f5c 0%, #2c5aa0 100%);
   }
   
   .notif:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 63, 92, 0.15);
+    border-color: #003f5c;
+  }
+  
+  .notif-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+  
+  .notif-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #003f5c 0%, #2c5aa0 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .notif-content {
+    flex: 1;
   }
   
   .notif-file {
+    font-weight: 600;
+    color: #003f5c;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .file-type-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: 500;
-    color: #003366;
-    font-size: 1rem;
+    text-transform: uppercase;
   }
   
   .notif-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+  
+  .date-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .date-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .notif-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .btn-notif {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
     font-size: 0.85rem;
-    color: #666;
-    margin-top: 0.3rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary {
+    background: #003f5c;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: #2c5aa0;
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary {
+    background: #e9ecef;
+    color: #495057;
+  }
+  
+  .btn-secondary:hover {
+    background: #dee2e6;
   }
   
   .no-notifs {
     text-align: center;
-    color: #999;
-    margin-top: 2rem;
+    padding: 3rem 2rem;
+    color: #6c757d;
+  }
+  
+  .no-notifs-icon {
+    width: 80px;
+    height: 80px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 2rem;
+    color: #adb5bd;
+  }
+  
+  .no-notifs-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+  
+  .no-notifs-desc {
+    font-size: 0.95rem;
+    color: #6c757d;
   }
   
   .new-notification {
-    animation: highlight 2s ease-out;
+    animation: highlight 3s ease-out;
+    border-color: #28a745 !important;
+  }
+  
+  .new-notification::before {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   }
   
   @keyframes highlight {
-    0% { background-color: rgba(255, 253, 152, 0.8); }
-    100% { background-color: #f9f9f9; }
+    0% { 
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      transform: scale(1.02);
+    }
+    100% { 
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      transform: scale(1);
+    }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .notif-wrapper {
+      margin: 1rem;
+    }
+    
+    .instm-header {
+      padding: 1.5rem 1rem;
+    }
+    
+    .instm-header .header-title {
+      font-size: 1.5rem;
+    }
+    
+    .notifications-stats {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
+    .notifications-list {
+      padding: 1rem;
+    }
+    
+    .notif {
+      padding: 1rem;
+    }
+    
+    .notif-header {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .notif-dates {
+      flex-direction: column;
+    }
   }
 </style>
 {% endblock stylesheets %}
 
 {% block content %}
-<div class=" fade-in">
-  <div class="notif-title">📥 INSTM Notifications</div>
+<div class="notif-wrapper fade-in">
+  <!-- En-tête INSTM -->
+  <div class="instm-header">
+    <img src="/static/assets/img/instmLogo.jpg" alt="INSTM Logo" class="header-logo">
+    <div class="header-title">INSTM Notifications</div>
+    <div class="header-subtitle">Institut National des Sciences et Technologies de la Mer</div>
+  </div>
   
-  <div id="notif-list">
-    {% if notifications %}
-      {% for notif in notifications %}
-        <div class="notif" data-id="{{ notif.id }}">
-          <div class="notif-file">{{ notif.file_name }}</div>
-          <div class="notif-dates">
-            📧 Received: {{ notif.received_at }}<br>
-            🕒 Notified: {{ notif.date }}
+  <div class="notifications-container">
+    <!-- Statistiques -->
+    <div class="notifications-stats">
+      <div class="stat-item">
+        <div class="stat-icon">📊</div>
+        <span>Total: <strong id="total-count">{{ notifications|length }}</strong></span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">🔔</div>
+        <span>Active Monitoring</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">⏱️</div>
+        <span>Last Update: <strong id="last-update">{{ "now"|date:"H:i" }}</strong></span>
+      </div>
+    </div>
+    
+    <!-- Liste des notifications -->
+    <div class="notifications-list">
+      <div id="notif-list">
+        {% if notifications %}
+          {% for notif in notifications %}
+            <div class="notif" data-id="{{ notif.id }}">
+              <div class="notif-header">
+                <div class="notif-icon">📄</div>
+                <div class="notif-content">
+                  <div class="notif-file">
+                    {{ notif.file_name }}
+                    <span class="file-type-badge">FerryBox</span>
+                  </div>
+                  <div class="notif-dates">
+                    <div class="date-item">
+                      <div class="date-icon">📧</div>
+                      <span>Received: {{ notif.received_at }}</span>
+                    </div>
+                    <div class="date-item">
+                      <div class="date-icon">🕒</div>
+                      <span>Notified: {{ notif.date }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="notif-actions">
+                <button class="btn-notif btn-primary">View Details</button>
+                <button class="btn-notif btn-secondary">Mark as Read</button>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="no-notifs">
+            <div class="no-notifs-icon">🔔</div>
+            <div class="no-notifs-title">No Notifications Yet</div>
+            <div class="no-notifs-desc">You'll receive notifications here when new FerryBox data is available.</div>
           </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="no-notifs">No notifications received yet.</div>
-    {% endif %}
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>
 {% endblock content %}
@@ -105,7 +393,7 @@
   
   // Initialisation
   document.addEventListener("DOMContentLoaded", function() {
-    console.log("Initialisation du système de notifications");
+    console.log("Initialisation du système de notifications INSTM");
     
     // Collecte des IDs existants
     const notifElements = document.querySelectorAll('.notif');
@@ -117,15 +405,42 @@
     });
     
     console.log("Nombre d'IDs initiaux:", processedIds.size);
+    updateStats();
     
     // Démarrer la vérification périodique
     fetchNotifications();
     setInterval(fetchNotifications, 10000);
+    
+    // Mise à jour de l'heure
+    setInterval(updateLastUpdate, 60000);
   });
+  
+  // Mise à jour des statistiques
+  function updateStats() {
+    const totalCount = document.querySelectorAll('.notif').length;
+    const totalElement = document.getElementById('total-count');
+    if (totalElement) {
+      totalElement.textContent = totalCount;
+    }
+  }
+  
+  // Mise à jour de l'heure de dernière vérification
+  function updateLastUpdate() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    const lastUpdateElement = document.getElementById('last-update');
+    if (lastUpdateElement) {
+      lastUpdateElement.textContent = timeString;
+    }
+  }
   
   // Fonction principale de récupération des notifications
   function fetchNotifications() {
-    console.log("Vérification des nouvelles notifications...");
+    console.log("Vérification des nouvelles notifications INSTM...");
+    updateLastUpdate();
     
     fetch("/api/notifications/")
       .then(response => response.json())
@@ -154,7 +469,14 @@
     
     // Cas où il n'y a pas de notifications
     if (!notifications || notifications.length === 0) {
-      container.innerHTML = '<div class="no-notifs">No notifications received yet.</div>';
+      container.innerHTML = `
+        <div class="no-notifs">
+          <div class="no-notifs-icon">🔔</div>
+          <div class="no-notifs-title">No Notifications Yet</div>
+          <div class="no-notifs-desc">You'll receive notifications here when new FerryBox data is available.</div>
+        </div>
+      `;
+      updateStats();
       return;
     }
     
@@ -172,7 +494,7 @@
       if (notif && notif.id && !processedIds.has(notif.id)) {
         newItems.push(notif);
         processedIds.add(notif.id);
-        console.log("Nouvelle notification identifiée:", notif.id);
+        console.log("Nouvelle notification INSTM identifiée:", notif.id);
       }
     });
     
@@ -185,17 +507,54 @@
         newNotifEl.className = 'notif new-notification';
         newNotifEl.dataset.id = notif.id;
         newNotifEl.innerHTML = `
-          <div class="notif-file">${notif.file_name}</div>
-          <div class="notif-dates">
-            📧 Received: ${notif.received_at}<br>
-            🕒 Notified: ${notif.date}
+          <div class="notif-header">
+            <div class="notif-icon">📄</div>
+            <div class="notif-content">
+              <div class="notif-file">
+                ${notif.file_name}
+                <span class="file-type-badge">FerryBox</span>
+              </div>
+              <div class="notif-dates">
+                <div class="date-item">
+                  <div class="date-icon">📧</div>
+                  <span>Received: ${notif.received_at}</span>
+                </div>
+                <div class="date-item">
+                  <div class="date-icon">🕒</div>
+                  <span>Notified: ${notif.date}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="notif-actions">
+            <button class="btn-notif btn-primary">View Details</button>
+            <button class="btn-notif btn-secondary">Mark as Read</button>
           </div>
         `;
         
         // Insérer au début de la liste
         container.insertBefore(newNotifEl, container.firstChild);
       });
+      
+      updateStats();
     }
   }
+  
+  // Gestion des actions sur les notifications
+  document.addEventListener('click', function(event) {
+    if (event.target.matches('.btn-notif')) {
+      const notifElement = event.target.closest('.notif');
+      const action = event.target.textContent.trim();
+      
+      if (action === 'Mark as Read') {
+        notifElement.style.opacity = '0.6';
+        event.target.disabled = true;
+        event.target.textContent = 'Read';
+      } else if (action === 'View Details') {
+        // Ici vous pouvez ajouter la logique pour afficher les détails
+        console.log('Viewing details for notification:', notifElement.dataset.id);
+      }
+    }
+  });
 </script>
 {% endblock javascripts %}
