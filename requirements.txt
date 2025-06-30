@@ -15,7 +15,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
 cmake==3.31.4
 colorama==0.4.6
-cryptography==43.0.3
+cryptography==43.0.3fv
 diff-match-patch==20241021
 dj-database-url==2.3.0
 Django==5.1.2
