@@ -19,7 +19,7 @@ APPEND_SLASH = False
 DEBUG = False
 
 # load production server from .env
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.78'),'*','.onrender.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.78'),'*','ferrybox.onrender.com']
 ASGI_APPLICATION = "Ferry_app.asgi.application"
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
