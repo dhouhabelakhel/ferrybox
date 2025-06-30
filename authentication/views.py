@@ -32,7 +32,6 @@ def login_view(request):
 
     if token:
         try:
-            # Décodage du token JWT
             payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"],options={"verify_exp": False})
             print(f"Token décodé avec succès: {payload}")
             
@@ -40,13 +39,11 @@ def login_view(request):
             full_name = payload.get("name", "Utilisateur")
             roles = payload.get("role", "")
             
-            # Vérification que le username existe
             if not username:
                 msg = "Token invalide : 'sub' manquant"
                 logger.warning("Token sans username (sub)")
                 return redirect("home")
 
-            # Création ou récupération de l'utilisateur
             user, created = User.objects.get_or_create(username=username)
             
             if created:
@@ -55,13 +52,11 @@ def login_view(request):
             else:
                 logger.info(f"Utilisateur existant: {username}")
             
-            # Mise à jour des informations utilisateur
             user.first_name = full_name
             
-            # Gestion des rôles
             if "ROLE_ADMIN" in roles:
                 user.is_staff = True
-                user.is_superuser = True  # Changé pour donner tous les droits admin
+                user.is_superuser = True  
                 logger.info(f"Droits admin accordés à {username}")
             else:
                 user.is_staff = False
@@ -70,15 +65,13 @@ def login_view(request):
 
             user.save()
 
-            # Connexion de l'utilisateur
             login(request, user)
-            print("kbduiiiiiiiiiiiiiiiiiiiiii")
             print(f"Connexion réussie pour {username}")
             logger.info(f"Session après login : {dict(request.session)}")
             logger.info(f"Session key : {request.session.session_key}")
             logger.info(f"Connexion réussie pour {username}")
             
-            return redirect("home")  # Assurez-vous que cette URL existe
+            return redirect("home")  
 
         except jwt.ExpiredSignatureError:
             msg = "Token expiré"
@@ -98,7 +91,7 @@ def login_view(request):
 
     return redirect("home")
 def logout_view(request):
-    print("=== DEBUT FONCTION LOGOUT ===")  # Pour être sûr qu'on entre dans la fonction
+    print("=== DEBUT FONCTION LOGOUT ===")  
     logger.info("=== DEBUG LOGOUT ===")
     logger.info(f"Request headers: {dict(request.headers)}")
     logger.info(f"Request cookies: {request.COOKIES}")
@@ -117,7 +110,6 @@ def logout_view(request):
 
     print("=== AVANT RETURN ===")
     
-    # Retourner JsonResponse au lieu de redirect pour les requêtes AJAX
     response = JsonResponse({"message": "Logout successful"})
     response.delete_cookie('sessionid', path='/')
     response.delete_cookie('csrftoken', path='/')

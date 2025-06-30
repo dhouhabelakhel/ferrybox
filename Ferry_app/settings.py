@@ -3,6 +3,9 @@ from decouple import config
 from unipath import Path
 import dj_database_url
 from Ferry_plot.log_handler import WebLogHandler
+import dj_database_url
+from decouple import config
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -12,11 +15,11 @@ PROJECT_DIR = Path(__file__).parent
 SECRET_KEY = config('SECRET_KEY', default='S#perS3crEt_1122')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 APPEND_SLASH = False
+DEBUG = False
 
 # load production server from .env
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.78'),'*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='41.229.139.78'),'*','.onrender.com']
 ASGI_APPLICATION = "Ferry_app.asgi.application"
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -52,6 +55,7 @@ MIDDLEWARE = [
         'corsheaders.middleware.CorsMiddleware',
 
     'django.middleware.security.SecurityMiddleware',
+     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,14 +90,15 @@ WSGI_APPLICATION = 'Ferry_app.wsgi.application'
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Ferrydb',
-        'USER': 'postgres',
-        'PASSWORD': 'dhouha',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-    }
+        'default': dj_database_url.config(default='postgresql://dhouha:bX8WPW5C7jvmiDZe9CFfltLgErdmICs4@dpg-d1hak9ili9vc73bi5ibg-a.frankfurt-postgres.render.com/ferrybox'),
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'Ferrydb',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'dhouha',
+    #     'HOST': '127.0.0.1',
+    #     'PORT': '5432',
+    # }
 }
 
 # DATABASES = {
@@ -148,6 +153,7 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
@@ -260,7 +266,7 @@ DEFAULT_FROM_EMAIL='tun.ferrybox@gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'dhouhabelakhel2001@gmail.com'
-EMAIL_HOST_PASSWORD = 'pmtd xqqz rqbj xcdv'
+EMAIL_HOST_PASSWORD = 'zvim jgvu wywk lnwi'
 EMAIL_PORT = 587
 import base64
 
