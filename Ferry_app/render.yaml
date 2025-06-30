@@ -3,7 +3,7 @@ services:
     name: FerryBox
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn mon_projet.wsgi:application"
+    startCommand: "gunicorn Ferry_app.wsgi:application"
     envVars:
       - key: DEBUG
         value: False
