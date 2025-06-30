@@ -1,7 +1,6 @@
 
 from django.contrib import admin
 from django.urls import path, include  # add this
-from django.conf.urls import url
 from django.views.generic import RedirectView
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf import settings
@@ -10,6 +9,7 @@ from django.contrib.auth import views as auth_views
 from Ferry_plot import views
 from Ferry_plot.views import page_user_view
 
+from django.urls import path, re_path
 
 app_name = "Ferry_plot"
 
