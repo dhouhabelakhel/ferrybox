@@ -1,164 +1,268 @@
-# [Django Dashboard Material](https://appseed.us/admin-dashboards/django-dashboard-material)
+# 🌊 Ferrybox Platform
 
-> **Open-Source Admin Dashboard** coded in **Flask Framework** by **AppSeed** [Web App Generator](https://appseed.us/app-generator) - features:
+<div align="center">
 
-- UI Kit: **[Material Dashboard](https://www.creative-tim.com/product/material-dashboard?ref=appseed)** (Free version) provided by **Creative-Tim**
-- UI-Ready app, SQLite Database, Django Native ORM
-- Modular design, clean code-base
-- Session-Based Authentication, Forms validation
-- Deployment scripts: Docker, Gunicorn / Nginx
-- **MIT License**
-- Free support via **Github** 
-- Paid Support **24/7 LIVE Support** via [Discord](https://discord.gg/fZC6hup)
+![Ferrybox Platform](https://img.shields.io/badge/Platform-Ferrybox-blue?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
+![Django](https://img.shields.io/badge/Django-4.2-green?style=for-the-badge&logo=django)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 
-> Links
+**Plateforme web de traitement automatisé et de visualisation interactive des données océanographiques collectées via les systèmes Ferrybox embarqués sur des ferries commerciaux.**
 
-- [Django Dashboard Material](https://appseed.us/admin-dashboards/django-dashboard-material) - product page 
-- [Django Dashboard Material](https://django-dashboard-material.appseed.us/login/) - LIVE Demo
-- [Django Dashboard Material](https://docs.appseed.us/admin-dashboards/django-dashboard-material/) - Documentation
-- More [Django Admin Dashboards](https://appseed.us/admin-dashboards/django) - index hosted by **AppSeed**
-- [Free Admin Dashboards](https://appseed.us/admin-dashboards/open-source) - index hosted by **AppSeed**
+[🚀 Démo en ligne](https://ferrybox.onrender.com/)
 
-<br />
-
-## Want more? Go PRO!
-
-PRO versions include **Premium UI Kits**, Lifetime updates and **24/7 LIVE Support** (via [Discord](https://discord.gg/fZC6hup))
-
-| [Django DattaAble Dark PRO](https://appseed.us/admin-dashboards/django-dashboard-dattaable-dark-pro) | [Django Dashboard Black PRO](https://appseed.us/admin-dashboards/django-dashboard-black-pro) | [Django StarAdmin Dark PRO](https://appseed.us/admin-dashboards/django-dashboard-staradmin-black-pro) |
-| --- | --- | --- |
-| [![Django DattaAble Dark PRO](https://raw.githubusercontent.com/app-generator/django-dashboard-dattaable-dark-pro/master/media/django-dashboard-dattaable-dark-pro-screen.png)](https://appseed.us/admin-dashboards/django-dashboard-dattaable-dark-pro) | [![Django Dashboard Black PRO](https://raw.githubusercontent.com/app-generator/django-dashboard-black-pro/master/media/django-dashboard-black-pro-screen.png)](https://appseed.us/admin-dashboards/django-dashboard-black-pro) | [![Django StarAdmin Dark PRO](https://raw.githubusercontent.com/app-generator/django-dashboard-staradmin-black-pro/master/media/django-dashboard-staradmin-black-pro-screen.png)](https://appseed.us/admin-dashboards/django-dashboard-staradmin-black-pro)
-
-<br />
-<br />
-
-![Django Dashboard Material - Open-Source Web App.](https://raw.githubusercontent.com/app-generator/static/master/products/django-dashboard-material-screen.png)
-
-<br />
-
-## How to use it
-
-```bash
-$ # Get the code
-$ git clone https://github.com/app-generator/django-dashboard-material.git
-$ cd django-dashboard-material
-$
-$ # Virtualenv modules installation (Unix based systems)
-$ virtualenv env
-$ source env/bin/activate
-$
-$ # Virtualenv modules installation (Windows based systems)
-$ # virtualenv env
-$ # .\env\Scripts\activate
-$
-$ # Install modules
-$ # SQLIte version
-$ pip3 install -r requirements.txt
-$
-$ # Create tables
-$ python manage.py makemigrations
-$ python manage.py migrate
-$
-$ # Start the application (development mode)
-$ python manage.py runserver # default port 8000
-$
-$ # Start the app - custom port
-$ # python manage.py runserver 0.0.0.0:<your_port>
-$
-$ # Access the web app in browser: http://127.0.0.1:8000/
-```
-
-<br />
-
-## Deployment
-
-The app is provided with a basic configuration to be executed in [Heroku](https://heroku.com/), [Docker](https://www.docker.com/), [Gunicorn](https://gunicorn.org/), and [Waitress](https://docs.pylonsproject.org/projects/waitress/en/stable/).
-
-### [Docker](https://www.docker.com/) execution
----
-
-The application can be easily executed in a docker container. The steps:
-
-> Get the code
-
-```bash
-$ git clone https://github.com/app-generator/django-dashboard-material.git
-$ cd django-dashboard-material
-```
-
-> Start the app in Docker
-
-```bash
-$ sudo docker-compose pull && sudo docker-compose build && sudo docker-compose up -d
-```
-
-Visit `http://localhost:5005` in your browser. The app should be up & running.
-
-<br />
-
-### [Gunicorn](https://gunicorn.org/)
----
-
-Gunicorn 'Green Unicorn' is a Python WSGI HTTP Server for UNIX.
-
-> Install using pip
-
-```bash
-$ pip install gunicorn
-```
-> Start the app using gunicorn binary
-
-```bash
-$ gunicorn --bind=0.0.0.0:8001 core.wsgi:application
-Serving on http://localhost:8001
-```
-
-Visit `http://localhost:8001` in your browser. The app should be up & running.
-
-
-<br />
-
-### [Waitress](https://docs.pylonsproject.org/projects/waitress/en/stable/)
----
-
-Waitress (Gunicorn equivalent for Windows) is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones that live in the Python standard library.
-
-> Install using pip
-
-```bash
-$ pip install waitress
-```
-> Start the app using [waitress-serve](https://docs.pylonsproject.org/projects/waitress/en/stable/runner.html)
-
-```bash
-$ waitress-serve --port=8001 core.wsgi:application
-Serving on http://localhost:8001
-```
-
-Visit `http://localhost:8001` in your browser. The app should be up & running.
-
-<br />
-
-## Credits & Links
-
-### [Django Admin Dashboards](https://appseed.us/admin-dashboards/django)
-
-Index with UI-ready **admin dashboards** generated by the AppSeed platform in [Django Framework](https://www.djangoproject.com/).
-Start fast your next Django project by using functional admin dashboards enhanced with Database, ORM, authentication flow, helpers and deployment scripts.
-
-### What is [Django](https://www.djangoproject.com/)
-
-[Django](https://www.djangoproject.com/) is a Python-based free and open-source web framework, which follows the model-template-view architectural pattern. It is maintained by the Django Software Foundation, an independent organization established as a 501 non-profit. Django's primary goal is to ease the creation of complex, database-driven websites.
-
-### [What is a dashboard](https://en.wikipedia.org/wiki/Dashboard_(business))
-
-A dashboard is a set of pages that are easy to read and offer information to the user in real-time regarding his business. A dashboard usually consists of graphical representations of the current status and trends within an organization. Having a well-designed dashboard will give you the possibility to act and make informed decisions based on the data that your business provides - *definition provided by [Creative-Tim - Free Dashboard Templates](https://www.creative-tim.com/blog/web-design/free-dashboard-templates/?ref=appseed)*.
-
-### [Material Dashboard](https://www.creative-tim.com/product/material-dashboard?ref=appseed)
-
-**[Material Dashboard](https://www.creative-tim.com/product/material-dashboard?ref=appseed)** is a free Material Bootstrap 4 Admin with a fresh, new design inspired by Google's Material Design. Material Dashboard was built over the popular Bootstrap 4 framework and it comes with a couple of third-party plugins redesigned to fit in with the rest of the elements - provided by **Creative-Tim**.
-
-<br />
+</div>
 
 ---
-**[Django Dashboard Material](https://appseed.us/admin-dashboards/django-dashboard-material)** - Provided by **AppSeed** [Web App Generator](https://appseed.us/app-generator).
+
+## 📋 Table des matières
+
+- [🎯 Aperçu](#-aperçu)
+- [✨ Fonctionnalités](#-fonctionnalités)
+- [🏗️ Architecture](#️-architecture)
+- [⚡ Installation rapide](#-installation-rapide)
+- [🔧 Configuration](#-configuration)
+- [📊 Utilisation](#-utilisation)
+- [🤝 Contribution](#-contribution)
+- [📄 Licence](#-licence)
+
+---
+
+## 🎯 Aperçu
+
+La **Ferrybox Platform** est une solution complète développée par l'**INSTM** (Institut National des Sciences et Technologies de la Mer, Tunisie) pour automatiser la collecte, le traitement et la visualisation des données océanographiques en temps réel.
+
+### 🌟 Pourquoi cette plateforme ?
+
+- **Automatisation complète** : Traitement automatique des données depuis la réception email jusqu'à la visualisation
+- **Temps réel** : Monitoring en direct avec notifications WebSocket
+- **Visualisation avancée** : Cartes interactives, transects, séries temporelles
+- **Sécurité** : Authentification JWT et gestion des rôles
+- **Scalabilité** : Architecture modulaire et extensible
+
+---
+
+## ✨ Fonctionnalités
+
+### 📥 Traitement automatisé
+- ✅ Réception automatique des emails Ferrybox
+- ✅ Extraction et validation des métadonnées
+- ✅ Transformation en séries temporelles
+- ✅ Détection des doublons et gestion d'erreurs
+
+### 📊 Visualisation interactive
+- 🗺️ **Cartes Leaflet** avec routes des ferries
+- 📈 **Graphiques dynamiques** (Plotly, Chart.js)
+- 🔍 **Transects par paramètre** et date
+- 📊 **Heatmaps** et séries temporelles
+
+### 🔔 Notifications temps réel
+- 📱 **WebSocket** pour les mises à jour instantanées
+- 📧 **Emails automatiques** pour les demandes
+- 🔊 **Alertes sonores** optionnelles
+- 📝 **Historique complet** des événements
+
+### 🛡️ Sécurité et gestion
+- 🔐 **Authentification JWT** + Sessions
+- 👥 **Gestion des rôles** (Admin, Chercheur, Utilisateur)
+- 📋 **Système de demandes** avec validation
+- 🔍 **Logs détaillés** et monitoring
+
+---
+
+## 🏗️ Architecture
+
+### Stack technique
+
+| Composant | Technologies |
+|-----------|-------------|
+| **Backend** | Python 3.11, Django 4.2, Django REST Framework |
+| **Frontend** | Django Templates, JavaScript ES6+ |
+| **Base de données** | PostgreSQL 14+ |
+| **Visualisation** | Leaflet.js, Chart.js |
+| **Temps réel** | Django Channels, WebSockets |
+| **Traitement** | Pandas, NumPy, Celery |
+
+
+## ⚡ Installation rapide
+
+### Prérequis
+
+- Python 3.11+
+- PostgreSQL 14+
+- Redis (pour Celery)
+- Node.js 16+ (optionnel)
+
+### Installation avec Conda
+
+```bash
+# 1. Cloner le projet
+git clone https://github.com/instm/ferrybox-platform.git
+cd ferrybox-platform
+
+# 2. Créer l'environnement
+conda create -n ferrybox_env python=3.11
+conda activate ferrybox_env
+
+# 3. Installer les dépendances
+pip install -r requirements.txt
+
+# 4. Configuration
+cp .env.example .env
+# Éditer .env avec vos paramètres
+
+# 5. Base de données
+python manage.py migrate
+python manage.py createsuperuser
+
+# 6. Lancer le serveur
+python manage.py runserver
+```
+
+
+
+## 🔧 Configuration
+
+### Variables d'environnement
+
+Créez un fichier `.env` basé sur `.env.example` :
+
+```env
+# Base de données
+DATABASE_URL=postgresql://user:password@localhost:5432/ferrybox
+
+# Django
+SECRET_KEY=your-secret-key-here
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,ferrybox.instm.tn
+
+# Email
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your-email@example.com
+EMAIL_HOST_PASSWORD=your-app-password
+
+# Redis (pour Celery)
+REDIS_URL=redis://localhost:6379/0
+```
+
+
+
+
+
+
+
+
+## 📊 Utilisation
+
+### Interface d'administration
+
+Accédez à l'interface admin : `http://localhost:8000/admin/`
+
+- **Gestion des utilisateurs** : Créer/modifier les comptes
+- **Monitoring** : Suivre les traitements en cours
+- **Configuration** : Paramètres de l'application
+
+### API REST
+
+La plateforme expose une API REST complète :
+
+```python
+# Exemple d'utilisation
+import requests
+
+# Authentification
+response = requests.post('http://localhost:8000/api/auth/login/', {
+    'username': 'user@example.com',
+    'password': 'password'
+})
+token = response.json()['token']
+
+# Récupérer les données
+headers = {'Authorization': f'Bearer {token}'}
+data = requests.get('http://localhost:8000/api/data/', headers=headers)
+```
+
+### Traitement des données
+
+Le pipeline de traitement suit ces étapes :
+
+1. **Réception** : Emails avec fichiers Ferrybox
+2. **Extraction** : Métadonnées et données brutes
+3. **Validation** : Contrôle qualité automatique
+4. **Transformation** : Séries temporelles et géolocalisation
+5. **Stockage** : Base de données PostgreSQL
+6. **Notification** : Alerts temps réel
+
+---
+
+## 🤝 Contribution
+
+### Guide de contribution
+
+1. **Fork** le projet
+2. **Créer** une branche feature (`git checkout -b feature/AmazingFeature`)
+3. **Commit** vos changements (`git commit -m 'Add AmazingFeature'`)
+4. **Push** vers la branche (`git push origin feature/AmazingFeature`)
+5. **Ouvrir** une Pull Request
+
+### Standards de code
+
+- **PEP 8** pour Python
+- **ESLint** pour JavaScript
+- **Tests** obligatoires pour nouvelles fonctionnalités
+- **Documentation** pour les API
+
+
+
+---
+
+## 📞 Support
+
+### Contacts
+
+- **Développeur** : dhouhabelakhel2001@gmail.com
+
+
+
+---
+
+## 📄 Licence
+
+Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus d'informations.
+
+```
+MIT License
+
+Copyright (c) 2024 INSTM - Institut National des Sciences et Technologies de la Mer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
+
+---
+
+## 🙏 Remerciements
+
+- **INSTM** pour le support institutionnel
+- **Communauté Django** pour le framework
+- **Contributeurs** du projet open source
+- **Équipe de recherche** pour les feedbacks
+
+---
+
+<div align="center">
+
+**Fait avec ❤️ par l'équipe INSTM**
+
+[⬆ Retour en haut](#-ferrybox-platform)
+
+</div>
